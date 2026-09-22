@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96" role="img" aria-label="Aujourd'hui">
+  <!-- Raccourci « aujourd'hui » : une page d'agenda avec le jour en cours
+       marque d'un point. -->
+  <rect width="96" height="96" rx="22" fill="#0284c7"/>
+  <rect x="22" y="26" width="52" height="48" rx="10" fill="#ffffff"/>
+  <path d="M22 36a10 10 0 0 1 10-10h32a10 10 0 0 1 10 10v4H22z" fill="#075985"/>
+  <rect x="33" y="19" width="7" height="15" rx="3.5" fill="#e0f2fe"/>
+  <rect x="56" y="19" width="7" height="15" rx="3.5" fill="#e0f2fe"/>
+  <circle cx="48" cy="57" r="10" fill="#0ea5e9"/>
+</svg>

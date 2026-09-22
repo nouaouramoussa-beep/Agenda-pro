@@ -1,0 +1,64 @@
+{
+  "_lisez_moi": "Ce fichier decrit l'application aux telephones (nom, icones, couleurs, raccourcis). Le format JSON n'accepte PAS de commentaires : toutes les explications sont dans app/pwa/OFFLINE.md, section « Le manifeste, ligne par ligne ». Les cles commencant par _ sont ignorees par les navigateurs.",
+
+  "_id": "Identite permanente de l'application. Ne JAMAIS la changer apres la premiere installation : un telephone qui verrait un autre identifiant croirait a une deuxieme application et en installerait une seconde icone.",
+  "id": "agenda-pro",
+
+  "_nom": "Le manifeste n'accepte qu'un seul nom. On y met donc les deux langues, l'arabe d'abord puisque c'est la langue par defaut du produit.",
+  "name": "أجندة برو — Agenda Pro",
+  "short_name": "أجندة برو",
+  "description": "لوحة قيادة المهام للحرفيين: مواعيد، ورشات، زبائن — يشتغل دون اتصال. Tableau de bord des taches pour artisans : rendez-vous, chantiers, clients — fonctionne sans reseau.",
+
+  "lang": "ar",
+  "dir": "rtl",
+
+  "_chemins": "Tout ce qui suit est relatif a CE fichier (app/pwa/). « ../../ » remonte donc a la racine de l'application, que celle-ci soit publiee a la racine du domaine ou dans un sous-dossier.",
+  "start_url": "../../index.html?source=pwa",
+  "scope": "../../",
+
+  "_affichage": "standalone = sans barre d'adresse, comme une vraie application. display_override donne les solutions de repli dans l'ordre, jusqu'au simple onglet.",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+
+  "_couleurs": "Le manifeste ne connait qu'une seule couleur, figee. Le theme sombre est gere en direct par app/pwa/pwa.js, qui met a jour la balise <meta name=\"theme-color\"> chaque fois que l'utilisateur bascule clair/sombre. Ces deux valeurs-ci sont donc celles du theme CLAIR (--bg).",
+  "theme_color": "#f5f7fa",
+  "background_color": "#f5f7fa",
+
+  "categories": ["productivity", "business", "utilities"],
+  "prefer_related_applications": false,
+
+  "_icones_A_LIRE_AVANT_DE_PUBLIER": "LES SIX FICHIERS .png SONT OBLIGATOIRES ET N'EXISTENT PAS ENCORE DANS LE DEPOT : le dossier icons/ ne contient que les .svg sources. Il faut les fabriquer AVANT la mise en ligne, avec les commandes exactes de app/pwa/icons/README.md (une seule fois, 2 minutes). Ce n'est PAS un simple defaut d'apparence : Chrome sur Android exige une icone PNG d'au moins 192x192 pour declencher l'invite d'installation. Sans elle, l'evenement beforeinstallprompt n'est jamais emis, tout le travail de la PARTIE 8 de app/pwa/pwa.js (attente de la 2e visite, delai de 20 s, respect du refus pendant 14 jours) ne sert a rien, et le bandeau « Installez Agenda Pro » ne s'affiche JAMAIS. Sur iPhone, Safari ignore le SVG en apple-touch-icon et pose une vignette floue de la page a la place du logo. Les deux plateformes echouent en silence, sans aucun message.",
+
+  "_icones": "Les .png sont fabriques a partir des .svg : voir app/pwa/icons/README.md. Les .svg sont listes en dernier : ils ne remplacent pas les .png (voir ci-dessus), ils evitent seulement que l'application n'ait aucune icone du tout pendant le temps ou les .png manquent. « maskable » = l'icone dont Android decoupe la forme (cercle, goutte, carre arrondi selon le telephone) : son dessin tient dans le cercle central, rien d'important ne se fait rogner.",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-512.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icons/icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ],
+
+  "_raccourcis": "Ce qui apparait quand on garde le doigt appuye sur l'icone de l'application. app/pwa/pwa.js lit le parametre « action » dans l'adresse et ouvre directement le bon ecran.",
+  "shortcuts": [
+    {
+      "name": "مهمة جديدة — Nouvelle tache",
+      "short_name": "＋ مهمة",
+      "description": "فتح نافذة إضافة مهمة مباشرة — Ouvre directement le formulaire d'ajout",
+      "url": "../../index.html?action=add&source=raccourci",
+      "icons": [
+        { "src": "icons/shortcut-add.png", "sizes": "96x96", "type": "image/png" },
+        { "src": "icons/shortcut-add.svg", "sizes": "any", "type": "image/svg+xml" }
+      ]
+    },
+    {
+      "name": "اليوم — Aujourd'hui",
+      "short_name": "اليوم",
+      "description": "عرض مهام اليوم — Affiche les taches du jour",
+      "url": "../../index.html?action=today&source=raccourci",
+      "icons": [
+        { "src": "icons/shortcut-today.png", "sizes": "96x96", "type": "image/png" },
+        { "src": "icons/shortcut-today.svg", "sizes": "any", "type": "image/svg+xml" }
+      ]
+    }
+  ]
+}

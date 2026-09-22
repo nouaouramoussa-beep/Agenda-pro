@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 512 512" role="img" aria-label="Agenda Pro">
+  <!-- ICONE PRINCIPALE, dessinee a la main, sans image importee.
+       Pourquoi du SVG ? Parce qu'un dessin vectoriel reste net a toutes les
+       tailles (48 px dans la liste des applications, 512 px sur la fiche du
+       magasin) et qu'il pese trois lignes de texte. Les .png demandes par les
+       telephones s'en tirent en une commande : voir README.md, a cote. -->
+  <defs>
+    <linearGradient id="apFond" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0ea5e9"/>
+      <stop offset="1" stop-color="#0284c7"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Le carre arrondi du fond. ––brand vers ––brand2, les couleurs de l'application. -->
+  <rect width="512" height="512" rx="112" fill="url(#apFond)"/>
+
+  <!-- Clin d'oeil a la disposition en anneau de l'ecran d'accueil. -->
+  <circle cx="256" cy="262" r="168" fill="none" stroke="#ffffff" stroke-opacity=".16"
+          stroke-width="10" stroke-dasharray="14 20"/>
+
+  <!-- Le corps de l'agenda. -->
+  <rect x="116" y="140" width="280" height="256" rx="40" fill="#ffffff"/>
+  <path d="M116 180a40 40 0 0 1 40-40h200a40 40 0 0 1 40 40v22H116z" fill="#0b7ab0"/>
+  <rect x="176" y="104" width="28" height="64" rx="14" fill="#e0f2fe"/>
+  <rect x="308" y="104" width="28" height="64" rx="14" fill="#e0f2fe"/>
+
+  <!-- La coche : une tache faite. C'est le sujet de l'application. -->
+  <path d="M182 288l50 50 104-116" fill="none" stroke="#0284c7" stroke-width="34"
+        stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

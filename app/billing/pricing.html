@@ -1,0 +1,252 @@
+<!-- ==========================================================================
+     AGENDA PRO — app/billing/pricing.html
+     LE MORCEAU DE PAGE DE LA BRIQUE VENTE.
+     --------------------------------------------------------------------------
+     DEUX FACONS DE S'EN SERVIR, exactement comme pour app/auth/auth-ui.html :
+
+     (A) RECOMMANDE — copiez tout ce fichier et collez-le dans index.html,
+         juste avant </body>, a la suite du bloc de la brique COMPTES.
+         Avantage : cela fonctionne meme quand la page est ouverte
+         directement depuis le disque (adresse « file:// »), ou le navigateur
+         interdit a une page de lire un fichier voisin.
+
+     (B) Ne rien coller : billing.js tente de telecharger ce fichier et de
+         l'inserer lui-meme. Cela ne marche que derriere un vrai serveur web.
+
+     Dans les deux cas billing.js reconnait le bloc a son identifiant
+     « apBillRoot » et ne l'ajoute jamais deux fois.
+
+     POURQUOI « data-apbt » ET PAS « data-t » NI « data-apt » ?
+     ---------------------------------------------------------
+     Trois traducteurs cohabitent dans cette page :
+        data-t    appartient a l'application d'origine ;
+        data-apt  appartient a la brique COMPTES ;
+        data-apbt appartient a la brique VENTE, c'est-a-dire a ce fichier.
+     Si deux briques partageaient le meme marqueur, celle qui passe en dernier
+     effacerait les textes de l'autre (elle ne connait pas ses cles) et vous
+     verriez des libelles vides sans comprendre pourquoi.
+        data-apbt      -> le texte de l'element
+        data-apbt-ph   -> le texte grise d'un champ de saisie (placeholder)
+
+     Les textes sont VOLONTAIREMENT VIDES ici : billing.js les remplit en
+     arabe ou en francais selon la langue de la page. Rien a traduire a la
+     main, et rien a retoucher le jour ou vous corrigez une formulation.
+
+     TOUT LE STYLE VIENT DE VOTRE APPLICATION
+     ----------------------------------------
+     .modal, .modal-in, .modal-h, .modal-b, .modal-f, .fld, .row2, .mb,
+     .mb.pri, .tbtn, .note-line : ce sont VOS classes, celles d'index.html.
+     billing.js n'ajoute qu'une poignee de classes « apb- » pour ce qui
+     n'existe pas encore (la grille de prix, la liste des membres), et elles
+     n'utilisent que vos variables de couleur. Il n'y a pas de seconde charte
+     graphique dans ce projet.
+     ========================================================================== -->
+
+<div id="apBillRoot">
+
+  <!-- ====================================================================
+       1. LA PASTILLE D'ABONNEMENT
+       billing.js la deplace tout seul dans la barre du haut (.tools), a
+       cote de la pastille de compte. Si la barre n'existe pas, elle reste
+       flottante : jamais d'ecran blanc, jamais de bouton introuvable.
+       Elle est masquee tant qu'on travaille en local (config.js vide) :
+       parler d'abonnement a quelqu'un qui n'a pas de compte n'a aucun sens.
+       ==================================================================== -->
+  <div class="apb-chip" id="apbChip" hidden>
+    <button type="button" class="tbtn apb-chip-btn" id="apbChipBtn">
+      <span class="apb-dot" id="apbDot"></span>
+      <span class="apb-chip-lbl" id="apbChipLbl"></span>
+      <span class="apb-caret">▾</span>
+    </button>
+
+    <div class="apb-menu" id="apbMenu" hidden>
+      <div class="apb-mi-head" id="apbMenuHead"></div>
+      <button type="button" class="apb-mi" data-apb-act="pricing"><span>🏷️</span><span data-apbt="menuPricing"></span></button>
+      <button type="button" class="apb-mi" data-apb-act="team"><span>👥</span><span data-apbt="menuTeam"></span></button>
+      <button type="button" class="apb-mi" data-apb-act="license"><span>🔑</span><span data-apbt="menuLicense"></span></button>
+      <div class="apb-sep" data-apb-when="owner"></div>
+      <button type="button" class="apb-mi" data-apb-act="portal" data-apb-when="owner"><span>💳</span><span data-apbt="menuPortal"></span></button>
+      <button type="button" class="apb-mi" data-apb-act="refresh"><span>🔄</span><span data-apbt="menuRefresh"></span></button>
+    </div>
+  </div>
+
+
+  <!-- ====================================================================
+       2. LE BANDEAU D'ETAT
+       Pose en haut du contenu par billing.js. Il ne s'affiche QUE s'il a
+       quelque chose d'utile a dire : fin d'essai proche, paiement en
+       retard, acces expire. Un bandeau permanent qui repete « tout va
+       bien » devient invisible au bout de deux jours, et le jour ou il
+       annonce un vrai probleme plus personne ne le lit.
+       ==================================================================== -->
+  <div class="apb-banner" id="apbBanner" hidden>
+    <span class="apb-banner-ic" id="apbBannerIc">⏳</span>
+    <div class="apb-banner-txt">
+      <b id="apbBannerTitle"></b>
+      <span id="apbBannerSub"></span>
+    </div>
+    <button type="button" class="mb pri apb-banner-go" id="apbBannerGo"></button>
+    <button type="button" class="apb-banner-x" id="apbBannerX" title="×">✕</button>
+  </div>
+
+
+  <!-- ====================================================================
+       3. LA GRILLE TARIFAIRE
+       ==================================================================== -->
+  <div class="modal apb-modal" id="apbmPricing">
+    <div class="modal-in apb-wide">
+      <div class="modal-h">
+        <h3 data-apbt="pricingTitle"></h3>
+        <button type="button" class="mb" data-apb-close="apbmPricing">✕</button>
+      </div>
+
+      <div class="modal-b">
+        <div class="note-line" id="apbPricingIntro" data-apbt="pricingIntro"></div>
+
+        <!-- Deux bascules : la periode et la monnaie. Le prix affiche change
+             tout seul ; c'est le SERVEUR qui choisira le vrai tarif Stripe
+             correspondant, jamais le navigateur. -->
+        <div class="apb-switches">
+          <div class="apb-seg" id="apbCycle" role="group">
+            <button type="button" class="apb-segb on" data-apb-cycle="mois" data-apbt="cycleMonth"></button>
+            <button type="button" class="apb-segb"    data-apb-cycle="an"   data-apbt="cycleYear"></button>
+          </div>
+          <div class="apb-seg" id="apbDevise" role="group">
+            <button type="button" class="apb-segb on" data-apb-cur="DZD">DZD</button>
+            <button type="button" class="apb-segb"    data-apb-cur="EUR">EUR</button>
+          </div>
+        </div>
+
+        <!-- Nombre de postes : ne sert qu'a la formule « par siege ». -->
+        <div class="fld apb-seats" id="apbSeatsFld" hidden>
+          <label data-apbt="seatsLabel"></label>
+          <input type="number" id="apbSeats" min="1" max="200" step="1" value="2" dir="ltr">
+          <div class="apb-hint" data-apbt="seatsHelp"></div>
+        </div>
+
+        <!-- Les cartes sont fabriquees par billing.js a partir de la
+             constante PRIX, pour qu'un changement de tarif ne se fasse qu'a
+             UN seul endroit. -->
+        <div class="apb-grid" id="apbGrid"></div>
+
+        <div class="apb-msg" id="apbPricingMsg" hidden></div>
+        <div class="note-line" data-apbt="pricingLegal"></div>
+      </div>
+
+      <div class="modal-f">
+        <button type="button" class="mb" data-apb-close="apbmPricing" data-apbt="close"></button>
+        <button type="button" class="mb" id="apbHaveKey" data-apbt="haveKey"></button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ====================================================================
+       4. SAISIE D'UNE CLE DE LICENCE
+       ==================================================================== -->
+  <div class="modal apb-modal" id="apbmLicense">
+    <div class="modal-in">
+      <div class="modal-h">
+        <h3 data-apbt="licTitle"></h3>
+        <button type="button" class="mb" data-apb-close="apbmLicense">✕</button>
+      </div>
+      <div class="modal-b">
+        <div class="note-line" data-apbt="licHelp"></div>
+        <div class="fld">
+          <label data-apbt="licKey"></label>
+          <input type="text" id="apbKey" dir="ltr" autocomplete="off" spellcheck="false"
+                 class="apb-key" data-apbt-ph="licKeyPh">
+          <div class="apb-hint" data-apbt="licFormat"></div>
+        </div>
+        <div class="apb-msg" id="apbLicMsg" hidden></div>
+        <div class="apb-card" id="apbLicCard" hidden>
+          <div class="apb-kv"><span data-apbt="licPlan"></span><b id="apbLicPlan"></b></div>
+          <div class="apb-kv"><span data-apbt="licSeats"></span><b id="apbLicSeats"></b></div>
+          <div class="apb-kv"><span data-apbt="licExpires"></span><b id="apbLicExp"></b></div>
+        </div>
+      </div>
+      <div class="modal-f">
+        <button type="button" class="mb" data-apb-close="apbmLicense" data-apbt="cancel"></button>
+        <button type="button" class="mb" id="apbLicCheck" data-apbt="licCheck"></button>
+        <button type="button" class="mb pri" id="apbLicGo" data-apbt="licActivate"></button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ====================================================================
+       5. MEMBRES DE L'EQUIPE
+       ==================================================================== -->
+  <div class="modal apb-modal" id="apbmTeam">
+    <div class="modal-in apb-wide">
+      <div class="modal-h">
+        <h3 data-apbt="teamTitle"></h3>
+        <button type="button" class="mb" data-apb-close="apbmTeam">✕</button>
+      </div>
+
+      <div class="modal-b">
+
+        <!-- Sieges payes / sieges occupes. La jauge est la premiere chose que
+             l'on voit : c'est elle qui explique un refus d'invitation. -->
+        <div class="apb-card">
+          <div class="apb-kv"><span data-apbt="seatsUsed"></span><b id="apbSeatUsed">—</b></div>
+          <div class="apb-gauge"><i id="apbGauge"></i></div>
+          <div class="apb-hint" id="apbSeatNote"></div>
+        </div>
+
+        <!-- Invitation. Le SQL impose une INVITATION : personne ne peut etre
+             inscrit de force dans une organisation. -->
+        <div class="apb-card" id="apbInviteCard">
+          <div class="apb-card-h"><b data-apbt="inviteTitle"></b></div>
+          <div class="row2">
+            <div class="fld">
+              <label data-apbt="inviteMail"></label>
+              <input type="email" id="apbInviteMail" dir="ltr" inputmode="email"
+                     autocomplete="off" data-apbt-ph="inviteMailPh">
+            </div>
+            <div class="fld">
+              <label data-apbt="inviteRole"></label>
+              <select id="apbInviteRole">
+                <option value="employee" data-apbt="roleEmployee"></option>
+                <option value="admin"    data-apbt="roleAdmin"></option>
+                <option value="viewer"   data-apbt="roleViewer"></option>
+              </select>
+            </div>
+          </div>
+          <div class="note-line" data-apbt="inviteHow"></div>
+          <div class="apb-actions">
+            <button type="button" class="mb pri" id="apbInviteGo" data-apbt="inviteSend"></button>
+          </div>
+          <div class="apb-msg" id="apbInviteMsg" hidden></div>
+        </div>
+
+        <!-- Invitations en attente -->
+        <div class="apb-card" id="apbPendingCard" hidden>
+          <div class="apb-card-h"><b data-apbt="pendingTitle"></b></div>
+          <div class="apb-list" id="apbPendingList"></div>
+        </div>
+
+        <!-- Membres actuels -->
+        <div class="apb-card">
+          <div class="apb-card-h"><b data-apbt="membersTitle"></b></div>
+          <div class="apb-list" id="apbTeamList"></div>
+          <div class="apb-hint" data-apbt="membersHelp"></div>
+        </div>
+
+        <!-- Les invitations qui me concernent MOI (recues d'une autre
+             organisation). Le SQL m'autorise a les voir par mon adresse. -->
+        <div class="apb-card" id="apbMyInvCard" hidden>
+          <div class="apb-card-h"><b data-apbt="myInvTitle"></b></div>
+          <div class="apb-list" id="apbMyInvList"></div>
+        </div>
+
+        <div class="apb-msg" id="apbTeamMsg" hidden></div>
+      </div>
+
+      <div class="modal-f">
+        <button type="button" class="mb" data-apb-close="apbmTeam" data-apbt="close"></button>
+      </div>
+    </div>
+  </div>
+
+</div>

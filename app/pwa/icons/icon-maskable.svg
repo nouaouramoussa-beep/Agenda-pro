@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Agenda Pro">
+  <!-- VERSION « MASKABLE » (decoupable).
+       Android ne montre pas l'icone telle quelle : il la decoupe selon la
+       forme choisie par le fabricant du telephone (cercle chez Samsung, carre
+       arrondi chez d'autres, goutte, hexagone...). Il ne garantit qu'une seule
+       chose : le CERCLE CENTRAL de 80 % du cote (ici un rayon de 204,8 px
+       autour du centre) ne sera jamais rogne.
+       Deux differences avec l'icone normale, et deux seulement :
+         1. le fond va d'un bord a l'autre, sans coin arrondi (c'est le
+            telephone qui arrondit) ;
+         2. le dessin est reduit a 86 % et recentre, pour tenir largement
+            dans ce cercle de securite. -->
+  <defs>
+    <linearGradient id="apFondM" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0ea5e9"/>
+      <stop offset="1" stop-color="#0284c7"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" fill="url(#apFondM)"/>
+
+  <g transform="translate(256 256) scale(.86) translate(-256 -250)">
+    <circle cx="256" cy="262" r="168" fill="none" stroke="#ffffff" stroke-opacity=".16"
+            stroke-width="10" stroke-dasharray="14 20"/>
+    <rect x="116" y="140" width="280" height="256" rx="40" fill="#ffffff"/>
+    <path d="M116 180a40 40 0 0 1 40-40h200a40 40 0 0 1 40 40v22H116z" fill="#0b7ab0"/>
+    <rect x="176" y="104" width="28" height="64" rx="14" fill="#e0f2fe"/>
+    <rect x="308" y="104" width="28" height="64" rx="14" fill="#e0f2fe"/>
+    <path d="M182 288l50 50 104-116" fill="none" stroke="#0284c7" stroke-width="34"
+          stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

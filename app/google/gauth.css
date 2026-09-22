@@ -1,0 +1,252 @@
+/* ============================================================================
+   AGENDA PRO — app/google/gauth.css
+   LES TROIS SEULS MORCEAUX D'ECRAN QUE LA BRIQUE « CONNEXION GOOGLE » POSE.
+   ----------------------------------------------------------------------------
+   1. la pastille dans la barre du haut ;
+   2. son petit menu (compte, droit en cours, deconnexion) ;
+   3. le bandeau « reconnectez-vous », en bas, qui ne bloque rien.
+
+   POURQUOI SI PEU ? Parce que cette brique ne fait qu'obtenir un laissez-passer.
+   Tout ce qui se voit de la synchronisation — l'etat des rendez-vous, la
+   progression, les conflits — appartient a la brique moteur, et doit avoir
+   l'air de venir d'un seul programme.
+
+   AUCUNE COULEUR N'EST ECRITE EN DUR. On se sert exclusivement des variables
+   de l'application (--surface, --line, --txt, --brand, --bad, --ok, --shadow,
+   --r). C'est ce qui fait que le mode sombre, et toute retouche future de la
+   charte, s'appliquent ici sans qu'on ait a y revenir.
+
+   CE FICHIER EST CHARGE PAR gauth.js, ET SEULEMENT S'IL SERT : une
+   installation sans googleClientId ne le telecharge jamais.
+
+   SENS DE LECTURE : rien ici n'utilise « left » ni « right » seuls. L'arabe
+   est la langue par defaut du produit ; on ecrit donc en proprietes logiques
+   (inset-inline, margin-inline, padding-inline), que le navigateur retourne
+   tout seul selon dir="rtl" ou dir="ltr".
+   ============================================================================ */
+
+
+/* ---------------------------------------------------------------------------
+   1. LA PASTILLE
+   Elle emprunte la classe .tbtn de l'application : meme hauteur, meme police,
+   meme coin arrondi que les boutons voisins de la barre du haut. Ce qui suit
+   ne fait qu'ajouter les trois etats qui lui sont propres.
+   --------------------------------------------------------------------------- */
+
+.ap-g-pastille {
+  max-width: 230px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: border-color .18s, color .18s;
+}
+
+/* Connecte : un liseret discret de la couleur « tout va bien ». Pas de fond
+   plein — la barre du haut en compte deja assez. */
+.ap-g-pastille.actif {
+  border-color: var(--ok);
+  color: var(--txt);
+}
+
+/* La liaison a expire. C'est le SEUL etat qui attire l'oeil, et il le fait
+   sans clignoter : un artisan qui pose une fenetre n'a pas besoin qu'on
+   agite son ecran. */
+.ap-g-pastille.alerte {
+  border-color: var(--bad);
+  color: var(--bad);
+}
+
+
+/* ---------------------------------------------------------------------------
+   2. LE MENU DE LA PASTILLE
+   Position calculee en JavaScript (gauth.js, PARTIE 10) parce qu'elle depend
+   de l'endroit ou la barre du haut a place la pastille ce jour-la.
+   --------------------------------------------------------------------------- */
+
+.ap-g-menu {
+  position: fixed;
+  z-index: 350;             /* au-dessus de la barre, sous les fenetres modales */
+  min-width: 212px;
+  max-width: 290px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r, 12px);
+  box-shadow: var(--shadow);
+}
+
+/* L'adresse du compte. Volontairement en evidence : c'est la reponse a la
+   question « est-ce que le programme ecrit dans le bon agenda ? », et
+   l'artisan doit pouvoir se la poser en un coup d'oeil.
+   « break-all » plutot qu'une coupure elegante : une adresse tronquee ne
+   rassure personne, mieux vaut qu'elle passe a la ligne. */
+.ap-g-menu-t {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--txt);
+  word-break: break-all;
+}
+
+/* Le droit en cours : « lecture seule » ou « lecture et ecriture ». Il
+   compte autant que l'adresse — c'est lui qui dit si le programme peut
+   toucher a l'agenda ou seulement le regarder. */
+.ap-g-menu-p {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--txt2);
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+}
+
+
+/* ---------------------------------------------------------------------------
+   3. LE BANDEAU « RECONNECTEZ-VOUS »
+   ---------------------------------------------------------------------------
+   IL NE BLOQUE RIEN, ET C'EST TOUT SON INTERET. Pas de voile gris, pas de
+   fenetre modale, aucun clic capture ailleurs que sur ses deux boutons :
+   l'artisan peut continuer a cocher ses documents et a taper ses notes
+   pendant que le bandeau attend. Son travail est garde en memoire par la
+   file d'ecriture (gauth.js, PARTIE 12) et repartira tout seul.
+
+   Il se place en bas, du cote du debut de ligne, la ou le regard revient
+   naturellement, et la ou il ne recouvre pas la barre du haut.
+   --------------------------------------------------------------------------- */
+
+.ap-g-bandeau {
+  position: fixed;
+  inset-inline: 16px auto;
+  bottom: 18px;
+  z-index: 400;
+  max-width: min(460px, calc(100vw - 32px));
+
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 15px;
+
+  background: var(--surface);
+  color: var(--txt);
+  border: 1px solid var(--bad);
+  border-radius: var(--r, 12px);
+  box-shadow: var(--shadow);
+
+  /* Cache par defaut : la classe « on » le fait entrer. On anime l'opacite
+     et un petit deplacement, jamais la hauteur — animer une hauteur fait
+     sauter le reste de la page. */
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease;
+}
+
+.ap-g-bandeau.on {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.ap-g-bandeau-txt {
+  flex: 1 1 200px;
+  font-size: 12.8px;
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+
+/* ---------------------------------------------------------------------------
+   LES BOUTONS DU BANDEAU ET DU MENU
+   Une seule classe pour les deux endroits : deux styles de bouton pour une
+   meme brique, c'est deja un de trop.
+   --------------------------------------------------------------------------- */
+
+.ap-g-btn {
+  flex: 0 0 auto;
+  padding: 8px 13px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--txt);
+  background: var(--surface2, var(--surface));
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+
+.ap-g-btn:hover { border-color: var(--line2); }
+
+/* Le bouton qui compte. --ink est la couleur du texte qui se pose sur la
+   couleur de marque : elle bascule avec le theme, contrairement a un blanc
+   ecrit en dur, qui deviendrait illisible en mode sombre. */
+.ap-g-btn.primaire {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--ink);
+}
+
+.ap-g-btn.primaire:hover {
+  background: var(--brand2);
+  border-color: var(--brand2);
+}
+
+/* Le clavier compte autant que la souris. Un contour visible, dans la couleur
+   de marque, sur les deux sortes de boutons. */
+.ap-g-btn:focus-visible,
+.ap-g-pastille:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+
+/* ---------------------------------------------------------------------------
+   LE TELEPHONE
+   La barre du haut disparait sous 760 px (index.html), mais le bandeau, lui,
+   doit rester : c'est sur le chantier, telephone en main, qu'une liaison
+   expire au plus mauvais moment. On le fait alors courir sur toute la largeur
+   et on empile ses boutons, pour qu'ils restent assez gros au doigt.
+   --------------------------------------------------------------------------- */
+
+@media (max-width: 760px) {
+  .ap-g-bandeau {
+    inset-inline: 12px 12px;
+    bottom: 12px;
+    max-width: none;
+  }
+  .ap-g-btn {
+    flex: 1 1 auto;
+    padding: 11px 13px;     /* 44 px de haut au doigt, comme app/pwa/pwa.js */
+  }
+}
+
+
+/* ---------------------------------------------------------------------------
+   CEUX QUI NE VEULENT PAS D'ANIMATION
+   Un reglage du systeme, pas un caprice : certaines personnes ont des
+   vertiges avec les elements qui glissent. On respecte.
+   --------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .ap-g-bandeau,
+  .ap-g-pastille,
+  .ap-g-btn {
+    transition: none;
+  }
+  .ap-g-bandeau { transform: none; }
+}
+
+
+/* ---------------------------------------------------------------------------
+   A L'IMPRESSION
+   Une feuille de route imprimee pour l'atelier ne doit pas porter un bandeau
+   d'avertissement ni une pastille de connexion.
+   --------------------------------------------------------------------------- */
+
+@media print {
+  .ap-g-bandeau,
+  .ap-g-menu,
+  .ap-g-pastille { display: none !important; }
+}
