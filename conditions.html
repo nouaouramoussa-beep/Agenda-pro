@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agenda Pro — Conditions d'utilisation</title>
+<meta name="description" content="Les conditions d'utilisation de l'application.">
+<style>
+  :root{
+    --fond:#f6f8fc; --carte:#ffffff; --encre:#1b2440; --encre2:#44507a; --encre3:#7b86ab;
+    --trait:#e3e8f4; --accent:#3b6ef5;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --fond:#0f1420; --carte:#161d2e; --encre:#e9edf8; --encre2:#b4bdd6;
+      --encre3:#7e88a6; --trait:#242d44; --accent:#6c96ff;
+    }
+  }
+  :root[data-theme="dark"]{
+    --fond:#0f1420; --carte:#161d2e; --encre:#e9edf8; --encre2:#b4bdd6;
+    --encre3:#7e88a6; --trait:#242d44; --accent:#6c96ff;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--fond); color:var(--encre);
+    font:15px/1.7 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Naskh Arabic",sans-serif;
+    padding:0 16px;
+  }
+  .page{max-width:780px; margin:0 auto; padding:34px 0 72px}
+  header{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:26px}
+  h1{font-size:clamp(22px,4.4vw,30px); margin:0; letter-spacing:-.3px}
+  .maj{color:var(--encre3); font-size:13px; margin:6px 0 0}
+  .langues{margin-inline-start:auto; display:flex; gap:6px}
+  .langues button{
+    border:1px solid var(--trait); background:var(--carte); color:var(--encre2);
+    border-radius:999px; padding:6px 15px; font:inherit; font-size:13px; font-weight:600; cursor:pointer;
+  }
+  .langues button[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:#fff}
+  .carte{
+    background:var(--carte); border:1px solid var(--trait); border-radius:16px;
+    padding:22px 24px; margin-bottom:16px;
+  }
+  .carte h2{font-size:17px; margin:0 0 12px}
+  .carte p{margin:0 0 11px; color:var(--encre2)}
+  .carte p:last-child{margin-bottom:0}
+  ul{margin:0; padding-inline-start:22px; color:var(--encre2)}
+  li{margin-bottom:8px}
+  li:last-child{margin-bottom:0}
+  .fort{color:var(--encre); font-weight:650}
+  .resume{border-inline-start:4px solid var(--accent)}
+  footer{color:var(--encre3); font-size:13px; text-align:center; margin-top:26px}
+  [lang]{display:none}
+  body[data-l="fr"] [lang="fr"]{display:revert}
+  body[data-l="ar"] [lang="ar"]{display:revert}
+  body[data-l="ar"]{direction:rtl}
+  body[data-l="fr"]{direction:ltr}
+</style>
+</head>
+<body data-l="fr">
+<div class="page">
+
+  <header>
+    <div>
+      <h1><span lang="fr">Conditions d'utilisation</span><span lang="ar">شروط الاستعمال</span></h1>
+      <p class="maj"><span lang="fr">Dernière mise à jour : 22 septembre 2026</span><span lang="ar">آخر تحديث: 22 سبتمبر 2026</span></p>
+    </div>
+    <div class="langues">
+      <button type="button" data-set="fr" aria-pressed="true">Français</button>
+      <button type="button" data-set="ar" aria-pressed="false">العربية</button>
+    </div>
+  </header>
+
+  <div class="carte resume">
+    <h2><span lang="fr">En une phrase</span><span lang="ar">في جملة واحدة</span></h2>
+    <p lang="fr">Agenda Pro est un <span class="fort">outil personnel, gratuit et sans compte</span>, qui affiche votre propre agenda Google. Vous l'utilisez tel quel, à vos risques, et vous restez seul propriétaire de vos données.</p>
+    <p lang="ar">«أجندة برو» <span class="fort">أداة شخصية، مجّانية، وبلا حساب</span>، تعرض تقويم Google الخاص بك. تستعمله كما هو وعلى مسؤوليتك، وتبقى وحدك مالك بياناتك.</p>
+  </div>
+
+  <div class="carte">
+    <h2><span lang="fr">1. Objet</span><span lang="ar">١. الغرض</span></h2>
+    <p lang="fr">Agenda Pro est un tableau de bord qui lit votre agenda Google et vous aide à suivre vos échéances : statuts, listes de documents, notes, rappels. Il ne remplace pas Google Agenda, il s'appuie dessus.</p>
+    <p lang="ar">«أجندة برو» لوحة قيادة تقرأ تقويم Google وتساعدك على متابعة استحقاقاتك: الحالات، قوائم الوثائق، الملاحظات، التنبيهات. لا يحلّ محلّ Google Agenda بل يستند إليه.</p>
+  </div>
+
+  <div class="carte">
+    <h2><span lang="fr">2. Gratuité et absence de compte</span><span lang="ar">٢. المجّانية وانعدام الحساب</span></h2>
+    <p lang="fr">L'application est gratuite. Elle ne crée aucun compte, ne demande aucun paiement, ne comporte aucune publicité. La seule identification possible est celle de votre propre compte Google, que vous reliez vous-même et que vous pouvez délier à tout moment.</p>
+    <p lang="ar">البرنامج مجّاني. لا يُنشئ حساباً، ولا يطلب دفعاً، ولا يحمل إعلانات. والتعريف الوحيد الممكن هو حسابك في Google، تربطه أنت بنفسك، ويمكنك فكّه متى شئت.</p>
+  </div>
+
+  <div class="carte">
+    <h2><span lang="fr">3. Vos données vous appartiennent</span><span lang="ar">٣. بياناتك ملكك</span></h2>
+    <p lang="fr">L'application n'a pas de serveur. Vos rendez-vous restent chez Google, vos annotations restent sur votre appareil. Le détail figure dans les <span class="fort">règles de confidentialité</span>, qui font partie des présentes conditions.</p>
+    <p lang="fr">Vous pouvez à tout moment exporter vos données, effacer les données locales, ou retirer l'accès accordé à l'application depuis les autorisations de votre compte Google.</p>
+    <p lang="ar">لا خادم لهذا البرنامج. مواعيدك تبقى عند Google، وملاحظاتك تبقى على جهازك. والتفصيل في <span class="fort">سياسة الخصوصية</span>، وهي جزء من هذه الشروط.</p>
+    <p lang="ar">ويمكنك في أي وقت تصدير بياناتك، أو محو البيانات المحلّية، أو سحب الإذن الممنوح للبرنامج من أذونات حسابك في Google.</p>
+  </div>
+
+  <div class="carte">
+    <h2><span lang="fr">4. Ce que vous acceptez de ne pas faire</span><span lang="ar">٤. ما تلتزم بعدم فعله</span></h2>
+    <ul lang="fr">
+      <li>Utiliser l'application pour accéder à l'agenda d'une personne sans son accord.</li>
+      <li>Tenter de contourner les limites d'usage des services de Google, ou en faire un usage automatisé abusif.</li>
+      <li>Vous servir de l'application à des fins illicites.</li>
+    </ul>
+    <ul lang="ar">
+      <li>استعمال البرنامج للوصول إلى تقويم شخص آخر بغير إذنه.</li>
+      <li>محاولة الالتفاف على حدود استعمال خدمات Google، أو استعمالها آلياً استعمالاً مفرطاً.</li>
+      <li>استعمال البرنامج لغرض غير مشروع.</li>
+    </ul>
+  </div>
+
+  <div class="carte">
+    <h2><span lang="fr">5. Fourni tel quel</span><span lang="ar">٥. يُقدَّم كما هو</span></h2>
+    <p lang="fr">L'application est fournie <span class="fort">telle quelle</span>, sans garantie d'aucune sorte. Elle peut comporter des erreurs, devenir indisponible, ou cesser de fonctionner si Google modifie ses services. Elle ne remplace ni un conseil juridique, ni un conseil comptable, ni un avis médical : les listes de documents qu'elle propose sont des aide-mémoire, pas des textes officiels.</p>
+    <p lang="fr"><span class="fort">Vérifiez toujours une échéance importante auprès de l'organisme concerné.</span> La responsabilité de l'auteur ne saurait être engagée pour un rendez-vous manqué, une donnée perdue ou un dommage indirect.</p>
+    <p lang="ar">يُقدَّم البرنامج <span class="fort">كما هو</span>، بلا ضمان من أي نوع. وقد يحتوي أخطاءً، أو ينقطع، أو يتوقّف عن العمل إن غيّرت Google خدماتها. وهو لا يحلّ محلّ استشارة قانونية ولا محاسبية ولا طبية: قوائم الوثائق فيه مذكّرات، لا نصوص رسمية.</p>
+    <p lang="ar"><span class="fort">تحقّق دائماً من أي استحقاق مهمّ لدى الجهة المعنية.</span> ولا تُحمَّل مسؤولية كاتب البرنامج عن موعد فائت، أو بيانات ضائعة، أو ضرر غير مباشر.</p>
+  </div>
+
+  <div class="carte">
+    <h2><span lang="fr">6. Services de Google</span><span lang="ar">٦. خدمات Google</span></h2>
+    <p lang="fr">L'application s'appuie sur Google Agenda. Votre usage de ces services reste soumis aux conditions de Google. L'application respecte les <span class="fort">Règles relatives aux données utilisateur des services d'API Google</span>, y compris les exigences d'utilisation limitée.</p>
+    <p lang="ar">يستند البرنامج إلى Google Agenda. ويبقى استعمالك لتلك الخدمات خاضعاً لشروط Google. ويلتزم البرنامج <span class="fort">قواعد بيانات المستخدمين لخدمات واجهات Google</span>، بما فيها شروط الاستعمال المحدود.</p>
+  </div>
+
+  <div class="carte">
+    <h2><span lang="fr">7. Évolution de ces conditions</span><span lang="ar">٧. تطوّر هذه الشروط</span></h2>
+    <p lang="fr">Ces conditions peuvent être modifiées. Toute version nouvelle est publiée sur cette page, avec sa date. Continuer à utiliser l'application après une modification vaut acceptation.</p>
+    <p lang="ar">قد تُعدَّل هذه الشروط. وكل نسخة جديدة تُنشر في هذه الصفحة مؤرّخة. والاستمرار في استعمال البرنامج بعد التعديل قبولٌ به.</p>
+  </div>
+
+  <footer>
+    <span lang="fr">Agenda Pro — tableau de bord personnel</span>
+    <span lang="ar">أجندة برو — لوحة قيادة شخصية</span>
+  </footer>
+
+</div>
+<script>
+  (function(){
+    var corps = document.body;
+    var boutons = document.querySelectorAll('.langues button');
+    function poser(l){
+      corps.dataset.l = l;
+      document.documentElement.lang = l;
+      document.documentElement.dir = (l === 'ar') ? 'rtl' : 'ltr';
+      for (var i = 0; i < boutons.length; i++) {
+        boutons[i].setAttribute('aria-pressed', boutons[i].dataset.set === l ? 'true' : 'false');
+      }
+      try { localStorage.setItem('ap_langue_doc', l); } catch (e) {}
+    }
+    for (var i = 0; i < boutons.length; i++) {
+      boutons[i].addEventListener('click', function(){ poser(this.dataset.set); });
+    }
+    var depart = 'fr';
+    try {
+      var garde = localStorage.getItem('ap_langue_doc');
+      depart = garde ? garde : ((navigator.language || '').slice(0,2) === 'ar' ? 'ar' : 'fr');
+    } catch (e) {}
+    poser(depart === 'ar' ? 'ar' : 'fr');
+  })();
+</script>
+</body>
+</html>

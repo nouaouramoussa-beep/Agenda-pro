@@ -55,6 +55,11 @@ window.AP_CONFIG = {
      Supabase > Authentication > URL Configuration > Redirect URLs,
      sinon Supabase refusera de renvoyer l'utilisateur chez vous.
      Laisse vide, on retombe sur l'adresse de la page en cours. */
+  /* LAISSEE VIDE VOLONTAIREMENT. Les trois briques qui la lisent retombent
+     toutes sur location.origin + location.pathname, c'est-a-dire exactement
+     la meme adresse, calculee au moment ou la page s'ouvre. L'ecrire ici
+     n'apporterait rien et publierait le nom de l'artisan dans un fichier
+     mis en ligne. */
   siteUrl: '',
 
   /* Google Cloud Console > Identifiants > ID client OAuth 2.0.
@@ -63,5 +68,5 @@ window.AP_CONFIG = {
      cote le « client secret ». Cette valeur-ci n'est utile qu'a la brique
      SYNCHRONISATION (pour demander l'acces a l'agenda). La brique COMPTES
      fonctionne sans elle. */
-  googleClientId: ''
+  googleClientId: '600479837599-dlefudbicp4vc18nrn149hrck7rm7q01.apps.googleusercontent.com'
 };

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agenda Pro — Confidentialité</title>
+<meta name="description" content="Ce que l'application fait, et ne fait pas, de vos données.">
+<style>
+  :root{
+    --fond:#f6f8fc; --carte:#ffffff; --encre:#1b2440; --encre2:#44507a; --encre3:#7b86ab;
+    --trait:#e3e8f4; --accent:#3b6ef5; --ok:#16a34a; --non:#dc2626;
+  }
+  :root:not([data-theme="light"]){
+    @media (prefers-color-scheme: dark){
+      :root{ --fond:#0f1420; --carte:#161d2e; --encre:#e9edf8; --encre2:#b4bdd6;
+             --encre3:#7e88a6; --trait:#242d44; --accent:#6c96ff; }
+    }
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --fond:#0f1420; --carte:#161d2e; --encre:#e9edf8; --encre2:#b4bdd6;
+      --encre3:#7e88a6; --trait:#242d44; --accent:#6c96ff;
+    }
+  }
+  :root[data-theme="dark"]{
+    --fond:#0f1420; --carte:#161d2e; --encre:#e9edf8; --encre2:#b4bdd6;
+    --encre3:#7e88a6; --trait:#242d44; --accent:#6c96ff;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--fond); color:var(--encre);
+    font:15px/1.7 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Naskh Arabic",sans-serif;
+    padding:0 16px;
+  }
+  .page{max-width:780px; margin:0 auto; padding:34px 0 72px}
+  header{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:26px}
+  h1{font-size:clamp(22px,4.4vw,30px); margin:0; letter-spacing:-.3px}
+  .maj{color:var(--encre3); font-size:13px; margin:6px 0 0}
+  .langues{margin-inline-start:auto; display:flex; gap:6px}
+  .langues button{
+    border:1px solid var(--trait); background:var(--carte); color:var(--encre2);
+    border-radius:999px; padding:6px 15px; font:inherit; font-size:13px; font-weight:600; cursor:pointer;
+  }
+  .langues button[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:#fff}
+  .carte{
+    background:var(--carte); border:1px solid var(--trait); border-radius:16px;
+    padding:22px 24px; margin-bottom:16px;
+  }
+  .carte h2{font-size:17px; margin:0 0 12px; display:flex; align-items:center; gap:9px}
+  .carte p{margin:0 0 11px; color:var(--encre2)}
+  .carte p:last-child{margin-bottom:0}
+  ul{margin:0; padding-inline-start:22px; color:var(--encre2)}
+  li{margin-bottom:8px}
+  li:last-child{margin-bottom:0}
+  .fort{color:var(--encre); font-weight:650}
+  .resume{border-inline-start:4px solid var(--accent)}
+  .oui::before{content:"✅"; margin-inline-end:8px}
+  .non::before{content:"🚫"; margin-inline-end:8px}
+  table{width:100%; border-collapse:collapse; font-size:14px}
+  th,td{text-align:start; padding:9px 10px; border-bottom:1px solid var(--trait); vertical-align:top}
+  th{color:var(--encre3); font-size:12px; text-transform:uppercase; letter-spacing:.4px; font-weight:700}
+  td:first-child{color:var(--encre); font-weight:600; white-space:nowrap}
+  code{background:var(--fond); border:1px solid var(--trait); border-radius:6px; padding:1px 6px; font-size:13px}
+  footer{color:var(--encre3); font-size:13px; text-align:center; margin-top:26px}
+  [lang]{display:none}
+  body[data-l="fr"] [lang="fr"]{display:revert}
+  body[data-l="ar"] [lang="ar"]{display:revert}
+  body[data-l="ar"]{direction:rtl}
+  body[data-l="fr"]{direction:ltr}
+</style>
+</head>
+<body data-l="fr">
+<div class="page">
+
+  <header>
+    <div>
+      <h1><span lang="fr">Confidentialité</span><span lang="ar">سياسة الخصوصية</span></h1>
+      <p class="maj"><span lang="fr">Dernière mise à jour : 22 septembre 2026</span><span lang="ar">آخر تحديث: 22 سبتمبر 2026</span></p>
+    </div>
+    <div class="langues">
+      <button type="button" data-set="fr" aria-pressed="true">Français</button>
+      <button type="button" data-set="ar" aria-pressed="false">العربية</button>
+    </div>
+  </header>
+
+  <div class="carte resume">
+    <h2><span lang="fr">En une phrase</span><span lang="ar">في جملة واحدة</span></h2>
+    <p lang="fr"><span class="fort">Agenda Pro n'a pas de serveur.</span> L'application s'exécute entièrement dans votre navigateur. Vos rendez-vous restent dans votre agenda Google, vos annotations restent sur votre appareil. Personne d'autre que vous n'y a accès — pas même l'auteur de l'application.</p>
+    <p lang="ar"><span class="fort">«أجندة برو» لا خادم له.</span> يعمل البرنامج كلّه داخل متصفّحك. مواعيدك تبقى في تقويم Google الخاص بك، وملاحظاتك تبقى على جهازك. لا أحد غيرك يصل إليها — ولا حتى كاتب البرنامج.</p>
+  </div>
+
+  <div class="carte">
+    <h2><span lang="fr">Ce que l'application lit et écrit dans Google Agenda</span><span lang="ar">ما يقرؤه البرنامج ويكتبه في Google Agenda</span></h2>
+    <p lang="fr">Après votre autorisation explicite, l'application demande les permissions suivantes, et rien d'autre :</p>
+    <p lang="ar">بعد إذنك الصريح، يطلب البرنامج الصلاحيات التالية، ولا شيء غيرها:</p>
+    <table>
+      <thead>
+        <tr>
+          <th><span lang="fr">Permission</span><span lang="ar">الصلاحية</span></th>
+          <th><span lang="fr">À quoi elle sert ici</span><span lang="ar">لماذا</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>calendar.readonly</code></td>
+          <td><span lang="fr">Afficher la liste de vos agendas, pour que vous choisissiez lesquels suivre.</span><span lang="ar">عرض قائمة تقاويمك لتختار ما تتابعه منها.</span></td>
+        </tr>
+        <tr>
+          <td><code>calendar.events.readonly</code></td>
+          <td><span lang="fr">Lire vos rendez-vous pour les afficher dans le tableau de bord.</span><span lang="ar">قراءة مواعيدك لعرضها في اللوحة.</span></td>
+        </tr>
+        <tr>
+          <td><code>calendar.events</code></td>
+          <td><span lang="fr">Enregistrer <span class="fort">uniquement</span> vos annotations (statut, notes, cases cochées) dans un tiroir privé de l'événement, afin de les retrouver sur vos autres appareils.</span><span lang="ar">حفظ <span class="fort">ملاحظاتك وحدها</span> (الحالة، الملاحظات، التأشيرات) في درج خاص داخل الموعد، لتجدها على أجهزتك الأخرى.</span></td>
+        </tr>
+        <tr>
+          <td><code>userinfo.email</code></td>
+          <td><span lang="fr">Afficher quel compte est relié, pour que vous le vérifiiez d'un coup d'œil.</span><span lang="ar">عرض الحساب المرتبط لتتأكّد منه بنظرة.</span></td>
+        </tr>
+        <tr>
+          <td><code>drive.appdata</code></td>
+          <td><span lang="fr">Ranger vos réglages dans un dossier caché de votre propre Drive, invisible aux autres applications. Facultatif.</span><span lang="ar">حفظ إعداداتك في مجلّد مخفي داخل Drive الخاص بك، لا تراه التطبيقات الأخرى. اختياري.</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <p lang="fr" style="margin-top:14px"><span class="fort">Règle d'écriture stricte, appliquée dans le code :</span> sur un rendez-vous qui existe déjà, l'application n'a le droit de modifier <span class="fort">qu'un seul champ</span> — le tiroir d'annotations qui lui appartient. Le titre, l'heure, la description, le lieu, les invités et les rappels que vous avez écrits vous-même ne sont jamais touchés. Toute tentative d'écrire ailleurs est refusée par le programme lui-même.</p>
+    <p lang="ar" style="margin-top:14px"><span class="fort">قاعدة كتابة صارمة، مطبَّقة في الشيفرة:</span> على موعد موجود سلفاً، لا يحقّ للبرنامج تعديل <span class="fort">إلا خانة واحدة</span> — درج الملاحظات الذي يخصّه. أمّا العنوان والوقت والوصف والمكان والمدعوّون والتنبيهات التي كتبتَها أنت، فلا تُمسّ أبداً. وأي محاولة للكتابة في غيرها يرفضها البرنامج نفسه.</p>
+  </div>
+
+  <div class="carte">
+    <h2><span lang="fr">Où vivent vos données</span><span lang="ar">أين تعيش بياناتك</span></h2>
+    <ul lang="fr">
+      <li><span class="fort">Vos rendez-vous</span> : chez Google, dans votre agenda. L'application en garde une copie de travail dans la mémoire de votre navigateur pour fonctionner hors connexion.</li>
+      <li><span class="fort">Vos statuts, notes, cases cochées et tâches ajoutées</span> : dans le stockage local de votre navigateur, sur cet appareil. Si vous avez relié Google, ils voyagent aussi dans le tiroir privé des événements, pour se retrouver sur vos autres appareils.</li>
+      <li><span class="fort">Le jeton d'accès Google</span> : en mémoire vive uniquement, le temps de la session. Il n'est jamais écrit sur le disque, jamais dans le stockage local. Fermer l'onglet l'efface.</li>
+      <li><span class="fort">Votre mot de passe principal</span>, si vous en posez un : il ne quitte jamais l'appareil et n'est stocké nulle part. Seule une empreinte irréversible l'est, et la clé qui en dérive chiffre vos données locales en AES-256.</li>
+    </ul>
+    <ul lang="ar">
+      <li><span class="fort">مواعيدك</span>: عند Google، في تقويمك. ويحتفظ البرنامج بنسخة عمل في ذاكرة متصفّحك ليشتغل بلا إنترنت.</li>
+      <li><span class="fort">حالاتك وملاحظاتك وتأشيراتك ومهامك المضافة</span>: في التخزين المحلّي لمتصفّحك، على هذا الجهاز. وإن ربطتَ Google، تسافر أيضاً في الدرج الخاص داخل المواعيد لتجدها على أجهزتك الأخرى.</li>
+      <li><span class="fort">رمز الدخول إلى Google</span>: في الذاكرة الحيّة فقط، ما دامت الجلسة. لا يُكتب على القرص أبداً ولا في التخزين المحلّي. وإغلاق النافذة يمحوه.</li>
+      <li><span class="fort">كلمة السرّ الرئيسية</span>، إن وضعتَ واحدة: لا تغادر الجهاز ولا تُخزَّن في أي مكان. يُخزَّن منها أثر لا يمكن عكسه فقط، والمفتاح المشتقّ منها يُعمّي بياناتك المحلّية بمعيار AES-256.</li>
+    </ul>
+  </div>
+
+  <div class="carte">
+    <h2><span lang="fr">Ce que l'application ne fait pas</span><span lang="ar">ما لا يفعله البرنامج</span></h2>
+    <ul lang="fr">
+      <li class="non">Aucun serveur ne reçoit vos rendez-vous. Il n'y a pas de base de données derrière cette application.</li>
+      <li class="non">Aucune publicité, aucun traceur, aucune mesure d'audience.</li>
+      <li class="non">Aucune donnée n'est vendue, louée, partagée ou transmise à un tiers.</li>
+      <li class="non">Aucun profilage, aucune décision automatisée vous concernant.</li>
+      <li class="non">Aucune donnée de votre agenda n'est utilisée pour entraîner un modèle d'intelligence artificielle.</li>
+    </ul>
+    <ul lang="ar">
+      <li class="non">لا خادم يستقبل مواعيدك. لا توجد قاعدة بيانات خلف هذا البرنامج.</li>
+      <li class="non">لا إعلانات ولا متعقّبات ولا قياس زيارات.</li>
+      <li class="non">لا تُباع بياناتك ولا تُؤجَّر ولا تُشارَك ولا تُرسَل إلى أي طرف ثالث.</li>
+      <li class="non">لا تنميط لك ولا قرارات آلية بشأنك.</li>
+      <li class="non">لا يُستعمل شيء من تقويمك لتدريب أي نموذج ذكاء اصطناعي.</li>
+    </ul>
+  </div>
+
+  <div class="carte">
+    <h2><span lang="fr">Les deux seuls services extérieurs</span><span lang="ar">الخدمتان الخارجيتان الوحيدتان</span></h2>
+    <ul lang="fr">
+      <li><span class="fort">La météo</span> — les coordonnées d'une ville sont envoyées à un service météo public. Aucune donnée personnelle, aucun compte, aucun identifiant.</li>
+      <li><span class="fort">Le conseil du jour</span> — facultatif, désactivé tant que vous n'avez pas saisi votre propre clé. Si vous l'activez, un court résumé de vos échéances proches part vers le service d'intelligence artificielle de Google, sous votre propre clé. Ne l'activez pas si ce résumé vous paraît sensible. Votre clé reste sur votre appareil.</li>
+    </ul>
+    <ul lang="ar">
+      <li><span class="fort">الطقس</span> — تُرسَل إحداثيات مدينة إلى خدمة طقس عمومية. لا بيانات شخصية ولا حساب ولا معرّف.</li>
+      <li><span class="fort">نصيحة اليوم</span> — اختيارية، ومعطَّلة ما لم تُدخل مفتاحك أنت. وإن فعّلتَها، يُرسَل ملخّص قصير لمواعيدك القريبة إلى خدمة الذكاء الاصطناعي من Google، بمفتاحك الخاص. لا تفعّلها إن رأيتَ في هذا الملخّص حساسية. ومفتاحك يبقى على جهازك.</li>
+    </ul>
+  </div>
+
+  <div class="carte">
+    <h2><span lang="fr">Reprendre la main, à tout moment</span><span lang="ar">استرجاع زمام الأمر، في أي وقت</span></h2>
+    <ul lang="fr">
+      <li class="oui"><span class="fort">Couper l'accès à Google</span> : rendez-vous sur la page des autorisations de votre compte Google et retirez l'accès accordé à cette application. L'effet est immédiat et définitif.</li>
+      <li class="oui"><span class="fort">Effacer les données locales</span> : videz les données de site de votre navigateur pour cette page, ou utilisez le bouton de réinitialisation dans les réglages de l'application.</li>
+      <li class="oui"><span class="fort">Emporter vos données</span> : l'application exporte tout ce qu'elle détient dans un fichier que vous gardez.</li>
+      <li class="oui"><span class="fort">Effacer les annotations chez Google</span> : supprimer l'événement, ou retirer le tiroir d'annotations depuis l'application.</li>
+    </ul>
+    <ul lang="ar">
+      <li class="oui"><span class="fort">قطع الوصول إلى Google</span>: ادخل إلى صفحة أذونات حسابك في Google واسحب الإذن الممنوح لهذا البرنامج. الأثر فوري ونهائي.</li>
+      <li class="oui"><span class="fort">محو البيانات المحلّية</span>: امسح بيانات الموقع من متصفّحك لهذه الصفحة، أو استعمل زرّ التصفير في إعدادات البرنامج.</li>
+      <li class="oui"><span class="fort">أخذ بياناتك معك</span>: يُصدّر البرنامج كل ما لديه في ملفّ تحتفظ به أنت.</li>
+      <li class="oui"><span class="fort">محو الملاحظات عند Google</span>: بحذف الموعد، أو بإزالة درج الملاحظات من داخل البرنامج.</li>
+    </ul>
+  </div>
+
+  <div class="carte">
+    <h2><span lang="fr">Portée de ce document</span><span lang="ar">نطاق هذه الوثيقة</span></h2>
+    <p lang="fr">Agenda Pro est un outil personnel, utilisé par son auteur pour organiser son propre travail. Il n'est pas un service commercial, ne crée aucun compte utilisateur et ne collecte rien à des fins statistiques. L'usage des données de Google Agenda par cette application respecte les <span class="fort">Règles relatives aux données utilisateur des services d'API Google</span>, y compris les exigences d'utilisation limitée.</p>
+    <p lang="fr">Toute modification de ce document sera publiée sur cette même page, avec sa date.</p>
+    <p lang="ar">«أجندة برو» أداة شخصية يستعملها كاتبها لتنظيم عمله. ليست خدمة تجارية، ولا تُنشئ حسابات مستخدمين، ولا تجمع شيئاً لأغراض إحصائية. واستعمالُها بياناتِ Google Agenda يلتزم <span class="fort">قواعد بيانات المستخدمين لخدمات واجهات Google</span>، بما فيها شروط الاستعمال المحدود.</p>
+    <p lang="ar">وأي تعديل على هذه الوثيقة يُنشر في هذه الصفحة نفسها، مؤرّخاً.</p>
+  </div>
+
+  <footer>
+    <span lang="fr">Agenda Pro — tableau de bord personnel</span>
+    <span lang="ar">أجندة برو — لوحة قيادة شخصية</span>
+  </footer>
+
+</div>
+<script>
+  (function(){
+    var corps = document.body;
+    var boutons = document.querySelectorAll('.langues button');
+    function poser(l){
+      corps.dataset.l = l;
+      document.documentElement.lang = l;
+      document.documentElement.dir = (l === 'ar') ? 'rtl' : 'ltr';
+      for (var i = 0; i < boutons.length; i++) {
+        boutons[i].setAttribute('aria-pressed', boutons[i].dataset.set === l ? 'true' : 'false');
+      }
+      try { localStorage.setItem('ap_langue_doc', l); } catch (e) {}
+    }
+    for (var i = 0; i < boutons.length; i++) {
+      boutons[i].addEventListener('click', function(){ poser(this.dataset.set); });
+    }
+    var depart = 'fr';
+    try {
+      var garde = localStorage.getItem('ap_langue_doc');
+      depart = garde ? garde : ((navigator.language || '').slice(0,2) === 'ar' ? 'ar' : 'fr');
+    } catch (e) {}
+    poser(depart === 'ar' ? 'ar' : 'fr');
+  })();
+</script>
+</body>
+</html>
