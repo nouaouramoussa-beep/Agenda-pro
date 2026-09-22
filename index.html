@@ -61,7 +61,11 @@ button{cursor:pointer;border:none;background:none}
    centre de l'anneau est décalé d'autant au lieu d'être à 50%. */
 .wrap.ring{--rr:clamp(196px,25vw,290px);--n:5;--mainsH:0px;
   display:block;position:relative;
-  height:calc(var(--mainsH) + var(--rr)*2 + 200px)}
+  /* min-height et non height : si le contenu depasse la formule, la page
+     s allonge au lieu de le rogner. C etait la source du grand vide blanc
+     ET des bulles coupees. */
+  min-height:calc(var(--mainsH) + var(--rr)*2 + 200px);
+  padding-bottom:0}
 .wrap.ring .ring-node{position:absolute;
   top:calc(var(--mainsH) + var(--rr) + 100px);left:50%;
   transform:translate(-50%,-50%) rotate(calc(var(--i) * (360deg / var(--n)))) translateY(calc(-1 * var(--rr))) rotate(calc(var(--i) * (-360deg / var(--n))));
@@ -101,7 +105,11 @@ button{cursor:pointer;border:none;background:none}
 .wrap.ring .board.closed .board-orb::after{content:"›";font-size:26px;color:var(--txt3);line-height:1}
 html[dir="rtl"] .wrap.ring .board.closed .board-orb::after{content:"‹"}
 .wrap.ring .board.closed .board-orb:hover{transform:translateY(-3px);border-color:var(--brand)}
-.pan-orb.ctr{width:284px;height:284px;gap:4px;padding:30px 34px;background:radial-gradient(circle at 50% 22%,var(--brandSoft),var(--surface) 62%)}
+/* Hauteur figee = texte tranche net par le bord rond des que la salutation,
+   la meteo et le conseil du jour depassent. Elle suit desormais son contenu,
+   et retrecit avec l ecran. */
+.pan-orb.ctr{width:min(284px,78vw);height:auto;min-height:min(284px,78vw);aspect-ratio:1;
+             gap:4px;padding:30px 34px;background:radial-gradient(circle at 50% 22%,var(--brandSoft),var(--surface) 62%)}
 .pan-orb.ctr .po-ic{font-size:26px}
 .pan-orb.ctr .po-g{font-size:13.5px;font-weight:700;color:var(--txt);line-height:1.3}
 .pan-orb.ctr .po-w{font-size:11.8px;font-weight:700;color:var(--txt2);font-family:var(--ff-fr);white-space:nowrap}
@@ -115,6 +123,10 @@ html[dir="rtl"] .wrap.ring .board.closed .board-orb::after{content:"‹"}
 @keyframes grow{from{opacity:0;transform:translateY(-7px)}}
 
 /* ---------- TOPBAR ---------- */
+/* Quand le programme fait defiler vers une carte, le navigateur amene son
+   haut a zero — c est-a-dire DERRIERE la barre collante. D ou « la moitie
+   disparait ». --tbH porte la hauteur reelle de la barre, mesuree en JS. */
+html{scroll-padding-top:calc(var(--tbH,150px) + 16px)}
 .topbar{
   position:sticky;top:0;z-index:60;
   background:color-mix(in srgb,var(--surface) 88%,transparent);
@@ -130,6 +142,17 @@ html[dir="rtl"] .wrap.ring .board.closed .board-orb::after{content:"‹"}
 .brand h1{margin:0;font-size:18px;font-weight:700;letter-spacing:-.2px}
 .brand p{margin:2px 0 0;font-size:11.5px;color:var(--txt3);font-weight:500}
 .tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+/* Sur un telephone, ces treize boutons se repliaient sur sept lignes : la
+   barre du haut occupait 335 px, soit 41 % de l ecran, EN PERMANENCE puisque
+   elle est collante. On les met sur une seule rangee que l on fait glisser du
+   doigt : la barre retombe a 127 px et rend 208 px au contenu. */
+@media(max-width:700px){
+  .tools{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none;
+         scroll-snap-type:x proximity;padding-bottom:2px;
+         -webkit-mask-image:linear-gradient(to left,transparent 0,#000 18px,#000 calc(100% - 18px),transparent 100%)}
+  .tools::-webkit-scrollbar{display:none}
+  .tools>*{flex:0 0 auto;scroll-snap-align:start}
+}
 .tbtn{
   height:38px;padding:0 13px;border-radius:12px;border:1px solid var(--line);
   background:var(--surface);color:var(--txt2);font-size:12.5px;font-weight:600;
@@ -162,7 +185,7 @@ html[dir="rtl"] .wrap.ring .board.closed .board-orb::after{content:"‹"}
 .nextup-item:hover{background:var(--brandSoft);border-color:color-mix(in srgb,var(--brand) 35%,transparent)}
 .nextup-item .when{font-size:11px;font-weight:700;color:var(--txt3);min-width:78px;font-family:var(--ff-fr)}
 .nextup-item .ttl{flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.alerts{padding:20px 22px;display:flex;flex-direction:column;gap:10px;max-height:330px;overflow:auto}
+.alerts{padding:20px 22px;display:flex;flex-direction:column;gap:10px}
 .alerts h3{margin:0 0 4px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
 .alert{
   display:flex;gap:11px;padding:12px 14px;border-radius:12px;font-size:12.8px;line-height:1.6;
@@ -257,7 +280,10 @@ select.fsel:focus,input.fdate:focus{outline:none;border-color:var(--brand)}
 
 /* ---------- BOARDS ---------- */
 .boards{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
-.board{border-radius:var(--r);border:1px solid var(--line);background:var(--surface);overflow:hidden;box-shadow:var(--shadow)}
+/* overflow:clip rogne les coins arrondis SANS faire du cadre un conteneur de
+   defilement — ce que faisait overflow:hidden, et qui empechait son en-tete
+   de rester colle pendant qu on parcourt la liste. */
+.board{border-radius:var(--r);border:1px solid var(--line);background:var(--surface);overflow:clip;box-shadow:var(--shadow)}
 .board-head{
   padding:16px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);
   background:var(--surface);position:sticky;top:0;z-index:5;
@@ -271,7 +297,9 @@ select.fsel:focus,input.fdate:focus{outline:none;border-color:var(--brand)}
   margin-inline-start:auto;padding:5px 12px;border-radius:9px;background:var(--bg2);
   font-size:12.5px;font-weight:700;font-family:var(--ff-fr);color:var(--txt2);
 }
-.board-body{padding:14px;display:flex;flex-direction:column;gap:9px;max-height:1100px;overflow:auto}
+/* Plus de plafond : la liste s allonge et c est la page qui defile. Avant,
+   au-dela de 1100 px le reste etait injoignable sur ordinateur. */
+.board-body{padding:14px;display:flex;flex-direction:column;gap:9px}
 .bucket{margin-top:8px}
 .bucket:first-child{margin-top:0}
 .bucket-t{
@@ -347,6 +375,11 @@ select.fsel:focus,input.fdate:focus{outline:none;border-color:var(--brand)}
 .mini{height:34px;padding:0 11px;border-radius:10px;border:1px solid var(--line);background:var(--surface2);font-size:12.2px;width:100%}
 .mini:focus{outline:none;border-color:var(--brand)}
 .orgv{text-transform:none;color:var(--txt2);font-weight:600}
+/* Le temoin du jour choisi : assez visible pour qu'on comprenne pourquoi la
+   liste a fondu, assez discret pour ne pas encombrer. */
+.chip.seljour{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:700}
+.chip.seljour:hover{filter:brightness(1.08)}
+.chip.seljour[hidden]{display:none}
 .ginfo{display:flex;flex-direction:column;gap:6px}
 .grow{display:flex;align-items:flex-start;gap:9px;padding:7px 11px;border-radius:10px;background:var(--surface2);border:1px solid var(--line);font-size:12.5px}
 .gic{flex-shrink:0;font-size:13px;line-height:1.35}
@@ -355,9 +388,13 @@ select.fsel:focus,input.fdate:focus{outline:none;border-color:var(--brand)}
 @media(max-width:560px){.grow{flex-wrap:wrap}.glbl{min-width:0}.gval{flex-basis:100%}}
 .desc{
   font-size:12.4px;line-height:1.85;color:var(--txt2);background:var(--surface2);border:1px solid var(--line);
-  border-radius:12px;padding:12px 14px;max-height:170px;overflow:auto;white-space:pre-wrap;
+  border-radius:12px;padding:12px 14px;white-space:pre-wrap;
 }
-.desc.collapsed{max-height:74px;-webkit-mask-image:linear-gradient(180deg,#000 45%,transparent)}
+/* Repliee, on coupe a quatre lignes — proprement, sur une ligne entiere —
+   au lieu de trancher a 74 px au milieu d un mot. Le bouton « tout afficher »
+   deplie, et la description s allonge alors sans ascenseur a elle. */
+.desc.collapsed{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;
+                -webkit-mask-image:linear-gradient(180deg,#000 45%,transparent)}
 .more{font-size:11.3px;font-weight:700;color:var(--brand2);margin-top:7px}
 .notes{
   width:100%;min-height:66px;border-radius:12px;border:1px solid var(--line);background:var(--surface2);
@@ -477,9 +514,15 @@ html[dir="rtl"] .collapsed .p-tog{transform:rotate(90deg)}
 @keyframes bob{50%{transform:translateY(-4px)}}
 .orb-cap{margin-top:12px;font-size:12.5px;font-weight:700;color:var(--txt2)}
 .orb-hint{font-size:11.5px;color:var(--txt3);margin-top:3px;text-align:center}
-.orbwrap > .p-in{width:100%;margin-top:16px;display:flex;flex-direction:column;gap:9px;max-height:300px;overflow:auto}
+/* On garde un plafond, mais relatif a l ecran et non a un chiffre fixe, et on
+   empeche le geste de fuir vers la page quand on arrive au bout. */
+.orbwrap > .p-in{width:100%;margin-top:16px;display:flex;flex-direction:column;gap:9px;
+                 max-height:min(560px,62vh);overflow:auto;overscroll-behavior:contain}
 .orbwrap.collapsed > .p-in{display:none}
-.orbwrap.collapsed{background:transparent;border:none;box-shadow:none;padding:0}
+/* La legende est posee sous le cercle en position absolue : sans cette
+   reserve, la boite s arretait au cercle et la legende mordait sur la rangee
+   suivante (contenu de 111 px dans une boite de 83 px). */
+.orbwrap.collapsed{background:transparent;border:none;box-shadow:none;padding:0 0 30px}
 .orbwrap.collapsed{position:relative}
 .orbwrap.collapsed .orb-cap{position:absolute;inset-block-start:100%;inset-inline:0;margin-top:9px;font-size:11.8px}
 .orbwrap.collapsed .orb-hint{display:none}
@@ -617,6 +660,14 @@ input[type="color"]{height:40px;padding:3px;cursor:pointer}
 .wrap:not(.ring) #pets{position:absolute;top:0;bottom:auto;right:0;left:auto;
   width:190px;height:126px;opacity:.97}
 .wrap:not(.ring){padding-block-start:152px;padding-bottom:26px}
+/* Sur un telephone, 122 px de bande vide pleine largeur pour une decoration de
+   150x99 px, ajoutes a une barre collante de 127 px, repoussaient le premier
+   rendez-vous a plus de la moitie de l ecran. On serre la bande et on range la
+   decoration dans un coin. */
+@media(max-width:700px){
+  .wrap:not(.ring){padding-block-start:64px}
+  #pets{transform:scale(.72);transform-origin:top right;opacity:.9}
+}
 #pets .grp,#pets .head{transition:transform .9s cubic-bezier(.3,.1,.2,1)}
 #pets .tail{transform-box:fill-box;transform-origin:15% 85%}
 #pets .ear{transform-box:fill-box;transform-origin:50% 6%}
@@ -696,7 +747,7 @@ input[type="color"]{height:40px;padding:3px;cursor:pointer}
     --petsW:min(176px,46vw);           /* largeur des animaux          */
     --petsH:calc(var(--petsW)*216/330);/* hauteur = ratio du viewBox   */
     display:block;position:relative;
-    height:calc(var(--mainsH) + var(--rr)*2 + var(--orbS) + 56px);
+    min-height:calc(var(--mainsH) + var(--rr)*2 + var(--orbS) + 56px);
     padding-bottom:0;
     margin-bottom:calc(var(--petsH) + 18px);  /* la bande des animaux */
   }
@@ -772,12 +823,12 @@ input[type="color"]{height:40px;padding:3px;cursor:pointer}
 }
 @media(max-width:940px){
   .wrap:not(.ring) #pets{width:150px;height:99px}
-  .wrap:not(.ring){padding-block-start:122px}
+  .wrap:not(.ring){padding-block-start:96px}
 }
 
 @media(max-width:1180px){.kpis{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:980px){
-  .toolbar{position:static}.board-body{max-height:none}
+  .toolbar{position:static}
 }
 @media(max-width:560px){
   .kpis{grid-template-columns:repeat(2,1fr)}
@@ -923,6 +974,10 @@ input[type="color"]{height:40px;padding:3px;cursor:pointer}
     <div class="p-in">
     <section class="toolbar">
     <div class="chips" id="winChips"></div>
+    <!-- Nomme le jour choisi dans la bande du calendrier, et permet de le
+         retirer. Sans lui, une journee vide donne une liste vide sans raison
+         apparente. -->
+    <button class="chip seljour" id="selDayChip" onclick="pickDay(state.selDay)" hidden></button>
     <div class="range-box" id="rangeBox">
       <input type="date" class="fdate" id="dFrom" onchange="applyCustom()">
       <span style="color:var(--txt3);font-size:12px">→</span>
@@ -2584,7 +2639,8 @@ ar:{
   routines:'إظهار الروتين', addTask:'مهمة جديدة',
   searchPh:'ابحث عن مهمة، جهة، أو كلمة مفتاحية…',
   allSubs:'كل التصنيفات', allStatus:'كل الحالات',
-  w1:'أسبوع', w2:'أسبوعان', w3:'3 أسابيع', m1:'شهر', m2:'شهران', custom:'مخصص',
+  p3:'◀ 3 أشهر', p1:'◀ شهر', w1:'أسبوع', w2:'أسبوعان', w3:'3 أسابيع',
+  m1:'شهر', m2:'شهران', m6:'6 أشهر', a1:'سنة', all:'الكل', custom:'مخصص',
   st:{pending:'معلقة',overdue:'متأخرة',done:'مكتملة',waiting:'تحت المتابعة',postponed:'مؤجلة',passed:'منقضية'},
   bk:{overdue:'متأخر — يحتاج تدخلاً عاجلاً',today:'اليوم',tomorrow:'غداً',week:'هذا الأسبوع',next:'الأسبوع القادم',later:'لاحقاً',closed:'منجزة ومؤرشفة'},
   kpi:{k1:'متأخرة تحتاج تدخلاً',k2:'المؤسسة — هذا الأسبوع',k3:'شخصية قادمة',k4:'تحت المتابعة',k5:'مكتملة هذا الشهر',k6:'روتين اليوم'},
@@ -2650,7 +2706,8 @@ fr:{
   routines:'Afficher la routine', addTask:'Nouvelle tâche',
   searchPh:'Rechercher une tâche, un organisme, un mot-clé…',
   allSubs:'Toutes les catégories', allStatus:'Tous les statuts',
-  w1:'1 semaine', w2:'2 semaines', w3:'3 semaines', m1:'1 mois', m2:'2 mois', custom:'Personnalisé',
+  p3:'◀ 3 mois', p1:'◀ 1 mois', w1:'1 semaine', w2:'2 semaines', w3:'3 semaines',
+  m1:'1 mois', m2:'2 mois', m6:'6 mois', a1:'1 an', all:'Tout', custom:'Personnalisé',
   st:{pending:'En attente',overdue:'En retard',done:'Terminée',waiting:'En suivi',postponed:'Reportée',passed:'Passée'},
   bk:{overdue:'En retard — action urgente',today:"Aujourd'hui",tomorrow:'Demain',week:'Cette semaine',next:'Semaine prochaine',later:'Plus tard',closed:'Terminées et archivées'},
   kpi:{k1:'En retard',k2:'Entreprise — cette semaine',k3:'Personnel à venir',k4:'En suivi',k5:'Terminées ce mois',k6:"Routine du jour"},
@@ -2783,10 +2840,50 @@ function prefSet(){ try{ localStorage.setItem(LS_KEY+'_pref2',JSON.stringify({la
    ============================================================================ */
 const pad = n => String(n).padStart(2,'0');
 const iso = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
-const parse = s => { const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); };
-const today = () => { const d=new Date(); d.setHours(0,0,0,0); return d; };
+/* --- La memoire des dates -------------------------------------------------
+   Quelques centaines de dates distinctes portent cinq mille rendez-vous : il
+   serait absurde de refaire le meme calcul cinq mille fois par affichage.
+   Rien ici ne change le resultat, seulement le nombre de fois qu'on le
+   calcule. Voir la note « vitesse » plus bas. */
+const _tsParDate = new Map();     /* 'AAAA-MM-JJ'  ->  minuit de ce jour, en ms */
+const _ecartParDate = new Map();  /* 'AAAA-MM-JJ'  ->  nombre de jours d'ici la */
+let _jourCourant = '';            /* la date d'aujourd'hui, pour savoir quand oublier */
+let _tsAujourdhui = 0;
+
+/* Rend minuit d'aujourd'hui, en millisecondes. Si le jour a tourne depuis le
+   dernier appel — application laissee ouverte la nuit — on oublie tous les
+   ecarts calcules la veille : « demain » doit devenir « aujourd'hui ». */
+function _minuitAujourdhui(){
+  const d = new Date(); d.setHours(0,0,0,0);
+  const cle = d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+  if(cle !== _jourCourant){ _jourCourant = cle; _tsAujourdhui = d.getTime(); _ecartParDate.clear(); }
+  return _tsAujourdhui;
+}
+
+/* Minuit du jour ecrit 'AAAA-MM-JJ', en millisecondes. Meme decoupage qu'avant. */
+function _minuitDe(s){
+  let t = _tsParDate.get(s);
+  if(t === undefined){
+    const p = String(s).split('-');
+    t = new Date(Number(p[0]), Number(p[1])-1, Number(p[2])).getTime();
+    _tsParDate.set(s, t);
+  }
+  return t;
+}
+
+/* Un objet NEUF a chaque appel, comme avant : ce que l'appelant en fait ne
+   regarde que lui. Seul le calcul est mis en reserve, jamais l'objet. */
+const parse = s => new Date(_minuitDe(s));
+const today = () => new Date(_minuitAujourdhui());
 const addDays = (d,n) => { const x=new Date(d); x.setDate(x.getDate()+n); return x; };
-const diffDays = s => Math.round((parse(s)-today())/86400000);
+const diffDays = s => {
+  let n = _ecartParDate.get(s);
+  if(n === undefined){
+    n = Math.round((_minuitDe(s) - _minuitAujourdhui())/86400000);
+    _ecartParDate.set(s, n);
+  }
+  return n;
+};
 function fmtDate(s){ const d=parse(s); const L=T[state.lang]; return d.getDate()+' '+L.months[d.getMonth()]+' '+d.getFullYear(); }
 function fmtDayName(s){ return T[state.lang].days[parse(s).getDay()]; }
 
@@ -2956,8 +3053,19 @@ function winRange(){
   const T0 = today();
   if(state.win==='custom' && state.from && state.to) return [parse(state.from), parse(state.to)];
   if(state.selDay) return [parse(state.selDay), parse(state.selDay)];
-  const n = {w1:7,w2:14,w3:21,m1:31,m2:62}[state.win] || 31;
-  return [T0, addDays(T0,n)];
+  /* Deux bornes en jours autour d aujourd'hui, et non plus une seule vers
+     l'avant. Un nombre negatif regarde en arriere : c'est tout ce qui
+     manquait pour retrouver ce qui est passe. Les anciennes cles (w1…m2)
+     gardent exactement leur sens : un reglage deja enregistre chez l'artisan
+     continue de marcher. */
+  const W = {
+    p1:[-31,0], p3:[-92,0],                       /* le passe */
+    w1:[0,7], w2:[0,14], w3:[0,21],               /* les semaines */
+    m1:[0,31], m2:[0,62], m6:[0,183], a1:[0,365], /* les mois, l'annee */
+    all:[-1095,1095]                              /* tout ce qu'on a */
+  };
+  const b = W[state.win] || W.m1;
+  return [addDays(T0,b[0]), addDays(T0,b[1])];
 }
 function visible(){
   const [A,B] = winRange();
@@ -2966,9 +3074,13 @@ function visible(){
     const st = statusOf(it);
     const d = parse(it.date);
     const inWin = d>=A && d<=B;
+    /* Quand on cherche, on cherche PARTOUT. Enfermer la recherche dans la
+       fenetre de temps revenait a cacher a l'artisan des rendez-vous qu'il
+       sait pourtant exister : sur deux ans de donnees, la plupart. */
+    const enRecherche = q.length > 0;
     /* les retards restent visibles même hors fenêtre (60 j en arrière) */
     const isLateVisible = !state.selDay && state.win!=='custom' && st==='overdue' && d>=addDays(today(),-60) && d<today();
-    if(!inWin && !isLateVisible) return false;
+    if(!enRecherche && !inWin && !isLateVisible) return false;
     if(!state.routine && it.routine && st!=='overdue') return false;
     if(state.sub!=='all' && it.sub!==state.sub) return false;
     if(state.status!=='all' && st!==state.status) return false;
@@ -2995,6 +3107,11 @@ function render(){
   renderAlerts();
   renderStrip();
   allSections().forEach(s=>{ renderBoard(s.id, vis.filter(i=>catOf(i)===s.id)); });
+  /* Mesurer sur la ligne suivante donnerait encore la mise en page d'AVANT :
+     le navigateur n'a pas encore replie les textes ni pose les images.
+     requestAnimationFrame attend qu'il l'ait fait. C'est la cause du vide
+     blanc et de l'anneau qui chevauchait les cartes. */
+  requestAnimationFrame(function(){ syncMains(); syncBarre(); });
 }
 
 /* --- KPI ---------------------------------------------------------------- */
@@ -3161,7 +3278,7 @@ function renderStrip(){
   document.getElementById('stripRange').textContent = lbl;
   const o = document.getElementById('stripRangeOrb'); if(o) o.textContent = lbl;
 }
-function pickDay(s){ state.selDay = (state.selDay===s? null : s); render(); }
+function pickDay(s){ state.selDay = (state.selDay===s ? null : s); syncUI(); render(); }
 
 /* --- Colonnes ----------------------------------------------------------- */
 function bucketOf(it){
@@ -3411,8 +3528,26 @@ function syncMains(){
   const b = document.querySelector('.boards');
   /* 26px = décalage haut des cartes, 34px = respiration avant l'anneau. */
   const h = b ? Math.round(b.getBoundingClientRect().height) : 0;
-  w.style.setProperty('--mainsH', (h ? h + 60 : 0) + 'px');
+  /* Deux garde-fous appris a l'usage :
+     — on ne laisse pas cette hauteur depasser 60 % de l'ecran, sinon la page
+       d'accueil reserve un vide enorme sous l'anneau ;
+     — une mesure faite trop tot rend zero ; on garde alors la precedente
+       plutot que d'ecraser une bonne valeur par une fausse. */
+  const plafond = Math.round(window.innerHeight * 0.6);
+  if(h > 0) w.style.setProperty('--mainsH', Math.min(h + 60, plafond) + 'px');
 }
+
+/* La hauteur REELLE de la barre du haut. Le navigateur s'en sert pour ne plus
+   amener une carte derriere elle quand il fait defiler vers elle (voir la
+   regle scroll-padding-top). Elle change avec la langue, la largeur, et selon
+   qu'on est sur l'accueil ou dans une section : on la remesure. */
+function syncBarre(){
+  const t = document.querySelector('.topbar');
+  if(!t) return;
+  const hh = Math.ceil(t.getBoundingClientRect().height);
+  if(hh > 0) document.documentElement.style.setProperty('--tbH', hh + 'px');
+}
+window.addEventListener('resize', syncBarre);
 let mainsT;
 window.addEventListener('resize', ()=>{ clearTimeout(mainsT); mainsT=setTimeout(syncMains,120); });
 /* Referme toutes les bulles et rétablit l'anneau d'accueil.
@@ -3484,7 +3619,7 @@ function applyI18n(){
   /* Version publiee : aucune extraction, donc aucune date a annoncer. */
   document.getElementById('extDate').textContent = EXTRACT_DATE ? fmtDate(EXTRACT_DATE) : '—';
   /* fenêtres */
-  document.getElementById('winChips').innerHTML = [['w1','w1'],['w2','w2'],['w3','w3'],['m1','m1'],['m2','m2'],['custom','custom']]
+  document.getElementById('winChips').innerHTML = [['p3','p3'],['p1','p1'],['w1','w1'],['w2','w2'],['w3','w3'],['m1','m1'],['m2','m2'],['m6','m6'],['a1','a1'],['all','all'],['custom','custom']]
     .map(([k,l])=>'<button class="chip'+(state.win===k?' on':'')+'" onclick="setWin(\''+k+'\')">'+t(l)+'</button>').join('');
   /* filtres */
   const fs=document.getElementById('fSub');
@@ -3499,12 +3634,20 @@ function applyI18n(){
 }
 function syncUI(){
   document.getElementById('winChips').querySelectorAll('.chip').forEach((c,i)=>{
-    const k=['w1','w2','w3','m1','m2','custom'][i]; c.classList.toggle('on', state.win===k);
+    const k=['p3','p1','w1','w2','w3','m1','m2','m6','a1','all','custom'][i]; c.classList.toggle('on', state.win===k);
   });
   document.getElementById('swRoutine').classList.toggle('on',state.routine);
   document.getElementById('fSub').value=state.sub;
   document.getElementById('fStatus').value=state.status;
   document.getElementById('rangeBox').classList.toggle('show', state.win==='custom');
+  /* Le jour choisi prime sur la periode (voir winRange) : il faut donc le
+     dire, sinon l'artisan voit « 1 mois » allume et une liste d'un seul jour,
+     parfois vide. */
+  const cj = document.getElementById('selDayChip');
+  if(cj){
+    if(state.selDay){ cj.hidden = false; cj.textContent = '📅 ' + fmtDate(state.selDay) + '  ✕'; }
+    else { cj.hidden = true; cj.textContent = ''; }
+  }
 }
 
 /* --- modales ------------------------------------------------------------ */
