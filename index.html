@@ -6,7 +6,11 @@
 <title>Agenda Pro — لوحة قيادة المهام</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
+<!-- Les polices se chargent SANS bloquer : la page se dessine avec la police
+     du systeme et bascule quand Google a repondu. Avant, rien ne s'affichait
+     tant que fonts.googleapis.com n'avait pas repondu — ou echoue. -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet"></noscript>
 <style>
 /* ============================================================
    AGENDA PRO — habillage clair, simple et moderne
@@ -89,7 +93,7 @@ button{cursor:pointer;border:none;background:none}
   border-radius:42% 58% 54% 46% / 56% 44% 56% 44%;
   flex-direction:row;justify-content:flex-start;gap:16px;padding:22px 34px;
   box-shadow:0 18px 38px -24px rgba(16,26,43,.5);
-  animation:blobWave 16s ease-in-out infinite}
+  animation:blobWave 16s ease-in-out 3}
 .wrap.ring .board[data-cat="perso"] .board-orb{animation-delay:-5.5s}
 @keyframes blobWave{
   0%,100%{border-radius:42% 58% 54% 46% / 56% 44% 56% 44%}
@@ -225,7 +229,9 @@ html{scroll-padding-top:calc(var(--tbH,150px) + 16px)}
   background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(10px);
   border:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;align-items:center;
 }
-.chips{display:flex;gap:4px;background:var(--bg2);padding:4px;border-radius:12px}
+/* flex-wrap : sur un telephone les onze periodes passent sur trois lignes au
+   lieu de deborder hors ecran, ou sept d'entre elles etaient injoignables. */
+.chips{display:flex;flex-wrap:wrap;gap:4px;background:var(--bg2);padding:4px;border-radius:12px}
 .chip{padding:7px 13px;border-radius:9px;font-size:12.2px;font-weight:600;color:var(--txt2);transition:.15s;white-space:nowrap}
 .chip:hover{color:var(--txt)}
 .chip.on{background:var(--surface);color:var(--brand2);box-shadow:0 1px 2px rgba(16,26,43,.1)}
@@ -334,7 +340,9 @@ select.fsel:focus,input.fdate:focus{outline:none;border-color:var(--brand)}
 .c-main h4{margin:0;font-size:13.8px;font-weight:600;line-height:1.45;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .c-meta{display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap}
 .tag{padding:3px 9px;border-radius:8px;font-size:10.3px;font-weight:700;border:1px solid transparent;white-space:nowrap}
-.tag.time{background:var(--surface2);border-color:var(--line);color:var(--txt3);font-family:var(--ff-fr)}
+/* unicode-bidi:plaintext — sans lui, en arabe, « 09:00–10:30 » s'affichait
+   « 10:30–09:00 » : le tiret entre deux nombres prenait le sens du paragraphe. */
+.tag.time{background:var(--surface2);border-color:var(--line);color:var(--txt3);font-family:var(--ff-fr);unicode-bidi:plaintext}
 .tag.rel{background:var(--brandSoft);color:var(--brand2)}
 .tag.rel.neg{background:color-mix(in srgb,var(--bad) 10%,var(--surface));color:#b91c1c}
 :root[data-theme="dark"] .tag.rel.neg{color:#fca5a5}
@@ -380,6 +388,13 @@ select.fsel:focus,input.fdate:focus{outline:none;border-color:var(--brand)}
 .chip.seljour{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:700}
 .chip.seljour:hover{filter:brightness(1.08)}
 .chip.seljour[hidden]{display:none}
+/* « voir la suite » : un bouton plein, en bas d'une rubrique. */
+.plus{display:block;width:100%;margin-top:6px;padding:11px;border-radius:12px;border:1px dashed var(--line2);
+      background:var(--surface2);color:var(--brand);font:inherit;font-weight:700;font-size:13px;cursor:pointer}
+.plus:hover{background:var(--brandSoft)}
+.winlbl{font-size:12.5px;color:var(--txt2);font-weight:600;padding:4px 2px 0;letter-spacing:.1px}
+.winlbl b{color:var(--ink)}
+/* le mode compact du rendu : rien de plus a dessiner */
 .ginfo{display:flex;flex-direction:column;gap:6px}
 .grow{display:flex;align-items:flex-start;gap:9px;padding:7px 11px;border-radius:10px;background:var(--surface2);border:1px solid var(--line);font-size:12.5px}
 .gic{flex-shrink:0;font-size:13px;line-height:1.35}
@@ -646,8 +661,21 @@ input[type="color"]{height:40px;padding:3px;cursor:pointer}
    une barre de défilement horizontale fantôme en LTR et rognait la queue du
    chat en RTL. */
 #pets{position:absolute;bottom:8px;right:0;left:auto;width:300px;height:196px;z-index:40;
-  pointer-events:none;filter:drop-shadow(0 14px 20px rgba(16,26,43,.16))}
+  pointer-events:none}
 #pets svg{width:100%;height:100%;overflow:visible}
+/* Les animaux jouent quelques secondes apres un geste, puis se tiennent
+   tranquilles : douze animations infinies coutaient un travail graphique
+   permanent, meme page immobile. */
+#pets.play #cat,#pets.play #dog,#pets.play #catFrontA,#pets.play #catFrontB,#pets.play #dogFrontA,#pets.play #dogFrontB,
+#pets.play #catHindA,#pets.play #dogHindA,#pets.play #catHindB,#pets.play #dogHindB,#pets.play .tail,#pets.play .ear,
+#pets.play #catHead,#pets.play #dogHead{animation-iteration-count:4}
+#pets.sleep #cat,#pets.sleep #dog{animation-iteration-count:3}
+#pets.sleep .zzz{animation-iteration-count:4}
+@media(prefers-reduced-motion:reduce){#pets *{animation:none!important}}
+/* Le flou d'arriere-plan des barres collantes se recalcule a chaque
+   defilement : on s'en passe sur telephone. */
+@media(max-width:700px){.topbar,.toolbar,[class*="bar"]{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}}
+@media(max-width:480px){.board-head{flex-wrap:wrap}}
 /* ÉTAT OUVERT — les animaux restent EN HAUT, à droite, comme voulu.
    position:absolute (et non fixed) : ils appartiennent à la colonne de
    contenu, se placent donc toujours SOUS la barre du haut quelle que soit
@@ -904,7 +932,7 @@ input[type="color"]{height:40px;padding:3px;cursor:pointer}
            « Liaison et compte » en disant pourquoi. La notice d'origine reste
            joignable en repli, au cas ou setup.js ne serait pas charge. -->
       <button class="tbtn" onclick="(window.APSetup&&APSetup.refresh)?APSetup.refresh():openModal('mHelp')">🔄 <span data-t="refresh"></span></button>
-      <button class="tbtn" onclick="exportJSON()">⬇️ JSON</button>
+      <button class="tbtn" onclick="exportJSON()">⬇️ <span data-t="exportJson"></span></button>
       <button class="tbtn" onclick="exportAllICS()">📆 <span data-t="exportIcs"></span></button>
       <button class="tbtn" onclick="window.print()">🖨️</button>
     </div>
@@ -939,9 +967,11 @@ input[type="color"]{height:40px;padding:3px;cursor:pointer}
       <h2 id="greet"></h2>
       <div class="p-in">
         <div class="wxrow"><span class="ins" id="briefWx"></span><span class="ins q" id="briefQuote"></span></div>
+        <div class="sec-t" data-t="loadTitle"></div>
         <div class="loadbar" id="loadBar"></div>
         <div class="loadleg" id="loadLeg"></div>
         <div class="insight" id="insightBox"></div>
+        <div class="sec-t" data-t="nextUpT"></div>
         <div class="nextup" id="nextUp"></div>
       </div>
     </div>
@@ -978,6 +1008,9 @@ input[type="color"]{height:40px;padding:3px;cursor:pointer}
          retirer. Sans lui, une journee vide donne une liste vide sans raison
          apparente. -->
     <button class="chip seljour" id="selDayChip" onclick="pickDay(state.selDay)" hidden></button>
+    <!-- Le mede reellement affiche, toujours ecrit en clair : « du … au … ».
+         Fini de deviner ou commence et ou finit « un mois ». -->
+    <div class="winlbl" id="winRangeLbl"></div>
     <div class="range-box" id="rangeBox">
       <input type="date" class="fdate" id="dFrom" onchange="applyCustom()">
       <span style="color:var(--txt3);font-size:12px">→</span>
@@ -985,7 +1018,7 @@ input[type="color"]{height:40px;padding:3px;cursor:pointer}
     </div>
     <div class="search">
       <span class="si">🔍</span>
-      <input type="text" id="q" oninput="state.q=this.value;render()">
+      <input type="text" id="q" oninput="chercher(this.value)">
     </div>
     <select class="fsel" id="fSub" onchange="state.sub=this.value;render()"></select>
     <select class="fsel" id="fStatus" onchange="state.status=this.value;render()"></select>
@@ -1224,8 +1257,8 @@ input[type="color"]{height:40px;padding:3px;cursor:pointer}
     </div>
     <div class="modal-f">
       <button class="mb" onclick="closeModal('mAdd')" data-t="cancel"></button>
-      <button class="mb" onclick="exportOne('ics')">⬇️ .ics</button>
-      <button class="mb" onclick="exportOne('google')">📅 Google</button>
+      <button class="mb" onclick="exportOne('ics')">⬇️ <span data-t="dlIcs"></span></button>
+      <button class="mb" onclick="exportOne('google')">📅 <span data-t="openGoogle"></span></button>
       <button class="mb pri" onclick="saveTask()" data-t="save"></button>
     </div>
   </div>
@@ -2639,8 +2672,8 @@ ar:{
   routines:'إظهار الروتين', addTask:'مهمة جديدة',
   searchPh:'ابحث عن مهمة، جهة، أو كلمة مفتاحية…',
   allSubs:'كل التصنيفات', allStatus:'كل الحالات',
-  p3:'◀ 3 أشهر', p1:'◀ شهر', w1:'أسبوع', w2:'أسبوعان', w3:'3 أسابيع',
-  m1:'شهر', m2:'شهران', m6:'6 أشهر', a1:'سنة', all:'الكل', custom:'مخصص',
+  p3:'3 أشهر ماضية', p1:'الشهر الماضي', w1:'أسبوع', w2:'أسبوعان', w3:'3 أسابيع',
+  m1:'الشهر القادم', m2:'شهران', m6:'6 أشهر', a1:'سنة', all:'الكل', custom:'مخصص',
   st:{pending:'معلقة',overdue:'متأخرة',done:'مكتملة',waiting:'تحت المتابعة',postponed:'مؤجلة',passed:'منقضية'},
   bk:{overdue:'متأخر — يحتاج تدخلاً عاجلاً',today:'اليوم',tomorrow:'غداً',week:'هذا الأسبوع',next:'الأسبوع القادم',later:'لاحقاً',closed:'منجزة ومؤرشفة'},
   kpi:{k1:'متأخرة تحتاج تدخلاً',k2:'المؤسسة — هذا الأسبوع',k3:'شخصية قادمة',k4:'تحت المتابعة',k5:'مكتملة هذا الشهر',k6:'روتين اليوم'},
@@ -2669,13 +2702,20 @@ ar:{
   days:['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'],
   daysS:['أحد','إثن','ثلا','أرب','خمي','جمع','سبت'],
   months:['جانفي','فيفري','مارس','أفريل','ماي','جوان','جويلية','أوت','سبتمبر','أكتوبر','نوفمبر','ديسمبر'],
-  inDays:n=>n===0?'اليوم':n===1?'غداً':n===-1?'أمس':n>0?'بعد '+n+' يوم':'منذ '+Math.abs(n)+' يوم',
+  inDays:n=>n===0?'اليوم':n===1?'غداً':n===-1?'أمس':n>0?'بعد '+duree(n,'j'):'منذ '+duree(Math.abs(n),'j'),
   sourceTitle:'العنوان في الأجندة',
   gInfo:'من Google Agenda', gPlace:'المكان', gRemind:'التنبيهات', gGuests:'المدعوّون',
   gFiles:'المرفقات', gUntil:'ينتهي يوم', gCal:'التقويم',
   rapPopup:'تنبيه', rapMail:'بريد', rapPile:'عند الموعد', rapAvant:'قبل %1',
-  rapU:{min:['دقيقة','دقيقتين','دقائق'], h:['ساعة','ساعتين','ساعات'], j:['يوم','يومين','أيام']},
-  cal:{fam:'العائلة', moi:'التقويم الشخصي', fer:'العطل في الجزائر'}
+  rapU:{min:['دقيقة','دقيقتين','دقائق','دقيقة'], h:['ساعة','ساعتين','ساعات','ساعة'], j:['يوم','يومين','أيام','يوماً']},
+  cal:{fam:'العائلة', moi:'التقويم الشخصي', fer:'العطل في الجزائر'},
+  plusDe:'▼ عرض المزيد (%1)', rangeLbl:'من %1 إلى %2', rangeDays:'يوماً',
+  exportJson:'حفظ نسخة احتياطية', dlIcs:'حفظ لتقويم الهاتف', openGoogle:'فتح في Google Agenda',
+  fTitleReq:'اكتب عنوان المهمة أولاً', restoreBad:'الملف غير صالح — اختر نسخة احتياطية من هذا البرنامج',
+  gemQuota:'تجاوزت الحصة اليومية — أعد المحاولة لاحقاً', gemNet:'لا اتصال بالإنترنت', rapJourA:'في يوم الموعد على الساعة',
+  delTask:'حذف', delTaskQ:'حذف هذه المهمة نهائياً؟',
+  routinesCachees:'👁 إظهار المهام الروتينية المخفية (%1)',
+  gemAuto:'اختير النموذج تلقائياً: %1', gemBadKey:'المفتاح مرفوض — تأكّد أنك نسخته كاملاً'
 },
 fr:{
   title:'Tableau de bord des tâches', sub:'Entreprise & personnel — vos rendez-vous et vos échéances au même endroit',
@@ -2706,8 +2746,8 @@ fr:{
   routines:'Afficher la routine', addTask:'Nouvelle tâche',
   searchPh:'Rechercher une tâche, un organisme, un mot-clé…',
   allSubs:'Toutes les catégories', allStatus:'Tous les statuts',
-  p3:'◀ 3 mois', p1:'◀ 1 mois', w1:'1 semaine', w2:'2 semaines', w3:'3 semaines',
-  m1:'1 mois', m2:'2 mois', m6:'6 mois', a1:'1 an', all:'Tout', custom:'Personnalisé',
+  p3:'3 mois passés', p1:'Mois passé', w1:'1 semaine', w2:'2 semaines', w3:'3 semaines',
+  m1:'Mois à venir', m2:'2 mois', m6:'6 mois', a1:'1 an', all:'Tout', custom:'Personnalisé',
   st:{pending:'En attente',overdue:'En retard',done:'Terminée',waiting:'En suivi',postponed:'Reportée',passed:'Passée'},
   bk:{overdue:'En retard — action urgente',today:"Aujourd'hui",tomorrow:'Demain',week:'Cette semaine',next:'Semaine prochaine',later:'Plus tard',closed:'Terminées et archivées'},
   kpi:{k1:'En retard',k2:'Entreprise — cette semaine',k3:'Personnel à venir',k4:'En suivi',k5:'Terminées ce mois',k6:"Routine du jour"},
@@ -2743,7 +2783,14 @@ fr:{
   gFiles:'Pièces jointes', gUntil:'Se termine le', gCal:'Agenda',
   rapPopup:'Notification', rapMail:'E-mail', rapPile:"à l'heure dite", rapAvant:'%1 avant',
   rapU:{min:['min','min','min'], h:['h','h','h'], j:['jour','jours','jours']},
-  cal:{fam:'Famille', moi:'Agenda personnel', fer:'Jours fériés en Algérie'}
+  cal:{fam:'Famille', moi:'Agenda personnel', fer:'Jours fériés en Algérie'},
+  plusDe:'▼ Voir la suite (%1)', rangeLbl:'Du %1 au %2', rangeDays:'jours',
+  exportJson:'Sauvegarde (fichier)', dlIcs:'Enregistrer pour le téléphone', openGoogle:'Ouvrir dans Google Agenda',
+  fTitleReq:"Écrivez d'abord le titre de la tâche", restoreBad:'Fichier non valide — choisissez une sauvegarde de ce programme',
+  gemQuota:'Quota du jour dépassé — réessayez plus tard', gemNet:'Pas de connexion internet', rapJourA:'le jour même à',
+  delTask:'Supprimer', delTaskQ:'Supprimer définitivement cette tâche ?',
+  routinesCachees:'👁 Afficher les routines masquées (%1)',
+  gemAuto:'Modèle choisi automatiquement : %1', gemBadKey:'Clé refusée — vérifiez qu\'elle est copiée en entier'
 }};
 const t = k => { const o=T[state.lang]; return k.split('.').reduce((a,b)=>a&&a[b],o) ?? k; };
 
@@ -2827,13 +2874,49 @@ function delSub(id){
 
 const LS_KEY = 'agendapro_v1';
 let store = {status:{}, checks:{}, notes:{}, cat:{}, custom:[], contact:{}, place:{}, sections:[], subs:[]};
-let state = {lang:'ar', theme:'light', win:'m1', from:null, to:null, q:'', sub:'all', status:'all', routine:false, open:{}, selDay:null,
-  pan:{brief:0,kpi:0,filters:0,strip:0,alerts:0,foot:0}, boards:{ent:0,perso:0}, group:{ent:'date',perso:'date'}, gopen:{}};
+let state = {lang:'ar', theme:'light', win:'m1', from:null, to:null, q:'', sub:'all', status:'all', routine:true, routineChoisi:false, open:{}, selDay:null,
+  pan:{brief:0,kpi:0,filters:0,strip:0,alerts:0,foot:0}, boards:{ent:0,perso:0}, group:{ent:'date',perso:'date'}, gopen:{},
+  /* combien de cartes on montre par rubrique ; augmente par « voir la suite ».
+     Jamais enregistre : a chaque ouverture on repart leger. */
+  more:{}};
 
 function lsGet(){ try{ const r=localStorage.getItem(LS_KEY); if(r) store=Object.assign(store,JSON.parse(r)); }catch(e){} }
-function lsSet(){ try{ localStorage.setItem(LS_KEY,JSON.stringify(store)); }catch(e){} }
-function prefGet(){ try{ const p=JSON.parse(localStorage.getItem(LS_KEY+'_pref2')||'{}'); Object.assign(state,p); }catch(e){} }
-function prefSet(){ try{ localStorage.setItem(LS_KEY+'_pref2',JSON.stringify({lang:state.lang,theme:state.theme,win:state.win,routine:state.routine,pan:state.pan,boards:state.boards,group:state.group})); }catch(e){} }
+/* Chaque geste reecrivait le magasin ENTIER — et, verrou pose, le
+   rechiffrait entierement. On regroupe : une ecriture au plus tous les
+   300 ms, et une ecriture immediate des que la page se cache ou se ferme. */
+let lsT=null;
+function lsFlush(){ clearTimeout(lsT); lsT=null; try{ localStorage.setItem(LS_KEY,JSON.stringify(store)); }catch(e){} }
+function lsSet(){ if(lsT) return; lsT=setTimeout(lsFlush,300); }
+window.addEventListener('pagehide', lsFlush);
+window.addEventListener('beforeunload', lsFlush);
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden) lsFlush(); });
+function prefGet(){
+  try{
+    const p=JSON.parse(localStorage.getItem(LS_KEY+'_pref2')||'{}');
+    /* Champ par champ, et jamais une clef inconnue : un vieux reglage
+       enregistre ne doit ni ecraser une valeur par defaut nouvelle, ni faire
+       entrer dans l'etat des objets que le programme ne connait plus. */
+    ['lang','theme','win','routine','routineChoisi'].forEach(k=>{ if(p[k]!==undefined) state[k]=p[k]; });
+    /* Un reglage « routines cachees » herite de l'ancien defaut, que l'artisan
+       n'a jamais choisi, ne doit pas survivre : on ne respecte le « cache »
+       que s'il a lui-meme touche l'interrupteur. */
+    if(!state.routineChoisi) state.routine = true;
+    const dateOk = v => typeof v==='string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
+    if(dateOk(p.from)) state.from=p.from;
+    if(dateOk(p.to))   state.to=p.to;
+    if(p.pan)    Object.keys(state.pan).forEach(k=>{ if(p.pan[k]!==undefined) state.pan[k]=p.pan[k]?1:0; });
+    /* seules les sections qui existent encore : une section supprimee
+       ailleurs ne doit pas laisser un cadre « ouvert » fantome qui empeche
+       l'anneau d'accueil de revenir */
+    if(p.boards){ const ok=new Set(allSections().map(s=>s.id)); Object.keys(p.boards).forEach(k=>{ if(ok.has(k)) state.boards[k]=p.boards[k]?1:0; }); }
+    if(p.group)  Object.keys(p.group).forEach(k=>{ if(p.group[k]==='cat'||p.group[k]==='date') state.group[k]=p.group[k]; });
+    /* un ancien nom de periode qui n'existe plus : on revient au mois */
+    if(['p3','p1','w1','w2','w3','m1','m2','m6','a1','all','custom'].indexOf(state.win)<0) state.win='m1';
+    /* « personnalise » sans ses deux dates n'a pas de sens : on revient au mois */
+    if(state.win==='custom' && !(state.from && state.to)) state.win='m1';
+  }catch(e){}
+}
+function prefSet(){ try{ localStorage.setItem(LS_KEY+'_pref2',JSON.stringify({lang:state.lang,theme:state.theme,win:state.win,from:state.from,to:state.to,routine:state.routine,routineChoisi:state.routineChoisi,pan:state.pan,boards:state.boards,group:state.group})); }catch(e){} }
 
 /* ============================================================================
    4. OUTILS DATE
@@ -2876,6 +2959,15 @@ function _minuitDe(s){
 const parse = s => new Date(_minuitDe(s));
 const today = () => new Date(_minuitAujourdhui());
 const addDays = (d,n) => { const x=new Date(d); x.setDate(x.getDate()+n); return x; };
+/* Un mois = le meme jour du mois suivant (22 septembre -> 22 octobre), pas
+   « 31 jours » qui donnait un mois et un jour. Si ce jour n'existe pas (31
+   -> fevrier), on s'arrete au dernier jour du mois vise. */
+const addMonths = (d,n) => {
+  const x=new Date(d); const jour=x.getDate();
+  x.setDate(1); x.setMonth(x.getMonth()+n);
+  const dernier=new Date(x.getFullYear(), x.getMonth()+1, 0).getDate();
+  x.setDate(Math.min(jour, dernier)); return x;
+};
 const diffDays = s => {
   let n = _ecartParDate.get(s);
   if(n === undefined){
@@ -2981,6 +3073,9 @@ function fmtRappels(rap){
     const m = Number(r && r.minutes);
     const voie = (r && r.method==='email') ? t('rapMail') : t('rapPopup');
     if(!isFinite(m)) return voie;
+    /* un rappel a heure fixe le jour meme (journee entiere) arrive en minutes
+       NEGATIVES : -540 = a 09:00 */
+    if(m<0){ const hh=String(Math.floor(-m/60)).padStart(2,'0'), mm=String((-m)%60).padStart(2,'0'); return voie+' — '+t('rapJourA')+' '+hh+':'+mm; }
     if(m===0) return voie+' — '+t('rapPile');
     if(m%1440===0) return voie+' — '+t('rapAvant').replace('%1', duree(m/1440,'j'));
     if(m%60===0)   return voie+' — '+t('rapAvant').replace('%1', duree(m/60,'h'));
@@ -2997,7 +3092,7 @@ function duree(n,u){
   if(n===1) return f[0];
   if(n===2) return f[1];
   if(n>=3 && n<=10) return n+' '+f[2];
-  return n+' '+f[0];
+  return n+' '+(f[3]||f[0]);   /* 11 et plus : singulier a l'accusatif (يوماً) */
 }
 
 function gcalLink(d){ const [y,m,dd]=d.split('-'); return 'https://calendar.google.com/calendar/u/0/r/day/'+y+'/'+Number(m)+'/'+Number(dd); }
@@ -3013,14 +3108,25 @@ function statusOf(it){
   return 'pending';
 }
 /* --- check-list --------------------------------------------------------- */
+/* Une fois une case cochee, la liste etait figee dans la langue du moment :
+   on passait en francais et les documents restaient en arabe. On retraduit
+   par la position : le libelle n° i en arabe devient le libelle n° i en
+   francais. Les lignes ajoutees a la main (absentes des deux tableaux)
+   gardent leur texte. */
+function traduireCL(it, arr){
+  const base = CL[it.sk]; if(!base || !arr) return arr||[];
+  const autre = state.lang==='ar' ? base.fr : base.ar, mienne = base[state.lang];
+  if(!autre || !mienne) return arr;
+  return arr.map(l=>{ const i = autre.indexOf(l); return (i>=0 && mienne[i]!==undefined) ? mienne[i] : l; });
+}
 function clOf(it){
-  if(store.checks[it.id] && store.checks[it.id].list) return store.checks[it.id].list;
+  if(store.checks[it.id] && store.checks[it.id].list) return traduireCL(it, store.checks[it.id].list);
   const base = CL[it.sk];
   let list = base ? base[state.lang].slice() : [];
   if(it.manual){ const c = store.custom.find(x=>x.id===it.id); if(c && c.subs) list = c.subs.slice(); }
   return list;
 }
-const clDone = it => (store.checks[it.id] && store.checks[it.id].done) || [];
+const clDone = it => traduireCL(it, (store.checks[it.id] && store.checks[it.id].done) || []);
 function setCheck(it,i,on){
   const list = clOf(it);
   const cur = store.checks[it.id] || {};
@@ -3058,14 +3164,22 @@ function winRange(){
      manquait pour retrouver ce qui est passe. Les anciennes cles (w1…m2)
      gardent exactement leur sens : un reglage deja enregistre chez l'artisan
      continue de marcher. */
-  const W = {
-    p1:[-31,0], p3:[-92,0],                       /* le passe */
-    w1:[0,7], w2:[0,14], w3:[0,21],               /* les semaines */
-    m1:[0,31], m2:[0,62], m6:[0,183], a1:[0,365], /* les mois, l'annee */
-    all:[-1095,1095]                              /* tout ce qu'on a */
-  };
-  const b = W[state.win] || W.m1;
-  return [addDays(T0,b[0]), addDays(T0,b[1])];
+  /* Les semaines se comptent en jours, les mois en MOIS : « un mois » va du
+     22 septembre au 22 octobre, ni un jour de plus ni un de moins. C'est ce
+     que l'artisan demandait : un mois, c'est un mois. */
+  const J = { w1:7, w2:14, w3:21 };
+  const M = { p1:-1, p3:-3, m1:1, m2:2, m6:6, a1:12 };
+  /* La liste inclut ses deux bornes (visible() teste d>=A && d<=B). Une
+     semaine = 7 jours = d'aujourd'hui a J+6 ; un mois = d'aujourd'hui a la
+     veille du meme jour le mois prochain. Les periodes passees s'arretent a
+     hier : aujourd'hui appartient aux periodes a venir. */
+  if(J[state.win] !== undefined) return [T0, addDays(T0, J[state.win]-1)];
+  if(M[state.win] !== undefined){
+    const n = M[state.win];
+    return n < 0 ? [addMonths(T0, n), addDays(T0,-1)] : [T0, addDays(addMonths(T0, n),-1)];
+  }
+  if(state.win === 'all') return [addMonths(T0,-36), addMonths(T0,36)];
+  return [T0, addDays(addMonths(T0, 1),-1)];
 }
 function visible(){
   const [A,B] = winRange();
@@ -3077,7 +3191,7 @@ function visible(){
     /* Quand on cherche, on cherche PARTOUT. Enfermer la recherche dans la
        fenetre de temps revenait a cacher a l'artisan des rendez-vous qu'il
        sait pourtant exister : sur deux ans de donnees, la plupart. */
-    const enRecherche = q.length > 0;
+    const enRecherche = q.length >= 2;   /* une lettre seule ne ramene pas deux ans de donnees */
     /* les retards restent visibles même hors fenêtre (60 j en arrière) */
     const isLateVisible = !state.selDay && state.win!=='custom' && st==='overdue' && d>=addDays(today(),-60) && d<today();
     if(!enRecherche && !inWin && !isLateVisible) return false;
@@ -3130,9 +3244,14 @@ function renderKPI(){
     if(it.routine && it.date===iso(T0)) k6++;
   });
   const K=[['k1',k1,'k1'],['k2',k2,'k2'],['k3',k3,'k3'],['k4',k4,'k4'],['k5',k5,'k5'],['k6',k6,'k6']];
-  const acts = {k1:"state.status='overdue';syncUI();render()",k2:"state.sub='all';state.status='all';syncUI();render()",
-                k3:"state.status='all';syncUI();render()",k4:"state.status='waiting';syncUI();render()",
-                k5:"state.status='done';syncUI();render()",k6:"state.routine=true;state.win='w1';syncUI();render()"};
+  /* Chaque indicateur ouvre le cadre qu'il compte et cale la periode sur
+     celle de son calcul ; setWin() enregistre et redessine. */
+  const acts = {k1:"state.status='overdue';syncUI();render()",
+                k2:"state.sub='all';state.status='all';state.boards.ent=1;applyPanels();setWin('w1')",
+                k3:"state.status='all';state.boards.perso=1;applyPanels();setWin('m1')",
+                k4:"state.status='waiting';syncUI();render()",
+                k5:"state.status='done';syncUI();render()",
+                k6:"state.routine=true;setWin('w1')"};
   document.getElementById('kpis').innerHTML = K.map(([cls,v,key])=>
     '<button class="kpi '+cls+'" onclick="'+acts[key]+'"><span class="bar"></span><div class="v">'+v+'</div><div class="l">'+t('kpi.'+key)+'</div></button>'
   ).join('');
@@ -3217,16 +3336,16 @@ function renderAlerts(){
     const list = clOf(it), done = clDone(it);
     if(s==='overdue' && d>=addDays(T0,-60)){
       A.push({p:0,k:'a-bad',ic:'🔴',h:state.lang==='ar'
-        ? '<b>'+nm+'</b> متأخرة منذ '+Math.abs(dd)+' يوم — سجّلها كمكتملة أو أعد برمجتها.'
-        : '<b>'+nm+'</b> en retard de '+Math.abs(dd)+' j — marquez-la terminée ou reprogrammez-la.'});
+        ? '<b>'+nm+'</b> متأخرة منذ '+duree(Math.abs(dd),'j')+' — سجّلها كمكتملة أو أعد برمجتها.'
+        : '<b>'+nm+'</b> en retard de '+duree(Math.abs(dd),'j')+' — marquez-la terminée ou reprogrammez-la.'});
     } else if(dd>=0 && dd<=2 && s!=='done'){
       A.push({p:1,k:'a-warn',ic:'⏰',h:state.lang==='ar'
         ? '<b>'+nm+'</b> '+T.ar.inDays(dd)+' ('+fmtDate(it.date)+')'+(list.length? ' — الوثائق الجاهزة: '+done.length+'/'+list.length:'')
         : '<b>'+nm+'</b> '+T.fr.inDays(dd)+' ('+fmtDate(it.date)+')'+(list.length? ' — documents prêts : '+done.length+'/'+list.length:'')});
     } else if(catOf(it)==='ent' && dd>2 && dd<=7 && s!=='done' && list.length && done.length<list.length){
       A.push({p:2,k:'a-info',ic:'📂',h:state.lang==='ar'
-        ? 'موعد <b>'+nm+'</b> بعد '+dd+' أيام — هل جهّزت الأوراق؟ ('+done.length+'/'+list.length+')'
-        : '<b>'+nm+'</b> dans '+dd+' j — les pièces sont-elles prêtes ? ('+done.length+'/'+list.length+')'});
+        ? 'موعد <b>'+nm+'</b> بعد '+duree(dd,'j')+' — هل جهّزت الأوراق؟ ('+done.length+'/'+list.length+')'
+        : '<b>'+nm+'</b> dans '+duree(dd,'j')+' — les pièces sont-elles prêtes ? ('+done.length+'/'+list.length+')'});
     } else if(s==='waiting'){
       A.push({p:3,k:'a-info',ic:'⏳',h:state.lang==='ar'
         ? '<b>'+nm+'</b> تحت المتابعة — تحقق من الرد.'
@@ -3246,15 +3365,16 @@ function renderAlerts(){
 }
 
 /* --- Bande agenda 14 jours --------------------------------------------- */
+/* La bande des jours suit EXACTEMENT la periode choisie — y compris vers le
+   passe — au lieu d'une table figee qui partait toujours d'aujourd'hui.
+   Plafond de 92 jours : au-dela, une bande n'est plus lisible. */
 function stripDays(){
-  if(state.win==='custom' && state.from && state.to){
-    const n = Math.round((parse(state.to)-parse(state.from))/86400000)+1;
-    return {from:parse(state.from), n:Math.max(1,Math.min(n,92))};
-  }
-  return {from:today(), n:({w1:7,w2:14,w3:21,m1:31,m2:62}[state.win]||31)};
+  const [A,B] = winRange();
+  const n = Math.round((B - A)/86400000) + 1;
+  return {from:A, n:Math.max(1,Math.min(n,92)), total:n};
 }
 function renderStrip(){
-  const {from,n} = stripDays(); let out='';
+  const {from,n,total} = stripDays(); let out='';
   const T0s = iso(today()), L=T[state.lang];
   let curMo = -1;
   for(let i=0;i<n;i++){
@@ -3263,7 +3383,7 @@ function renderStrip(){
       curMo = d.getMonth();
       out += '<div class="strip-mo">'+L.months[curMo]+' '+d.getFullYear()+'</div>';
     }
-    const items = TASKS.filter(x=>x.date===s && !x.routine && statusOf(x)!=='done');
+    const items = TASKS.filter(x=>x.date===s && (state.routine || !x.routine) && statusOf(x)!=='done');
     const ent = items.filter(x=>catOf(x)==='ent').length;
     const per = items.length - ent;
     const kls = !items.length ? 'none' : (per===0 ? 'ent' : ent===0 ? 'per' : 'mix');
@@ -3274,7 +3394,7 @@ function renderStrip(){
       '<span class="dq '+kls+'">'+(items.length||'·')+'</span></button>';
   }
   document.getElementById('strip').innerHTML = out;
-  const lbl = t(state.win) + ' · ' + n + (state.lang==='ar'?' يوم':' j');
+  const lbl = t(state.win) + ' · ' + duree(n,'j') + (total>n ? (state.lang==='ar' ? ' (الأولى)' : ' (premiers)') : '');
   document.getElementById('stripRange').textContent = lbl;
   const o = document.getElementById('stripRangeOrb'); if(o) o.textContent = lbl;
 }
@@ -3343,7 +3463,12 @@ function renderBoard(cat, items){
   if(on) on.textContent = items.length;
   if(!state.boards[cat] && !PRINTING){ el.innerHTML=''; return; }
   if(!items.length){
-    el.innerHTML = '<div class="empty"><span class="e-ic">🗂️</span>'+t('empty')+'<br><small style="opacity:.7">'+t('emptyHint')+'</small></div>';
+    /* Rien a montrer — mais y a-t-il des routines cachees pour ce cadre et
+       cette periode ? Si oui, on le dit et on offre de les afficher. */
+    let caches = 0;
+    if(!state.routine){ state.routine = true; try{ caches = visible().filter(i=>catOf(i)===cat).length; } finally { state.routine = false; } }
+    el.innerHTML = '<div class="empty"><span class="e-ic">🗂️</span>'+t('empty')+'<br><small style="opacity:.7">'+t('emptyHint')+'</small>'+
+      (caches ? '<br><button class="plus" style="margin-top:12px" onclick="toggleRoutine()">'+t('routinesCachees').replace('%1',caches)+'</button>' : '')+'</div>';
     return;
   }
   if((state.group[cat]||'date')==='cat'){ el.innerHTML = groupByCat(cat, items); return; }
@@ -3351,9 +3476,25 @@ function renderBoard(cat, items){
   el.innerHTML = BK_ORDER.filter(b=>g[b]).map(b=>
     '<div class="bucket"><div class="bucket-t'+(b==='overdue'?' b-over':b==='today'?' b-today':'')+'">'+
     t('bk.'+b)+' <span style="font-family:var(--ff-fr)">('+g[b].length+')</span></div>'+
-    g[b].map(card).join('')+'</div>'
+    tranche(g[b], cat+':'+b)+'</div>'
   ).join('');
 }
+
+/* Une rubrique n'affiche que ses premieres cartes. Le reste attend derriere
+   « voir la suite » : c'est ce qui empeche la page de peser vingt megaoctets
+   et de figer le telephone a chaque clic. */
+const PAGE = 30;
+function tranche(list, key){
+  /* A l'impression on veut tout, une fois ; a l'ecran on pagine. */
+  const n = PRINTING ? list.length : Math.min(list.length, PAGE * (1 + (state.more[key]||0)));
+  let s = list.slice(0, n).map(card).join('');
+  if(!PRINTING && n < list.length){
+    s += '<button class="plus" onclick="plusDe(\''+key+'\')">'+
+         t('plusDe').replace('%1', list.length - n)+'</button>';
+  }
+  return s;
+}
+function plusDe(key){ state.more[key] = (state.more[key]||0) + 1; render(); }
 function groupByCat(cat, items){
   const g={}; items.forEach(i=>{ (g[i.sub]=g[i.sub]||[]).push(i); });
   const keys = Object.keys(g).sort((a,b)=>g[b].length-g[a].length);
@@ -3372,7 +3513,7 @@ function groupByCat(cat, items){
         '<span class="cg-n">'+esc(S[state.lang])+'<div class="cg-sub">'+sub+'</div></span>'+
         '<span class="cg-c">'+list.length+'</span><span class="cg-ch">▼</span>'+
       '</button>'+
-      '<div class="cg-b">'+list.map(card).join('')+'</div></div>';
+      '<div class="cg-b">'+(isOpen ? tranche(list, key) : '')+'</div></div>';
   }).join('');
 }
 function togGroup(key){ state.gopen[key]=!state.gopen[key]; render(); }
@@ -3404,7 +3545,10 @@ function card(it){
   h += '</div></div>';
   h += '<span class="pill p-'+st+'">'+t('st.'+st)+'</span><span class="chev">▼</span></button>';
 
-  /* corps */
+  /* Une carte fermee s'arrete ici : pas de champs, pas de zone de notes, pas
+     de cases, pas de boutons. C'etait 74 % des noeuds de la page, caches. Le
+     corps est fabrique a l'ouverture (tog() redessine). */
+  if(!isOpen){ h += '<div class="card-body"></div></article>'; return h; }
   h += '<div class="card-body">';
   h += '<div class="sec"><div class="sec-t">📅 '+fmtDayName(it.date)+' • '+fmtDate(it.date)+
        (it.raw? ' &nbsp;·&nbsp; <span class="orgv">'+t('sourceTitle')+' : “'+esc(it.raw)+'”</span>':'')+'</div></div>';
@@ -3455,6 +3599,7 @@ function card(it){
   h += btn('a-post', st==='postponed', t('markPost'), it.id, 'postponed');
   h += btn('a-urg',  st==='overdue' && store.status[it.id]==='overdue', t('markUrg'), it.id, 'overdue');
   h += '<button class="act" onclick="setStatus(\''+it.id+'\',null)">'+t('reset')+'</button>';
+  if(it.manual) h += '<button class="act" onclick="delCustom(\''+it.id+'\')">🗑 '+t('delTask')+'</button>';
   const lst=allSections().map(s=>s.id), nxt=lst[(lst.indexOf(catOf(it))+1)%lst.length];
   h += '<button class="act" onclick="moveCat(\''+it.id+'\')">'+t('moveTo')+' '+secName(secById(nxt))+'</button>';
   h += '<a class="act link" href="'+it.link+'" target="_blank" rel="noopener">📅 '+t('openCal')+'</a>';
@@ -3479,19 +3624,37 @@ function setStatus(id,v){ if(v===null) delete store.status[id]; else store.statu
 function setNote(id,v){ store.notes[id]=v; lsSet();
   if(window.AP&&AP.sync&&AP.sync.setNote) AP.sync.setNote(id,v); }
 function setMeta(kind,sk,v){ store[kind][sk]=v; lsSet(); toast(t('toastSaved')); }
+/* Une tache ajoutee a la main ne pouvait ni etre supprimee ni corrigee : elle
+   restait a vie. */
+function delCustom(id){
+  if(!confirm(t('delTaskQ'))) return;
+  store.custom = store.custom.filter(c=>c.id!==id);
+  ['status','notes','checks','cat'].forEach(k=>{ if(store[k]) delete store[k][id]; });
+  delete state.open[id];
+  lsSet(); buildTasks(); render(); toast(t('toastSaved'));
+  if(window.AP&&AP.sync&&AP.sync.deleteTask) AP.sync.deleteTask(id);
+}
 /* Fait tourner la tache sur la section suivante, ce qui marche avec deux
    sections comme avec dix. */
 function moveCat(id){
   const it=TID(id), list=allSections().map(s=>s.id);
   const i=list.indexOf(catOf(it));
   store.cat[id]=list[(i+1)%list.length];
+  /* on suit la carte : le cadre d'arrivee s'ouvre, la carte reste depliee,
+     et l'ecran y va — au lieu de la voir disparaitre sans autre trace */
+  state.boards[store.cat[id]]=1; state.open[id]=true; applyPanels(); prefSet();
   lsSet(); render(); toast(t('toastMoved')+' — '+secName(secById(store.cat[id])));
+  setTimeout(()=>{ const e=document.getElementById('c_'+cssId(id)); if(e) e.scrollIntoView({block:'start',behavior:'smooth'}); },60);
 }
 function expandDesc(id,e){ e.stopPropagation(); const d=document.getElementById('d_'+cssId(id)); if(d){ d.classList.toggle('collapsed'); } }
 function jumpTo(id){ const it=TID(id); if(it){ state.boards[catOf(it)]=1; applyPanels(); prefSet(); } state.open[id]=true; render(); setTimeout(()=>{const e=document.getElementById('c_'+cssId(id)); if(e) e.scrollIntoView({block:'center',behavior:'smooth'});},80); }
-function toggleRoutine(){ state.routine=!state.routine; syncUI(); prefSet(); render(); }
+function toggleRoutine(){ state.routine=!state.routine; state.routineChoisi=true; syncUI(); prefSet(); render(); }
+/* La recherche attend un quart de seconde apres la derniere lettre avant de
+   redessiner : taper un mot de six lettres ne coute plus six rendus complets. */
+let qT;
+function chercher(v){ state.q=v; clearTimeout(qT); qT=setTimeout(render,250); }
 function setWin(w){ state.win=w; state.selDay=null; document.getElementById('rangeBox').classList.toggle('show', w==='custom'); syncUI(); prefSet(); render(); }
-function applyCustom(){ state.from=document.getElementById('dFrom').value; state.to=document.getElementById('dTo').value; if(state.from&&state.to){ state.win='custom'; state.selDay=null; syncUI(); render(); } }
+function applyCustom(){ state.from=document.getElementById('dFrom').value; state.to=document.getElementById('dTo').value; if(state.from&&state.to){ state.win='custom'; state.selDay=null; syncUI(); prefSet(); render(); } }
 
 function togPanel(k){
   state.pan[k] = state.pan[k] ? 0 : 1;
@@ -3613,7 +3776,7 @@ function applyI18n(){
   if(gk){ gk.placeholder=t('gemKeyPh'); gk.value=gemKey(); }
   if(gm){ gm.placeholder=t('gemModelPh'); gm.value=gemModel(); }
   gemState(gemKey()?'ok':'', gemKey()? t('gemOn') : t('gemOff'));
-  document.getElementById('helpTxt').innerHTML=t('helpBody');
+  document.getElementById('helpTxt').innerHTML=t('helpBody').replace('%1', DATA_FROM ? fmtDate(DATA_FROM) : '—').replace('%2', DATA_UNTIL ? fmtDate(DATA_UNTIL) : '—');
   const d=new Date();
   document.getElementById('todayLbl').textContent = T[state.lang].days[d.getDay()]+' '+d.getDate()+' '+T[state.lang].months[d.getMonth()]+' '+d.getFullYear();
   /* Version publiee : aucune extraction, donc aucune date a annoncer. */
@@ -3640,6 +3803,9 @@ function syncUI(){
   document.getElementById('fSub').value=state.sub;
   document.getElementById('fStatus').value=state.status;
   document.getElementById('rangeBox').classList.toggle('show', state.win==='custom');
+  const dF=document.getElementById('dFrom'), dT=document.getElementById('dTo');
+  if(dF && state.from && !dF.value) dF.value=state.from;
+  if(dT && state.to   && !dT.value) dT.value=state.to;
   /* Le jour choisi prime sur la periode (voir winRange) : il faut donc le
      dire, sinon l'artisan voit « 1 mois » allume et une liste d'un seul jour,
      parfois vide. */
@@ -3647,6 +3813,15 @@ function syncUI(){
   if(cj){
     if(state.selDay){ cj.hidden = false; cj.textContent = '📅 ' + fmtDate(state.selDay) + '  ✕'; }
     else { cj.hidden = true; cj.textContent = ''; }
+  }
+  const wl = document.getElementById('winRangeLbl');
+  if(wl){
+    const [A,B] = winRange();
+    /* +1 : les deux bornes sont dans la liste. C'est le meme nombre que
+       celui de la bande des jours, desormais. */
+    const nb = Math.round((B - A)/86400000) + 1;
+    wl.innerHTML = t('rangeLbl').replace('%1','<b>'+fmtDate(iso(A))+'</b>').replace('%2','<b>'+fmtDate(iso(B))+'</b>')
+                 + ' <span style="color:var(--txt3)">('+duree(nb,'j')+')</span>';
   }
 }
 
@@ -3749,7 +3924,7 @@ function buildDaysBox(){
 function readForm(){
   const g=id=>document.getElementById(id);
   const title=g('aTitle').value.trim();
-  if(!title){ g('aTitle').focus(); return null; }
+  if(!title){ g('aTitle').focus(); toast(t('fTitleReq')); return null; }
   const all=g('aAllDay').checked;
   const d1=g('aDate').value||iso(today());
   const t1=all?'':(g('aTime').value||'09:00');
@@ -3797,7 +3972,8 @@ function saveTask(){
     notes:ev.description, subs:ev.subs, ev:ev
   });
   lsSet(); buildTasks(); render(); closeModal('mAdd'); toast(t('toastSaved'));
-  ['aTitle','aNotes','aSubs','aTime','aTimeEnd','aLoc','aGuests','aUntil','aCount'].forEach(i=>{const e=document.getElementById(i); if(e) e.value='';});
+  ['aTitle','aNotes','aSubs','aTime','aTimeEnd','aLoc','aGuests','aUntil','aCount','aFreq'].forEach(i=>{const e=document.getElementById(i); if(e) e.value='';});
+  { const cb=document.getElementById('aAllDay'); if(cb) cb.checked=false; }
   document.getElementById('aRemBox').innerHTML='';
 }
 /* Sortie vers les agendas. */
@@ -3856,7 +4032,7 @@ function backupState(){ dl(JSON.stringify(store,null,2),'agendapro-backup-'+iso(
 function restoreState(inp){
   const f=inp.files[0]; if(!f) return;
   const r=new FileReader();
-  r.onload=e=>{ try{ store=Object.assign(store,JSON.parse(e.target.result)); lsSet(); buildTasks(); render(); toast(t('toastSaved')); }catch(x){ alert('JSON ✗'); } };
+  r.onload=e=>{ try{ store=Object.assign(store,JSON.parse(e.target.result)); lsSet(); buildTasks(); render(); toast(t('toastSaved')); }catch(x){ toast(t('restoreBad')); } };
   r.readAsText(f); inp.value='';
 }
 function dl(txt,name){
@@ -3961,7 +4137,24 @@ async function fetchWx(){
    un serveur : c'est le role de la fonction edge prevue en phase SaaS.
    --------------------------------------------------------------------------- */
 const GEM_KEY='agendapro_v1_gemkey', GEM_MODEL_KEY='agendapro_v1_gemmodel';
-const GEM_MODEL_DEFAULT='gemini-2.0-flash';
+/* Le nom du modele par defaut vieillit vite : « gemini-2.0-flash » n'est plus
+   servi, et une cle parfaitement valide recevait « model not found » — ce que
+   l'artisan lisait comme « le lien Gemini ne marche pas ». Aujourd'hui on part
+   d'un nom courant, et surtout gemini() demande a Google la liste des modeles
+   que la cle a le droit d'appeler des que le nom echoue, en retient un, et
+   reessaie : le programme ne se casse plus quand Google renomme ses modeles. */
+const GEM_MODEL_DEFAULT='gemini-2.5-flash';
+async function gemModelAuto(k){
+  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+encodeURIComponent(k)+'&pageSize=200');
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  const j=await r.json();
+  const ok=(j.models||[]).filter(m=>(m.supportedGenerationMethods||[]).indexOf('generateContent')>=0)
+                         .map(m=>String(m.name||'').replace(/^models\//,''));
+  const note=n=>(/flash/i.test(n)?0:1)+(/lite|preview|exp|thinking|tts|image|audio|embed/i.test(n)?2:0);
+  ok.sort((a,b)=>note(a)-note(b) || b.localeCompare(a));
+  if(!ok.length) throw new Error('EMPTY');
+  return ok[0];
+}
 function gemKey(){ try{ return localStorage.getItem(GEM_KEY)||''; }catch(e){ return ''; } }
 function gemModel(){ try{ return localStorage.getItem(GEM_MODEL_KEY)||GEM_MODEL_DEFAULT; }catch(e){ return GEM_MODEL_DEFAULT; } }
 function setGemKey(v){
@@ -3979,7 +4172,7 @@ function gemState(cls,msg){
   const e=document.getElementById('gemState'); if(!e) return;
   e.className='gemstate '+(cls||''); e.textContent=msg||'';
 }
-async function gemini(prompt){
+async function gemini(prompt, deuxieme){
   const k=gemKey(); if(!k) throw new Error('NOKEY');
   const url='https://generativelanguage.googleapis.com/v1beta/models/'+
             encodeURIComponent(gemModel())+':generateContent?key='+encodeURIComponent(k);
@@ -3988,6 +4181,16 @@ async function gemini(prompt){
       generationConfig:{temperature:1.05,maxOutputTokens:180}})});
   if(!r.ok){
     let d=''; try{ const j=await r.json(); d=(j.error&&j.error.message)||''; }catch(e){}
+    /* Modele inconnu ou retire : on demande a Google lesquels sont servis pour
+       CETTE cle, on en retient un, on le memorise, et on reessaie une fois. */
+    if(!deuxieme && (r.status===404 || /not found|not supported|deprecated/i.test(d))){
+      const m=await gemModelAuto(k);
+      try{ localStorage.setItem(GEM_MODEL_KEY,m); }catch(e){}
+      const gm=document.getElementById('gemModel'); if(gm) gm.value=m;
+      gemState('wait', t('gemAuto').replace('%1',m));
+      return gemini(prompt, true);
+    }
+    if(r.status===400 && /API key not valid|invalid/i.test(d)) throw new Error(t('gemBadKey'));
     throw new Error('HTTP '+r.status+(d? ' - '+d.slice(0,140):''));
   }
   const j=await r.json();
@@ -4044,10 +4247,17 @@ async function fetchDaily(){
     /* On affiche le vrai message de Google : c'est lui qui dit si la cle est
        invalide, le quota epuise, ou le nom de modele inconnu. */
     const m=String(e.message||e);
-    gemState('err', m==='NOKEY' ? t('gemOff') : (m==='EMPTY' ? t('gemEmpty') : m));
+    /* les cas courants en clair, dans la langue de l'artisan ; le reste tel quel */
+    const clair = m==='NOKEY' ? t('gemOff')
+                : m==='EMPTY' ? t('gemEmpty')
+                : /^HTTP 429/.test(m) ? t('gemQuota')
+                : /^HTTP 40[13]/.test(m) ? t('gemBadKey')
+                : /Failed to fetch|NetworkError|Load failed/i.test(m) ? t('gemNet')
+                : m;
+    gemState('err', clair);
   }
 }
-function newDaily(){ dailyData=null; localStorage.removeItem(DAY_KEY); loadDayCache(); renderBrief(visible()); fetchDaily(); }
+function newDaily(){ if(!gemKey()) toast(t('gemOff')); dailyData=null; localStorage.removeItem(DAY_KEY); loadDayCache(); renderBrief(visible()); fetchDaily(); }
 
 /* ============================================================================
    9. INIT
@@ -4065,7 +4275,8 @@ function init(){
   buildTasks();
   loadDayCache();
   applyI18n(); applyPanels(); syncUI(); render();
-  fetchWx(); fetchDaily();
+  if(!(typeof wxData!=='undefined' && wxData && wxData.date===iso(today()))) fetchWx();
+  fetchDaily();
   petPhase('play');
   document.addEventListener('click', e=>{
     if(e.target.closest('.pan-orb,.board-orb,.orb,.hdr-orb,.p-tog,.kpi,.chip,.lchip,.ins,.day,.cg-h,.card-head,.nextup-item,.tbtn')) petLook();

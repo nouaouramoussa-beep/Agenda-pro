@@ -538,6 +538,14 @@
     S.portees = String(reponse.scope || '').split(/\s+/).filter(Boolean);
     S.connecte = true;
     S.besoinReconnexion = false;
+    /* On note que cet appareil a ete relie au moins une fois. C'est ce
+       drapeau — et lui seul — qui autorise la reprise silencieuse au
+       prochain chargement (voir demarrage()). Un identifiant PUBLIC, pas un
+       jeton : la note du haut sur le disque reste respectee. */
+    try {
+      var rg = JSON.parse(W.localStorage.getItem(CLE_REGLAGES) || '{}') || {};
+      if (!rg.dejaConnecte) { rg.dejaConnecte = true; W.localStorage.setItem(CLE_REGLAGES, JSON.stringify(rg)); }
+    } catch (e) { }
     cacherBandeau();
     armerRenouvellement();
     journal('jeton pose, expire dans', secondes, 's, portees:', S.portees.join(' '));
@@ -1442,6 +1450,18 @@
            pastille passe au vert en une demi-seconde et l'artisan n'a rien vu.
            Si elle ne l'est pas, il ne se passe RIEN : aucune fenetre ne
            surgit sans qu'on ait clique, aucune erreur. */
+        /* … a une condition, apprise a l'usage : que cet appareil ait DEJA
+           ete relie une fois. Sans cela, le modele « jeton » de Google ouvre
+           quand meme une fenetre, que le navigateur bloque faute de clic —
+           trois erreurs rouges a chaque ouverture, et la librairie de Google
+           chargee pour rien sur un appareil qui n'a jamais rien demande. */
+        var dejaLie = false;
+        try { var rg0 = JSON.parse(W.localStorage.getItem(CLE_REGLAGES) || '{}'); dejaLie = !!(rg0 && rg0.dejaConnecte); } catch (e) { }
+        if (!dejaLie) {
+          journal('appareil jamais relie — pas de reprise silencieuse, on attend un clic');
+          S.pret = true; prevenir(); resoudre(etat());
+          return;
+        }
         demanderJetonGis(porteesVoulues('lecture'), false).then(function (r) {
           if (r && r.access_token) {
             poserJeton(r);

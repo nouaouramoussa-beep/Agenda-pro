@@ -98,7 +98,10 @@
   /* Toute clef du stockage local qui commence par ceci est protegee... */
   var PREFIXE  = 'agendapro_v1';
   /* ...sauf celles-ci, qui doivent rester lisibles avant le mot de passe. */
-  var EN_CLAIR = ['agendapro_v1_pref2'];
+  /* Les reglages de raccordement (adresse du site, banniere deja vue) ne sont
+     pas des donnees de l'artisan et sont lus par setup.js AVANT le mot de
+     passe : verrou pose, ils rendaient null et les briques demarraient a vide. */
+  var EN_CLAIR = ['agendapro_v1_pref2', 'agendapro_v1_setup_config', 'agendapro_v1_setup_banniere'];
 
   /* Parametres de chiffrement. 210 000 tours est la recommandation OWASP pour
      PBKDF2-SHA256 ; sur un telephone de 2020 cela coute environ un quart de
