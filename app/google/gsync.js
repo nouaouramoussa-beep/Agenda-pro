@@ -113,7 +113,8 @@
     evs:     'agendapro_g_evenements_v1', // LA RESERVE : les evenements deja lus
     ombre:   'agendapro_g_ombre_v1',      // dernier etat connu + horodatages
     file:    'agendapro_g_file_v1',       // la file d'attente hors ligne
-    journal: 'agendapro_g_journal_v1'     // conflits, refus, avertissements
+    journal: 'agendapro_g_journal_v1',    // conflits, refus, avertissements
+    classement: 'agendapro_g_classement_v1' // section / sous-categorie / routine par serie, venus du bureau
   };
 
   /* LES PERMISSIONS DEMANDEES A GOOGLE — le strict minimum, pas une de plus.
@@ -651,6 +652,9 @@
             id: c.id,
             nom: c.summaryOverride || c.summary || c.id,
             couleur: c.backgroundColor || '',
+            /* Les rappels « par defaut » de l'agenda : un evenement qui dit
+               « useDefault » n'en porte aucun lui-meme, ce sont ceux-ci. */
+            rappels: (c.defaultReminders || []).map(function (r) { return { method: r.method, minutes: r.minutes }; }),
             principal: !!c.primary,
             /* « lecture seule » au sens de Google : on ne pourra meme pas y
                ecrire le casier prive. On le sait a l'avance, ce qui evite de
@@ -770,8 +774,9 @@
      jamais un tableau vide.
      -------------------------------------------------------------------------- */
 
-  var RESERVE_V = 1;
+  var RESERVE_V = 2;   /* 2 : la reserve garde lieu, rappels, invites, pieces jointes (23/09/2026) — l'ancienne est relue en entier */
   var NOMS = {};        // id d'agenda -> nom, pour l'affichage apres rechargement
+  var RAPPELS = {};     // id d'agenda -> rappels par defaut ([{method, minutes}]), idem
 
   function evReduit(ev, o) {
     o = o || {};
@@ -782,6 +787,16 @@
     if (ev.end) r.end = ev.end;
     if (ev.recurringEventId) r.recurringEventId = ev.recurringEventId;
     if (ev.htmlLink && !o.sansLien) r.htmlLink = ev.htmlLink;
+    /* Ce que la carte affiche dans « informations Google » : sans ces
+       lignes, tout cela disparaissait au rechargement suivant. */
+    if (ev.location) r.location = ev.location;
+    if (ev.reminders) r.reminders = { useDefault: ev.reminders.useDefault !== false,
+                                      overrides: (ev.reminders.overrides || []).map(function (x) { return { method: x.method, minutes: x.minutes }; }) };
+    if (ev.eventType && ev.eventType !== 'default') r.eventType = ev.eventType;
+    if (!o.sansDesc) {
+      if (ev.attendees && ev.attendees.length) r.attendees = ev.attendees.map(function (a) { return { email: a.email, displayName: a.displayName, self: !!a.self }; });
+      if (ev.attachments && ev.attachments.length) r.attachments = ev.attachments.map(function (a) { return { title: a.title, fileUrl: a.fileUrl }; });
+    }
     var priv = ev.extendedProperties && ev.extendedProperties.private;
     if (priv && Object.keys(priv).length) r.extendedProperties = { private: priv };
     return r;
@@ -805,7 +820,9 @@
       v: RESERVE_V,
       lecture: ETAT.derniereLecture || 0,
       complet: ETAT.derniereComplete || 0,
-      agendas: AGENDAS.map(function (a) { return { id: a.id, nom: a.nom }; }),
+      agendas: AGENDAS.length
+        ? AGENDAS.map(function (a) { return { id: a.id, nom: a.nom, rappels: a.rappels || [] }; })
+        : Object.keys(NOMS).map(function (id) { return { id: id, nom: NOMS[id], rappels: RAPPELS[id] || [] }; }),
       ev: ev
     };
   }
@@ -852,7 +869,7 @@
       EVENEMENTS[id] = { cal: e.cal, ev: e.ev, jour: e.jour };
       n++;
     });
-    (p.agendas || []).forEach(function (a) { if (a && a.id) NOMS[a.id] = a.nom || a.id; });
+    (p.agendas || []).forEach(function (a) { if (a && a.id) { NOMS[a.id] = a.nom || a.id; RAPPELS[a.id] = a.rappels || []; } });
     if (n) {
       ETAT.derniereLecture  = p.lecture || 0;
       ETAT.derniereComplete = p.complet || 0;
@@ -906,7 +923,9 @@
           if (EVENEMENTS[id].cal === idAgenda) delete EVENEMENTS[id];
         });
       }
-      recus.forEach(function (ev) { absorber(idAgenda, ev); });
+      var regl = reglages();
+      recus.forEach(function (ev) { absorber(idAgenda, ev, regl); });
+      ecrireOmbres();
       if (nouveauRepere) poserCurseur(idAgenda, nouveauRepere);
       if (complet) ETAT.derniereComplete = maintenant();
       return recus.length;
@@ -926,7 +945,7 @@
        - hors de la fenetre     -> on l'ignore (la lecture incrementale peut
                                    ramener des evenements tres eloignes)
        - normal                 -> on le garde, on lit son casier prive */
-  function absorber(idAgenda, ev) {
+  function absorber(idAgenda, ev, regl) {
     if (!ev || !ev.id) return;
     var idTache = idDe(idAgenda, ev);
 
@@ -943,7 +962,7 @@
     var jour = jourDe(ev.start);
     if (!jour) return;                       // evenement sans date exploitable
 
-    var r = reglages();
+    var r = regl || reglages();
     var t0 = isoJour(plusJours(new Date(), -(r.joursPasses || 90)));
     var t1 = isoJour(plusJours(new Date(),  (r.joursFuturs || 400)));
     if (jour < t0 || jour > t1) { delete EVENEMENTS[idTache]; return; }
@@ -975,14 +994,32 @@
         allDay, desc, org, routine, link
      ========================================================================== */
 
-  function tacheDe(idTache) {
+  function tacheDe(idTache, regl) {
     var e = EVENEMENTS[idTache];
     if (!e) return null;
     var ev = e.ev;
     var etat = (ombres()[idTache] || {}).e || {};
-    var parAgenda = (reglages().agendas[e.cal] || {});
+    var parAgenda = ((regl || reglages()).agendas[e.cal] || {});
     var titre = (ev.summary || '').trim() || (langue() === 'fr' ? '(sans titre)' : '(بدون عنوان)');
+    var toutLeJour = !!(ev.start && ev.start.date);
     var finJour = jourDe(ev.end);
+    /* Journee entiere : Google donne la fin EXCLUSIVE (le lendemain). La page,
+       elle, ecrit « se termine le » avec le dernier jour reel. */
+    if (toutLeJour && finJour) { try { finJour = isoJour(plusJours(new Date(finJour + 'T00:00:00'), -1)); } catch (e) { } }
+    var dfin = (finJour && finJour > e.jour) ? finJour : null;
+
+    /* Les rappels : ceux de l'evenement, sinon ceux de son agenda. */
+    var rap = null;
+    if (ev.reminders && ev.reminders.useDefault === false) rap = (ev.reminders.overrides || []).slice();
+    else rap = rappelsDefaut(e.cal);
+    if (!rap || !rap.length) rap = null;
+    var inv = (ev.attendees || []).map(function (a) { return a.displayName || a.email; }).filter(Boolean);
+    var pj  = (ev.attachments || []).map(function (a) { return a.title || a.fileUrl; }).filter(Boolean);
+
+    /* Le classement venu du bureau (section, sous-categorie, routine) pour
+       cette serie — voir classementDescendre(). L'ombre (ce que l'artisan a
+       choisi lui-meme) passe toujours devant. */
+    var cl = (classement().s || {})[ev.recurringEventId || ev.id] || null;
 
     return {
       id:     idTache,
@@ -992,23 +1029,34 @@
          va pas inventer une traduction que l'artisan n'a pas ecrite. */
       title:  { ar: titre, fr: titre },
       raw:    titre,
-      cat:    etat.sc || parAgenda.sec || 'perso',
-      sub:    etat.sb || parAgenda.sub || 'perso',
+      cat:    etat.sc || (cl && cl[0]) || parAgenda.sec || 'perso',
+      sub:    etat.sb || (cl && cl[1]) || parAgenda.sub || 'perso',
       date:   e.jour,
       start:  heureDe(ev.start),
       end:    heureDe(ev.end),
-      allDay: !!(ev.start && ev.start.date),
+      endDate: dfin || e.jour,
+      allDay: toutLeJour,
       desc:   (ev.description || '').trim(),
       org:    { ar: nomAgenda(e.cal), fr: nomAgenda(e.cal) },
+      loc:    (ev.location || '').trim(),
+      rap:    rap,
+      inv:    inv.length ? inv : null,
+      pj:     pj.length ? pj : null,
+      fete:   ev.eventType === 'birthday',
       /* « routine » masque la tache quand l'artisan a decoche les routines.
-         Une repetition tres frequente en est une ; un rendez-vous unique, non. */
-      routine: !!ev.recurringEventId && !!etat.rt,
+         Une repetition tres frequente en est une ; un rendez-vous unique, non.
+         Le choix de l'artisan (ombre) d'abord, puis le classement du bureau. */
+      routine: !!ev.recurringEventId && ((etat.rt !== undefined && etat.rt !== null) ? !!etat.rt : !!(cl && cl[2])),
       link:   ev.htmlLink || lienJour(e.jour),
       /* Reperes internes, ignores par index.html mais precieux ici. */
       gcal:   e.cal,
       gev:    ev.id,
-      gfin:   (finJour && finJour !== e.jour) ? finJour : null
+      gfin:   dfin
     };
+  }
+  function rappelsDefaut(id) {
+    for (var i = 0; i < AGENDAS.length; i++) if (AGENDAS[i].id === id) return (AGENDAS[i].rappels || []).slice();
+    return (RAPPELS[id] || []).slice();
   }
   function nomAgenda(id) {
     for (var i = 0; i < AGENDAS.length; i++) if (AGENDAS[i].id === id) return AGENDAS[i].nom;
@@ -1025,8 +1073,8 @@
 
   /* La liste complete, triee comme index.html trie la sienne. */
   function tasks() {
-    var out = [];
-    Object.keys(EVENEMENTS).forEach(function (id) { var t = tacheDe(id); if (t) out.push(t); });
+    var out = [], regl = reglages();
+    Object.keys(EVENEMENTS).forEach(function (id) { var t = tacheDe(id, regl); if (t) out.push(t); });
     return out.sort(function (a, b) {
       return a.date === b.date ? (a.start || '').localeCompare(b.start || '') : a.date.localeCompare(b.date);
     });
@@ -1171,8 +1219,38 @@
      appareil qui avons bouge.
      ========================================================================== */
 
-  function ombres()      { var o = jget(K.ombre, {}); return (o && typeof o === 'object') ? o : {}; }
-  function poserOmbres(o){ jset(K.ombre, o); }
+  /* LES OMBRES VIVENT EN MEMOIRE.
+     Avant : chaque evenement recu relisait le paquet entier des ombres
+     (JSON.parse) puis le re-ecrivait en entier (JSON.stringify) — et chaque
+     tache affichee le relisait encore. Cinq mille rendez-vous, c'est cinq
+     mille lectures et cinq mille ecritures d'un paquet de cinq mille lignes :
+     des dizaines de millions de lignes serialisees. C'etait LE gel a la
+     liaison, et la lenteur a chaque clic ensuite (chaque reconstruction de
+     la liste repassait par la).
+     Maintenant : le paquet est lu une fois, garde en memoire, et ecrit au
+     plus une fois par tour de boucle (setTimeout 0), ou tout de suite quand
+     la page se cache ou qu'une lecture se termine. */
+  var OMBRES = null, OMBRES_SALE = false, OMBRES_MINUTERIE = null;
+  function ombres() {
+    if (OMBRES === null) { var o = jget(K.ombre, {}); OMBRES = (o && typeof o === 'object') ? o : {}; }
+    return OMBRES;
+  }
+  function ecrireOmbres() {
+    if (OMBRES_MINUTERIE) { clearTimeout(OMBRES_MINUTERIE); OMBRES_MINUTERIE = null; }
+    if (!OMBRES_SALE) return;
+    OMBRES_SALE = false;
+    jset(K.ombre, OMBRES || {});
+  }
+  function poserOmbres(o) {
+    OMBRES = (o && typeof o === 'object') ? o : {};
+    OMBRES_SALE = true;
+    if (!OMBRES_MINUTERIE) OMBRES_MINUTERIE = setTimeout(ecrireOmbres, 0);
+  }
+  try {
+    window.addEventListener('pagehide', ecrireOmbres);
+    window.addEventListener('beforeunload', ecrireOmbres);
+    document.addEventListener('visibilitychange', function () { if (document.hidden) ecrireOmbres(); });
+  } catch (e) {}
   function ombreDe(id)   { var o = ombres(); return o[id] || { e: {}, at: {} }; }
   function poserOmbre(id, etat) { var o = ombres(); o[id] = { e: etat, q: maintenant() }; poserOmbres(o); }
 
@@ -1583,44 +1661,56 @@
      ========================================================================== */
 
   var FICHIER_REGLAGES = 'agendapro-reglages.json';
-  var idFichier = null;
+  var FICHIER_CLASSEMENT = 'agendapro-classement.json';
+  var idFichiers = {};      // nom de fichier -> id Drive, une fois trouve
 
   function driveDisponible() { return JETON.permsDrive || reglages().driveOk; }
 
-  function trouverFichier() {
-    if (idFichier) return Promise.resolve(idFichier);
+  function trouverFichier(nom) {
+    nom = nom || FICHIER_REGLAGES;
+    if (idFichiers[nom]) return Promise.resolve(idFichiers[nom]);
     return api(DRIVE + '/files', {
       absolu: true,
-      params: { spaces: 'appDataFolder', q: "name='" + FICHIER_REGLAGES + "'", fields: 'files(id,name,modifiedTime)', pageSize: 10 }
+      params: { spaces: 'appDataFolder', q: "name='" + nom + "'", fields: 'files(id,name,modifiedTime)', pageSize: 10 }
     }).then(function (d) {
       var f = (d && d.files && d.files[0]) || null;
-      idFichier = f ? f.id : null;
-      return idFichier;
+      idFichiers[nom] = f ? f.id : null;
+      return idFichiers[nom];
     });
   }
 
-  function lireReglagesNuage() {
+  function lireNuage(nom) {
     if (!driveDisponible()) return Promise.resolve(null);
-    return trouverFichier().then(function (id) {
+    return trouverFichier(nom).then(function (id) {
       if (!id) return null;
       return api(DRIVE + '/files/' + id, { absolu: true, params: { alt: 'media' } });
-    }).catch(function (e) { avert('lecture des reglages : ' + (e && e.message)); return null; });
+    }).catch(function (e) { avert('lecture de ' + nom + ' : ' + (e && e.message)); return null; });
   }
+  function lireReglagesNuage() { return lireNuage(FICHIER_REGLAGES); }
+  function ecrireReglagesNuage(objet) { return ecrireNuage(FICHIER_REGLAGES, objet); }
 
-  function ecrireReglagesNuage(objet) {
+  function ecrireNuage(nom, objet, deuxieme) {
     if (!driveDisponible()) { say('reglagesLocaux'); return Promise.resolve(false); }
     var contenu = JSON.stringify(Object.assign({ v: 1, q: maintenant() }, objet || {}));
-    return trouverFichier().then(function (id) {
+    return trouverFichier(nom).then(function (id) {
       if (id) {
         return api(DRIVE_UP + '/files/' + id, {
           absolu: true, methode: 'PATCH', params: { uploadType: 'media' },
           entetes: { 'Content-Type': 'application/json; charset=UTF-8' }, corps: contenu
-        }).then(function () { return true; });
+        }).then(function () { return true; }).catch(function (e) {
+          /* Le fichier a ete supprime du Drive entre-temps : son identifiant
+             est mort. On l'oublie et on recree le fichier — une fois. */
+          if (!deuxieme && e && (e.statut === 404 || /404|not found/i.test(String(e.message || '')))) {
+            idFichiers[nom] = null;
+            return ecrireNuage(nom, objet, true);
+          }
+          throw e;
+        });
       }
       /* Creation : Google veut les informations du fichier et son contenu dans
          un meme envoi, separes par une frontiere choisie par nous. */
       var f = '-------agendapro' + maintenant().toString(36);
-      var meta = JSON.stringify({ name: FICHIER_REGLAGES, parents: ['appDataFolder'], mimeType: 'application/json' });
+      var meta = JSON.stringify({ name: nom, parents: ['appDataFolder'], mimeType: 'application/json' });
       var corps =
         '--' + f + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + meta + '\r\n' +
         '--' + f + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + contenu + '\r\n' +
@@ -1628,8 +1718,66 @@
       return api(DRIVE_UP + '/files', {
         absolu: true, methode: 'POST', params: { uploadType: 'multipart', fields: 'id' },
         entetes: { 'Content-Type': 'multipart/related; boundary=' + f }, corps: corps
-      }).then(function (d) { idFichier = d && d.id; return true; });
-    }).catch(function (e) { avert('ecriture des reglages : ' + (e && e.message)); return false; });
+      }).then(function (d) { idFichiers[nom] = d && d.id; return true; });
+    }).catch(function (e) { avert('ecriture de ' + nom + ' : ' + (e && e.message)); return false; });
+  }
+
+  /* ==========================================================================
+     LE CLASSEMENT PARTAGE.
+     Le bureau connait, pour chaque serie de rendez-vous, sa section
+     (entreprise / personnel), sa sous-categorie et si c'est une routine :
+     c'est ecrit dans ses propres donnees. Le telephone, lui, ne recoit de
+     Google que des rendez-vous nus, et rangeait tout dans « personnel ».
+     Le bureau depose donc ce classement — des identifiants de series et
+     trois lettres, rien de lisible — dans le dossier prive de l'application
+     sur le Drive de l'artisan ; le telephone le reprend a la liaison et une
+     fois par jour. Aucun serveur a nous, rien de public.
+     ========================================================================== */
+  var CLASSEMENT = null;
+  function classement() {
+    if (CLASSEMENT === null) {
+      var c = jget(K.classement, null);
+      CLASSEMENT = (c && c.s && typeof c.s === 'object') ? c : { v: 1, q: 0, s: {} };
+    }
+    return CLASSEMENT;
+  }
+  function classementMonter(paquet, opts) {
+    opts = opts || {};
+    if (paquet && paquet.s && typeof paquet.s === 'object' && Object.keys(paquet.s).length) {
+      var avant = JSON.stringify(classement().s);
+      CLASSEMENT = { v: 1, q: maintenant(), s: paquet.s };
+      jset(K.classement, CLASSEMENT);
+      /* les jumeaux Google du bureau prennent leur section sans attendre */
+      if (JSON.stringify(paquet.s) !== avant) rendre();
+    }
+    var c = classement();
+    if (!Object.keys(c.s).length) return Promise.resolve(false);
+    /* Sans la permission Drive : le classement reste local, et on ne le
+       repete pas a chaque lecture — le pont le dit une fois. */
+    if (opts.sansDrive || !driveDisponible()) return Promise.resolve(false);
+    return ecrireNuage(FICHIER_CLASSEMENT, { s: c.s }).then(function (ok) {
+      if (ok) dire('classement depose sur le Drive : ' + Object.keys(c.s).length + ' serie(s).');
+      return ok;
+    });
+  }
+  function classementDescendre() {
+    if (!driveDisponible()) return Promise.resolve(false);
+    return lireNuage(FICHIER_CLASSEMENT).then(function (d) {
+      if (!d || !d.s || typeof d.s !== 'object') return false;
+      var avant = JSON.stringify(classement().s);
+      CLASSEMENT = { v: 1, q: maintenant(), s: d.s };
+      jset(K.classement, CLASSEMENT);
+      dire('classement repris du Drive : ' + Object.keys(d.s).length + ' serie(s).');
+      if (JSON.stringify(d.s) !== avant) rendre();
+      return true;
+    });
+  }
+  /* A la fin d'une lecture : on reprend le classement s'il manque ou s'il
+     date de plus d'un jour. Sans reseau ni Drive, rien ne se passe. */
+  function classementRafraichir() {
+    var c = classement();
+    if (Object.keys(c.s).length && (maintenant() - (c.q || 0)) < 24 * 60 * 60 * 1000) return;
+    classementDescendre().catch(function () { });
   }
 
   /* Ce qu'on fait monter : uniquement ce que l'artisan a cree lui-meme. */
@@ -1726,7 +1874,7 @@
   function setLieu(idTache, v)    { return ecrire(idTache, function (e, q) { if (v) e.pl = String(v); else delete e.pl; e.at.pl = q; }); }
   function setSousCat(idTache, v) { return ecrire(idTache, function (e, q) { if (v) e.sb = String(v); else delete e.sb; e.at.sb = q; }); }
   function setSection(idTache, v) { return ecrire(idTache, function (e, q) { if (v) e.sc = String(v); else delete e.sc; e.at.sc = q; }); }
-  function setRoutine(idTache, v) { return ecrire(idTache, function (e, q) { if (v) e.rt = 1; else delete e.rt; e.at.rt = q; }); }
+  function setRoutine(idTache, v) { return ecrire(idTache, function (e, q) { e.rt = v ? 1 : 0; e.at.rt = q; }); }
 
   /* Renvoyer ce que l'appareil avait de plus recent et qui n'etait pas dans la
      file (voir section 10). C'est une action de l'artisan, donc autorisee. */
@@ -2012,7 +2160,11 @@
   function rendre() {
     try {
       if (P.buildTasks) P.buildTasks();     // recalcule la liste de index.html
-      injecter();                           // on y remet les taches Google
+      /* Si buildTasks est celui que le pont a enveloppe, il vient DEJA
+         d injecter les taches Google (et de dedoublonner) : refaire injecter()
+         ici retriait dix mille lignes pour rien. On ne le fait que pour un
+         buildTasks nu. */
+      if (!(P.buildTasks && P.buildTasks.__apPont)) injecter();
       repeindre();
     } catch (e) { avert('rendre : ' + e.message); }
   }
@@ -2068,9 +2220,16 @@
       poserReglages({ dejaConnecte: true });
       /* On range AVANT de dessiner : si la page est fermee dans la seconde,
          ce qui vient d'etre lu est deja a l'abri pour demain matin. */
+      ecrireOmbres();
       ranger();
-      rendre();
-      emettre('lecture', { fin: true, taches: Object.keys(EVENEMENTS).length });
+      /* On laisse le navigateur respirer entre l ecriture de la reserve et
+         le dessin : la page repond, puis se redessine. Le pont (gbridge)
+         n appelle plus rendre() de son cote sur 'lecture fin' : UNE passe. */
+      setTimeout(function () {
+        rendre();
+        emettre('lecture', { fin: true, taches: Object.keys(EVENEMENTS).length });
+        classementRafraichir();
+      }, 0);
       /* La file part APRES la lecture : ce qui attendait depuis hors ligne est
          alors compare a l'etat le plus frais, et ne repart pas a l'aveugle. */
       return vider().then(function () { return true; });
@@ -2091,7 +2250,7 @@
       demarrerMinuterie();
       /* Premiere lecture seulement si l'artisan a deja choisi ses agendas.
          Sinon on lui rend la liste et on attend qu'il coche. */
-      if (agendasSuivis().length) { reglagesDescendre(); pull({ complet: true }); }
+      if (agendasSuivis().length) { reglagesDescendre(); classementDescendre().catch(function () { }); pull({ complet: true }); }
       return liste;
     }, function (e) {
       avert('connexion : ' + (e && e.message));
@@ -2249,6 +2408,9 @@
 
     reglagesMonter: reglagesMonter,
     reglagesDescendre: reglagesDescendre,
+    classement: classement,
+    classementMonter: classementMonter,
+    classementDescendre: classementDescendre,
 
     journal: function () { return jget(K.journal, []); },
     viderJournal: function () { jset(K.journal, []); return true; },

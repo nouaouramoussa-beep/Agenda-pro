@@ -485,10 +485,14 @@
           Cela ne marche que si le serveur envoie l'entete
           « Service-Worker-Allowed: / ». Beaucoup d'hebergements ne le font
           pas — d'ou la premiere methode, qui ne depend de personne. */
-    navigator.serviceWorker.register(RACINE + 'sw.js' + q, { scope: RACINE })
+    /* updateViaCache:'none' : le navigateur va chercher le gardien ET les
+       fichiers qu'il importe (app/pwa/sw.js) sur le serveur, jamais dans sa
+       reserve HTTP — sans quoi une publication pouvait rester invisible dix
+       minutes, et le gardien racine, lui, ne change jamais d'un octet. */
+    navigator.serviceWorker.register(RACINE + 'sw.js' + q, { scope: RACINE, updateViaCache: 'none' })
       .then(pretAvecLeGardien)
       .catch(function () {
-        return navigator.serviceWorker.register(DOSSIER + 'sw.js' + q, { scope: RACINE })
+        return navigator.serviceWorker.register(DOSSIER + 'sw.js' + q, { scope: RACINE, updateViaCache: 'none' })
           .then(pretAvecLeGardien);
       })
       .catch(function () {
@@ -507,21 +511,19 @@
         try { location.reload(); } catch (e) { }
         return;
       }
-      /* Le changement vient d'un AUTRE onglet : cette page-ci tourne encore
-         avec l'ancien code. On ne la recharge pas sous les doigts de
-         l'utilisateur — on lui propose. */
-      if (!barMode) { S.majEnAttente = true; montrerBandeau('maj'); }
+      /* Le nouveau gardien a pris la place (voir plus bas : on le lui
+         demande nous-memes, en silence). La page ne se recharge pas sous
+         les doigts de l'utilisateur ; la prochaine ouverture aura tout. */
+      S.majEnAttente = false;
     });
 
     /* Les messages venant du gardien. */
     navigator.serviceWorker.addEventListener('message', function (ev) {
       var d = (ev && ev.data) || {};
       if (d.type === 'AP_SHELL_UPDATED') {
-        /* Le filet de securite : index.html a change sur le serveur alors que
-           le numero de version du gardien, lui, n'a pas bouge. La reserve
-           vient d'etre rafraichie ; un simple rechargement suffit. */
+        /* La page vient desormais du reseau a chaque ouverture : ce
+           message n'appelle plus aucun bandeau. On le note, c'est tout. */
         S.majEnAttente = true;
-        if (!barMode) { montrerBandeau('maj'); }
       }
       if (d.type === 'AP_VERSION') { S.versionSw = d.version; }
     });
@@ -537,8 +539,10 @@
     /* Une version est deja la, en salle d'attente (l'utilisateur a ferme la
        page la derniere fois sans recharger). */
     if (r.waiting && navigator.serviceWorker.controller) {
-      S.majEnAttente = true;
-      montrerBandeau('maj');
+      /* Plus de bandeau : le nouveau gardien prend la place tout de suite.
+         La page courante garde son code jusqu'a la prochaine ouverture —
+         elle est deja celle du serveur (reseau d'abord), rien ne presse. */
+      try { r.waiting.postMessage({ type: 'AP_SKIP_WAITING' }); } catch (e) { }
     }
 
     /* Une version arrive pendant que la page est ouverte. */
@@ -550,8 +554,7 @@
            Sans ce second test, on afficherait le bandeau au tout premier
            chargement, alors qu'il n'y a rien a mettre a jour. */
         if (nouveau.state === 'installed' && navigator.serviceWorker.controller) {
-          S.majEnAttente = true;
-          montrerBandeau('maj');
+          try { nouveau.postMessage({ type: 'AP_SKIP_WAITING' }); } catch (e) { }
         }
       });
     });

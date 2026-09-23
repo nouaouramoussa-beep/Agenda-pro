@@ -943,6 +943,11 @@
      ========================================================================= */
 
   var enveloppePosee = false;
+  /* Le classement COMPLET des rendez-vous ecrits dans le programme, releve
+     avant que dedoublonner() ne retire ceux que Google couvre : pris apres,
+     le paquet retrecissait a chaque lecture et le telephone perdait des
+     classements deja recus. */
+  var PAQUET_ENTIER = null;
 
   function envelopperBuildTasks() {
     if (enveloppePosee) { return; }
@@ -952,6 +957,7 @@
     var neuf = function () {
       var r = orig.apply(this, arguments);
       try {
+        PAQUET_ENTIER = paquetClassement() || PAQUET_ENTIER;
         if (AP.gsync && typeof AP.gsync.injecter === 'function') { AP.gsync.injecter(); }
         dedoublonner();
       } catch (e) { avert('buildTasks : ' + e.message); }
@@ -1503,6 +1509,63 @@
      tenir les compteurs du panneau a jour, et redessiner ce qui est ouvert.
      ========================================================================= */
 
+  /* LE CLASSEMENT DU BUREAU, DEPOSE POUR LE TELEPHONE.
+     Pour chaque serie de rendez-vous ecrite dans le programme (donnees en
+     dur), on retient [section, sous-categorie, routine] sous l'identifiant
+     Google de la serie — rien de lisible, pas un titre. gsync le depose dans
+     le dossier prive de l'application sur le Drive ; le telephone, qui n'a
+     que Google, range alors ses rendez-vous comme le bureau. Une fois par
+     jour, ou des que le classement change. */
+  /* Empreinte courte (FNV-1a, la meme que dans gsync) : sert seulement a
+     savoir si le classement a change depuis le dernier depot. */
+  function h32(str) {
+    var x = 2166136261; str = String(str == null ? '' : str);
+    for (var i = 0; i < str.length; i++) { x ^= str.charCodeAt(i); x = (x * 16777619) >>> 0; }
+    return x.toString(36);
+  }
+  function paquetClassement() {
+    var liste = taches(); if (!liste) { return null; }
+    var s = {}, n = 0;
+    liste.forEach(function (t) {
+      if (!t || EN_DUR.indexOf(t.src) < 0) { return; }
+      var id = t.gid || eidDe(t.link); if (!id) { return; }
+      /* On ne retire que le suffixe d'occurrence (_AAAAMMJJ ou
+         _AAAAMMJJTHHMMSSZ) : un identifiant Google peut lui-meme commencer
+         par « _ » (evenements importes), split('_') le jetait. */
+      var serie = String(id).replace(/_\d{8}(T\d{6}Z)?$/, ''); if (!serie) { return; }
+      if (s[serie]) { return; }
+      /* la section telle que l'artisan la voit (deplacements compris) */
+      var cat = (typeof W.catOf === 'function') ? W.catOf(t) : t.cat;
+      s[serie] = [cat || 'perso', t.sub || 'perso', t.routine ? 1 : 0]; n++;
+    });
+    return n ? s : null;
+  }
+  function deposerClassement() {
+    try {
+      if (!AP.gsync || typeof AP.gsync.classementMonter !== 'function') { return; }
+      var i = infoMoteur();
+      /* Sans la permission Drive, rien ne peut monter : on le dit UNE fois
+         par appareil, pas a chaque lecture. */
+      if (!i || !i.drive) {
+        if (!reglagesPont().driveDit) { poserReglagesPont({ driveDit: 1 }); dire('classement : la permission Drive manque, il reste local.'); }
+        return;
+      }
+      var s = PAQUET_ENTIER || paquetClassement(); if (!s) { return; }
+      var empreinte = h32(JSON.stringify(s));
+      var r = reglagesPont();
+      var recent = (Date.now() - (r.classementQuand || 0)) < 24 * 60 * 60 * 1000;
+      if (r.classementEmpreinte === empreinte && recent) {
+        /* Deja depose : on ne remonte pas, mais la copie LOCALE est remise a
+           jour (les jumeaux Google du bureau en dependent). */
+        AP.gsync.classementMonter({ s: s }, { sansDrive: true });
+        return;
+      }
+      AP.gsync.classementMonter({ s: s }).then(function (ok) {
+        if (ok) { poserReglagesPont({ classementEmpreinte: empreinte, classementQuand: Date.now() }); }
+      }).catch(function () { });
+    } catch (e) { avert('classement : ' + e.message); }
+  }
+
   var ecoutePosee = false;
 
   function ecouter() {
@@ -1511,12 +1574,12 @@
 
     if (AP.gsync && typeof AP.gsync.on === 'function') {
       AP.gsync.on('lecture', function (d) {
-        if (d && d.fin) {
-          /* La liste vient de changer : on la reconstruit AVANT de redessiner,
-             pour que le nombre de doublons masques affiche soit le vrai. */
-          rendre();
-        }
+        /* Le moteur a DEJA reconstruit et redessine (gsync.rendre passe par
+           notre buildTasks enveloppe, donc injecter + dedoublonner sont faits).
+           Refaire rendre() ici doublait tout le travail — c etait le gel a la
+           liaison. On ne rafraichit que le panneau, s il est ouvert. */
         if (elPanneau && elPanneau.classList.contains('show')) { dessiner(); }
+        if (d && d.fin) { setTimeout(deposerClassement, 1500); }
       });
       AP.gsync.on('envoye', function (d) {
         ENVOI_SESSION += (d && d.total) || 0;
@@ -1591,6 +1654,8 @@
 
     /* La reconstruction de la liste : taches Google injectees, doublons
        retires, puis rendu. */
+    /* Deposer maintenant le classement du bureau sur le Drive (voir deposerClassement). */
+    classer: deposerClassement,
     rendre: rendre,
 
     /* Le retrait des doublons, expose pour un test a la console. Il ne fait

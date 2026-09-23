@@ -1,5 +1,5 @@
 {
- "genere": "2026-09-22T23:00:09.957Z",
+ "genere": "2026-09-23T16:10:12.939Z",
  "fichiers": {
   ".nojekyll": {
    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -42,12 +42,12 @@
    "octets": 68141
   },
   "app/google/gbridge.js": {
-   "sha256": "afecb09fe65dcfb142d5cfe330a1e74d93e84c9b2e54fcb3707d98a360fdac71",
-   "octets": 73860
+   "sha256": "c63cad2cf1c5d0d01575be9da8e4957ab24bd9c0b0380ceacaa7833caacff28f",
+   "octets": 77430
   },
   "app/google/gsync.js": {
-   "sha256": "78238f57b1de1e1b178ea6d66f151778c7744006174d2c1fe0fb04b5cde5c5b1",
-   "octets": 108604
+   "sha256": "df3faa13c33c2ea5573c16766191b845130842d822786cf9c3feb65fd9b0a51f",
+   "octets": 117768
   },
   "app/lock/lock.css": {
    "sha256": "e598a810130e12661dc4d71800af146bc16edc0e2ff3cc1c43faecc0d12a9318",
@@ -106,16 +106,16 @@
    "octets": 5048
   },
   "app/pwa/pwa.js": {
-   "sha256": "5b037874aa16530c36d06456551ed8395f3c33eb51e84383c15132845aa3d44c",
-   "octets": 49110
+   "sha256": "c50a8057eeec15204979dcb889295f40114a38dbf56df3113a3f5361938af028",
+   "octets": 49590
   },
   "app/pwa/sw-racine.js": {
    "sha256": "bdca343b03eb8d6eaed1c3eec1de2ab2ac9d94e351beed282ab563ca0635e8c7",
    "octets": 1650
   },
   "app/pwa/sw.js": {
-   "sha256": "3bfec6cc0ad5c5f756fdb923dae1f6ee109c69e2235e6e109c1e4f807a1dbafd",
-   "octets": 27279
+   "sha256": "8de8f556df35f2b84814bb935d95ed760d4940ff3160943fde4a9686ca11f2d9",
+   "octets": 30781
   },
   "app/setup/setup.css": {
    "sha256": "64a1f939860918a213c421648bfc2f96f5a2cbb7901dcef794e848e86edfc60d",
@@ -146,8 +146,8 @@
    "octets": 17791
   },
   "index.html": {
-   "sha256": "8432315b3534d96b53ec1506793685ecc43173b9b7d8d6553c2964f08bd87289",
-   "octets": 282620
+   "sha256": "420200c257dfd502f06411204c5f6d087aa70e28bf225a7b7c2c1afad7cccfaf",
+   "octets": 289273
   },
   "sw.js": {
    "sha256": "bdca343b03eb8d6eaed1c3eec1de2ab2ac9d94e351beed282ab563ca0635e8c7",

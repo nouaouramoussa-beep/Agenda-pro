@@ -49,7 +49,7 @@
    =========================================================================== */
 
 /* >>> A CHANGER A CHAQUE PUBLICATION <<< (1.0.0 -> 1.0.1 -> 1.1.0 ...) */
-var VERSION = '1.1.0';   /* 1.1.0 : ajout de la synchronisation Google (app/google/) a la coquille */
+var VERSION = '1.2.0+20260923T161012';   /* 1.2.0 : periodes de calendrier, liaison sans gel (23/09/2026) — 1.1.0 : synchronisation Google */
 
 /* Le prefixe commun sert au menage : tout ce qui commence par « agendapro- »
    et qui n'est pas dans la liste du jour sera efface a l'activation. */
@@ -60,7 +60,7 @@ var PREFIXE = 'agendapro-';
    vieillissent en quelques heures, les polices ne changent jamais. */
 var C_COQUILLE = PREFIXE + 'coquille-' + VERSION;
 var C_DONNEES  = PREFIXE + 'donnees-'  + VERSION;
-var C_POLICES  = PREFIXE + 'polices-'  + VERSION;
+var C_POLICES  = PREFIXE + 'polices-1';   /* les polices ne changent jamais : pas retelechargees a chaque publication */
 var MES_CACHES = [C_COQUILLE, C_DONNEES, C_POLICES];
 
 /* La racine que ce gardien surveille. Elle vient du navigateur lui-meme, pas
@@ -355,35 +355,70 @@ function reserveDAbord(event, nomCache, options) {
    demande peut rester en suspens une minute entiere. Au-dela du delai on sort
    la version d'hier ; si le reseau finit par repondre, on la remplace en
    silence pour la fois suivante. */
-function reseauDAbord(event, nomCache, msMax) {
+/* D'OU EST VENUE LA DERNIERE PAGE SERVIE ? Le code (.html, .js) qu'elle
+   demande ensuite doit venir de la MEME source : tout neuf (reseau) ou tout
+   ancien (reserve). Sinon une page neuve pouvait tourner avec un gsync.js
+   ancien, pris dans la reserve apres 3,5 s de reseau lent — deux versions
+   melangees, le pire des cas. */
+var PAGE = { source: 'reseau', quand: 0 };
+
+/* cache:'no-cache' = on revalide TOUJOURS aupres du serveur (If-None-Match :
+   304 sans corps si rien n'a change) au lieu de prendre la copie « encore
+   fraiche » de la reserve HTTP du navigateur — GitHub Pages la declare bonne
+   dix minutes (max-age=600), soit dix minutes de vieille page apres chaque
+   publication. Une navigation ne se reconstruit pas avec new Request : on
+   repart de son adresse. */
+function requeteFraiche(req) {
+  if (req.mode === 'navigate') {
+    return fetch(req.url, { cache: 'no-cache', credentials: 'same-origin', redirect: 'follow' });
+  }
+  try { return fetch(new Request(req, { cache: 'no-cache' })); } catch (e) { return fetch(req); }
+}
+
+function reseauDAbord(event, nomCache, msMax, options) {
   var req = event.request;
+  var opts = options || {};
+  /* La cle de reserve : sans la partie « ?… » quand on le demande. Le
+     raccourci de l'ecran d'accueil ouvre « index.html?source=pwa » : garde
+     sous cette adresse-la, la copie ne serait jamais retrouvee par un
+     « index.html » nu — et l'inverse. Une seule copie, une seule cle. */
+  var cle = opts.ignorerRecherche ? new Request(req.url.split('?')[0].split('#')[0]) : req;
 
   return caches.open(nomCache).then(function (cache) {
+    var chercher = function () { return cache.match(cle, { ignoreSearch: !!opts.ignorerRecherche }); };
     return new Promise(function (resolve) {
-      var repondu = false;
-
-      var minuteur = setTimeout(function () {
+      var repondu = false, minuteur = null;
+      var repondre = function (rep, source) {
         if (repondu) { return; }
-        cache.match(req).then(function (vieille) {
-          if (!repondu && vieille) { repondu = true; resolve(vieille); }
+        repondu = true;
+        if (opts.noterSource) { PAGE = { source: source, quand: Date.now() }; }
+        resolve(rep);
+      };
+
+      /* Le travail reseau est declare au navigateur TOUT DE SUITE (waitUntil),
+         avant qu'un minuteur ne puisse repondre : sinon la copie fraiche
+         arrivee apres la reserve n'etait rangee que « par chance », l'evenement
+         etant deja clos. */
+      var travail = requeteFraiche(req).then(function (rep) {
+        clearTimeout(minuteur);
+        var rangee = gardable(rep) ? ranger(cache, cle, rep.clone()) : Promise.resolve();
+        repondre(rep, 'reseau');
+        return rangee;
+      }).catch(function () {
+        clearTimeout(minuteur);
+        if (repondu) { return; }
+        return chercher().then(function (vieille) { repondre(vieille || pageDeSecours(req), 'reserve'); });
+      });
+      try { event.waitUntil(travail); } catch (e) { }
+
+      minuteur = setTimeout(function () {
+        if (repondu) { return; }
+        chercher().then(function (vieille) {
+          if (vieille) { repondre(vieille, 'reserve'); }
           /* Pas de vieille copie : on continue d'attendre le reseau, c'est
              tout ce qui nous reste. */
         });
       }, msMax || 6000);
-
-      fetch(req).then(function (rep) {
-        clearTimeout(minuteur);
-        if (gardable(rep)) { event.waitUntil(ranger(cache, req, rep.clone())); }
-        if (!repondu) { repondu = true; resolve(rep); }
-      }).catch(function () {
-        clearTimeout(minuteur);
-        if (repondu) { return; }
-        cache.match(req).then(function (vieille) {
-          if (repondu) { return; }
-          repondu = true;
-          resolve(vieille || pageDeSecours(req));
-        });
-      });
     });
   });
 }
@@ -560,9 +595,15 @@ self.addEventListener('fetch', function (event) {
         ascenseur. « ignorerRecherche » est indispensable : l'adresse de
         depart du raccourci est « index.html?action=add », qui ne
         correspondrait a aucune entree de la reserve sans cette tolerance. */
+  /* RESEAU D'ABORD, ET NON PLUS RESERVE D'ABORD.
+     Avec la reserve d'abord, une page publiee le matin n'arrivait sur le
+     telephone qu'apres un rechargement… qui resservait la reserve : le
+     bandeau « nouvelle version » revenait a chaque ouverture sans jamais
+     rien changer. Desormais, en ligne, la page est TOUJOURS celle du
+     serveur (3,5 s au plus, sinon la reserve) ; hors ligne, la reserve. */
   if (req.mode === 'navigate') {
     event.respondWith(
-      reserveDAbord(event, C_COQUILLE, { ignorerRecherche: true, surveiller: true })
+      reseauDAbord(event, C_COQUILLE, 3500, { ignorerRecherche: true, noterSource: true })
         .catch(function () { return pageDeSecours(req); })
     );
     return;
@@ -605,11 +646,27 @@ self.addEventListener('fetch', function (event) {
         « surveiller » n'est actif que pour le code (.html et .js) : ce sont
         les seuls fichiers dont un changement justifie de proposer un
         rechargement au client. */
-  if (dansLApplication &&
-      /\.(html|css|js|mjs|svg|png|jpe?g|webp|gif|ico|woff2?|ttf|webmanifest|txt)$/i.test(url.pathname)) {
+  /* Le CODE (.html, .js) suit la meme regle que la page : reseau d'abord.
+     Sinon une page neuve tournerait avec de vieux fichiers .js pris dans la
+     reserve — deux versions melangees, le pire des cas. Les images, polices
+     et styles, eux, restent reserve d'abord : ils changent rarement et
+     pesent lourd. */
+  if (dansLApplication && /\.(html|js|mjs)$/i.test(url.pathname)) {
+    /* La page en cours vient-elle de la reserve (hors ligne) ? Alors son code
+       aussi, sans attendre le reseau. Vient-elle du reseau ? Alors son code
+       doit venir du reseau, quitte a l'attendre (20 s) : jamais une page neuve
+       avec un fichier ancien. */
+    var horsLigne = (PAGE.source === 'reserve') && (Date.now() - PAGE.quand < 60000);
     event.respondWith(
-      reserveDAbord(event, C_COQUILLE, { surveiller: /\.(html|js)$/i.test(url.pathname) })
+      (horsLigne ? reserveDAbord(event, C_COQUILLE, {}) : reseauDAbord(event, C_COQUILLE, 20000))
         .catch(function () { return fetch(req); })
+    );
+    return;
+  }
+  if (dansLApplication &&
+      /\.(css|svg|png|jpe?g|webp|gif|ico|woff2?|ttf|webmanifest|txt)$/i.test(url.pathname)) {
+    event.respondWith(
+      reserveDAbord(event, C_COQUILLE, {}).catch(function () { return fetch(req); })
     );
     return;
   }
