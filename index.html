@@ -63,7 +63,7 @@ button{cursor:pointer;border:none;background:none}
    seul. --mainsH est mesuré en JS (syncMains) : c'est la hauteur réelle de
    la rangée « sections principales » posée au-dessus de l'anneau, et le
    centre de l'anneau est décalé d'autant au lieu d'être à 50%. */
-.wrap.ring{--rr:clamp(196px,25vw,290px);--n:5;--mainsH:0px;
+.wrap.ring{--rr:clamp(196px,25vw,290px);--n:4;--mainsH:0px;
   display:block;position:relative;
   /* min-height et non height : si le contenu depasse la formule, la page
      s allonge au lieu de le rogner. C etait la source du grand vide blanc
@@ -574,7 +574,7 @@ html[dir="rtl"] .collapsed .p-tog{transform:rotate(90deg)}
   font-size:19px;display:grid;place-items:center;transition:.18s;flex-shrink:0}
 .hdr-orb:hover{transform:scale(1.06);border-color:var(--line2)}
 .brief > .hdr-orb{position:absolute;inset-block-start:18px;inset-inline-end:18px}
-.brief.collapsed{background:transparent;border:none;box-shadow:none;padding:0}
+.brief.collapsed{background:transparent;border:none;box-shadow:none;padding:0;overflow:visible}
 .brief.collapsed > h2,.brief.collapsed > .hdr-orb{display:none}
 .brief:not(.collapsed) .pan-orb{display:none}
 .brief.collapsed .pan-orb{display:flex}
@@ -582,7 +582,7 @@ html[dir="rtl"] .collapsed .p-tog{transform:rotate(90deg)}
 /* ---------- BOARDS CIRCULAIRES ---------- */
 .boards{display:contents}
 .board{flex:1 1 470px;min-width:0}
-.board.closed{flex:0 0 auto;background:transparent;border:none;box-shadow:none;border-radius:50%}
+.board.closed{flex:0 0 auto;background:transparent;border:none;box-shadow:none;border-radius:50%;overflow:visible}
 .board.closed .board-head,.board.closed .board-body{display:none}
 .board.open .board-orb{display:none}
 .board-orb{width:158px;height:158px;border-radius:50%;background:var(--surface);border:1px solid var(--line);
@@ -593,6 +593,44 @@ html[dir="rtl"] .collapsed .p-tog{transform:rotate(90deg)}
 .board-orb .bo-ic{font-size:34px;line-height:1}
 .board-orb .bo-n{font-family:var(--ff-fr);font-size:26px;font-weight:700;line-height:1.1;letter-spacing:-1px}
 .board-orb .bo-l{font-size:11.8px;font-weight:700;color:var(--txt2);text-align:center;line-height:1.35;max-width:112px}
+
+/* ---------- DISPOSITION DE TRAVAIL (au moins une bulle ouverte) ----------
+   Rangee 1 : toutes les bulles fermees, rassemblees au centre — « un seul
+   endroit ». Rangee 2 : les panneaux ouverts (resume, indicateurs, filtres)
+   en pleine largeur. Rangee 3 : les sections principales, TOUJOURS cote a
+   cote (l'une ouverte, l'autre en bulle, ou les deux ouvertes). Tout en bas :
+   « Sources et sauvegardes », en barre, qui attend qu'on l'ouvre. Quand tout
+   est ferme, l'anneau d'accueil reprend (voir .wrap.ring plus haut). */
+.wrap:not(.ring){justify-content:center}
+.wrap:not(.ring) > .pan.collapsed,.wrap:not(.ring) > .hero > .panel.collapsed{order:0}
+.wrap:not(.ring) > .pan:not(.collapsed),.wrap:not(.ring) > .hero > .panel:not(.collapsed){order:1;flex:1 1 100%}
+.wrap:not(.ring) > .boards{display:flex;order:2;flex:1 1 100%;gap:16px;align-items:flex-start;flex-wrap:wrap;justify-content:center}
+/* min-width:0 : sans lui, un cadre dont une ligne est plus large que l ecran
+   (telephone) elargissait toute la rangee au-dela de l ecran, qui defilait
+   alors de gauche a droite. Chaque fenetre fait EXACTEMENT la largeur de
+   l ecran ; ce qui est trop large a l interieur se replie ou se coupe. */
+.wrap:not(.ring) > .boards,.wrap:not(.ring) > .boards > .board,.wrap:not(.ring) > .pan:not(.collapsed),.wrap:not(.ring) > .hero > .panel:not(.collapsed),.wrap:not(.ring) > .foot{min-width:0;max-width:100%}
+.wrap:not(.ring) > .boards > .board.open{flex:1 1 420px;min-width:0}
+.wrap:not(.ring) > .boards > .board.closed{flex:0 0 auto}
+.wrap:not(.ring) > .foot{order:3;flex:1 1 100%!important}
+.wrap:not(.ring) > .foot.collapsed{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:var(--r2);padding:0}
+.wrap:not(.ring) > .foot.collapsed > .pan-orb{display:none}
+.wrap:not(.ring) > .foot.collapsed .foot-h{display:flex;cursor:pointer;padding:12px 18px}
+.wrap:not(.ring) > .foot.collapsed .foot-h .p-tog{transform:rotate(180deg)}
+/* la bulle d'accueil, grande sur l'anneau, redevient une bulle ordinaire ici */
+.wrap:not(.ring) .pan-orb.ctr{width:158px;min-height:158px;padding:14px;gap:2px;aspect-ratio:auto}
+.wrap:not(.ring) .pan-orb.ctr .po-q,.wrap:not(.ring) .pan-orb.ctr .po-k{display:none}
+.wrap:not(.ring) .pan-orb.ctr .po-w{white-space:normal;font-size:11px;line-height:1.3}
+/* La legende « تنبيهات ذكية » sous le robot etait posee en absolu SOUS sa
+   bulle : elle chevauchait la rangee suivante. Dans le flux, la bulle grandit
+   d autant et rien ne se touche. */
+.wrap:not(.ring) .orbwrap.collapsed{padding:0}
+.wrap:not(.ring) .orbwrap.collapsed .orb-cap{position:static;inset:auto;margin-top:8px}
+.strip-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 8px;font-size:12.5px;font-weight:700;color:var(--txt2)}
+/* Au telephone les deux sections s empilent : la bulle de la section FERMEE
+   passe AVANT la section ouverte, sinon il faudrait descendre au bout de
+   toute la liste pour changer de section. */
+@media(max-width:700px){ .wrap:not(.ring) > .boards > .board.closed{order:-1} }
 .board-orb .bo-s{font-size:10.5px;color:var(--txt3)}
 
 /* ---------- GROUPEMENT PAR CATÉGORIE ---------- */
@@ -612,7 +650,7 @@ html[dir="rtl"] .collapsed .p-tog{transform:rotate(90deg)}
 .cgroup.open .cg-ch{transform:rotate(180deg)}
 .cg-b{display:none;padding:0 9px 10px;flex-direction:column;gap:8px}
 .cgroup.open .cg-b{display:flex}
-@media(max-width:560px){.board-orb,.orb,.pan-orb{width:126px;height:126px}.orb .orb-face{font-size:46px}.pan-orb .po-ic{font-size:30px}}
+@media(max-width:560px){.board-orb,.orb,.pan-orb{width:126px;height:126px}.wrap:not(.ring) .pan-orb.ctr{width:126px;min-height:126px}.orb .orb-face{font-size:46px}.pan-orb .po-ic{font-size:30px}}
 
 
 /* ---------- COMPAGNONS (chat + chien) ---------- */
@@ -710,7 +748,7 @@ input[type="color"]{height:40px;padding:3px;cursor:pointer}
    rendez-vous a plus de la moitie de l ecran. On serre la bande et on range la
    decoration dans un coin. */
 @media(max-width:700px){
-  .wrap:not(.ring){padding-block-start:64px}
+  .wrap.wrap:not(.ring){padding-block-start:64px}   /* .wrap.wrap : gagne sur la regle 940 px, quel que soit l'ordre */
   #pets{transform:scale(.72);transform-origin:top right;opacity:.9}
 }
 #pets .grp,#pets .head{transition:transform .9s cubic-bezier(.3,.1,.2,1)}
@@ -881,7 +919,7 @@ input[type="color"]{height:40px;padding:3px;cursor:pointer}
   .brand p{display:none}
 }
 @media print{
-  .topbar,.toolbar,.strip,.acts,.btn-add,.tools,.foot .src{display:none!important}
+  .topbar,.toolbar,.strip,.strip-h,.acts,.btn-add,.tools,.foot .src{display:none!important}
   body{background:#fff}.card-body{display:block!important}
   .board-orb,.pan-orb,.hdr-orb,.p-tog,.gsw,.orb,.orb-cap,.orb-hint,#pets{display:none!important}
   .pan.collapsed .pan-h{display:flex!important}
@@ -892,6 +930,12 @@ input[type="color"]{height:40px;padding:3px;cursor:pointer}
   .boards{display:block!important}
   .board{border:1px solid var(--line)!important;border-radius:var(--r)!important;margin-bottom:16px}
   .cgroup .cg-b{display:flex!important}
+  /* Accueil en anneau : a l'impression tout repasse dans le flux normal —
+     sinon satellites, resume et sections restent en absolu au meme point et
+     s'impriment superposes. */
+  .wrap.ring{display:block!important;min-height:0!important;padding-bottom:0!important}
+  .wrap.ring::before{display:none!important}
+  .wrap.ring .ring-node,.wrap.ring #pan_brief,.wrap.ring .boards{position:static!important;transform:none!important;margin:0 0 16px!important}
 }
 </style>
 <link rel="manifest" href="app/pwa/manifest.webmanifest">
@@ -1017,6 +1061,7 @@ input[type="color"]{height:40px;padding:3px;cursor:pointer}
     <button class="pan-orb" onclick="togPanel('filters')">
       <span class="po-ic">🔎</span>
       <span class="po-l" data-t="filtersTitle"></span>
+      <span class="po-s" id="stripRangeOrb"></span>
     </button>
     <div class="pan-h"><button class="hdr-orb" onclick="togPanel('filters')">🔎</button><span data-t="filtersTitle"></span><button class="p-tog" onclick="togPanel('filters')">▾</button></div>
     <div class="p-in">
@@ -1043,17 +1088,11 @@ input[type="color"]{height:40px;padding:3px;cursor:pointer}
     <button class="switch" id="swRoutine" onclick="toggleRoutine()"><span class="track"></span><span data-t="routines"></span></button>
     <button class="btn-add" onclick="openAdd()">＋ <span data-t="addTask"></span></button>
     </section>
+    <!-- La bande des jours vit desormais ICI, sous les filtres : une seule
+         bulle « filtres, recherche, jours » au lieu de deux. -->
+    <div class="strip-h"><span>📆 <b data-t="agendaTitle"></b></span><span id="stripRange" style="font-family:var(--ff-fr);font-weight:700;font-size:11.5px;color:var(--txt3)"></span></div>
+    <div class="strip" id="strip"></div>
     </div>
-  </section>
-
-  <section class="pan ring-node" style="--i:3" id="pan_strip">
-    <button class="pan-orb" onclick="togPanel('strip')">
-      <span class="po-ic">📆</span>
-      <span class="po-l" data-t="agendaTitle"></span>
-      <span class="po-s" id="stripRangeOrb"></span>
-    </button>
-    <div class="pan-h"><button class="hdr-orb" onclick="togPanel('strip')">📆</button><span data-t="agendaTitle"></span><span id="stripRange" style="font-family:var(--ff-fr);font-weight:700;font-size:11.5px;color:var(--txt3)"></span><button class="p-tog" onclick="togPanel('strip')">▾</button></div>
-    <div class="p-in"><div class="strip" id="strip"></div></div>
   </section>
 
   <!-- Les tableaux sont generes par buildBoardsDOM() a partir de la liste
@@ -1097,13 +1136,13 @@ input[type="color"]{height:40px;padding:3px;cursor:pointer}
     </div>
   </template>
 
-  <footer class="foot collapsed ring-node" style="--i:4" id="pan_foot">
+  <footer class="foot collapsed ring-node" style="--i:3" id="pan_foot">
     <button class="pan-orb" onclick="togPanel('foot')">
-      <span class="po-ic">📅</span>
+      <span class="po-ic">💾</span>
       <span class="po-l" data-t="footTitle"></span>
     </button>
-    <div class="foot-h">
-      <button class="hdr-orb" onclick="togPanel('foot')">📅</button>
+    <div class="foot-h" role="button" tabindex="0" onclick="if(!event.target.closest('button') && this.closest('.foot.collapsed')) togPanel('foot')" onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();togPanel('foot')}">
+      <button class="hdr-orb" onclick="togPanel('foot')">💾</button>
       <span data-t="footTitle"></span>
       <button class="p-tog" onclick="togPanel('foot')">▾</button>
     </div>
@@ -2698,7 +2737,7 @@ ar:{
   greet:'مرحباً 👋', greetM:'صباح الخير ☀️', greetE:'مساء الخير 🌙',
   briefNone:'لا توجد التزامات في النطاق المحدد. يمكنك توسيع المدة الزمنية من الأعلى.',
   briefTodayNone:'لا شيء مبرمج اليوم.',
-  footTitle:'المصادر والنسخ', briefTitle:'الملخّص', kpiTitle:'المؤشرات السريعة', filtersTitle:'الفلاتر والبحث', agendaTitle:'شريط الأيام',
+  footTitle:'المصادر والنسخ', briefTitle:'الملخّص', kpiTitle:'المؤشرات السريعة', filtersTitle:'الفلاتر والبحث والأيام', agendaTitle:'شريط الأيام',
   byDate:'حسب التاريخ', byCat:'حسب التصنيف', openHint:'اضغط للفتح', orbHint:'اضغط لتشغيل المساعد',
   loadTitle:'توزيع الحمل', busiest:'أثقل يوم', freeDay:'أول يوم فارغ', lateLbl:'متأخرة', noneOpen:'لا عناصر مفتوحة في هذا النطاق',
   nextUpT:'القادم', noAlerts:'كل شيء تحت السيطرة — لا يوجد ما يستدعي التدخل العاجل ✅',
@@ -2772,7 +2811,7 @@ fr:{
   greet:'Bonjour 👋', greetM:'Bonjour ☀️', greetE:'Bonsoir 🌙',
   briefNone:'Aucune échéance dans la période choisie. Élargissez la fenêtre ci-dessus.',
   briefTodayNone:"Rien de programmé aujourd'hui.",
-  footTitle:'Sources et sauvegardes', briefTitle:'Le résumé', kpiTitle:'Indicateurs', filtersTitle:'Filtres et recherche', agendaTitle:'Bande des jours',
+  footTitle:'Sources et sauvegardes', briefTitle:'Le résumé', kpiTitle:'Indicateurs', filtersTitle:'Filtres, recherche, jours', agendaTitle:'Bande des jours',
   byDate:'Par date', byCat:'Par catégorie', openHint:'Cliquez pour ouvrir', orbHint:"Cliquez pour activer l'assistant",
   loadTitle:'Répartition de la charge', busiest:'Jour le plus chargé', freeDay:'Premier jour libre', lateLbl:'en retard', noneOpen:'Aucun élément ouvert dans cette période',
   nextUpT:'À venir', noAlerts:'Tout est sous contrôle — aucune urgence ✅',
@@ -2896,7 +2935,7 @@ let store = {status:{}, checks:{}, notes:{}, cat:{}, custom:[], contact:{}, plac
    passe / en cours / prochain, semaines 1 a 4 du mois en cours, date precise. */
 const WINS = ['mp','mc','mn','s1','s2','s3','s4','custom'];
 let state = {lang:'ar', theme:'light', win:'mc', from:null, to:null, q:'', sub:'all', status:'all', routine:true, routineChoisi:false, open:{}, selDay:null,
-  pan:{brief:0,kpi:0,filters:0,strip:0,alerts:0,foot:0}, boards:{ent:0,perso:0}, group:{ent:'date',perso:'date'}, gopen:{},
+  pan:{brief:0,kpi:0,filters:0,alerts:0,foot:0}, boards:{ent:0,perso:0}, group:{ent:'date',perso:'date'}, gopen:{},
   /* combien de cartes on montre par rubrique ; augmente par « voir la suite ».
      Jamais enregistre : a chaque ouverture on repart leger. */
   more:{}};
@@ -3179,10 +3218,13 @@ function delCheck(it,i){
 /* ============================================================================
    6. FILTRES
    ============================================================================ */
-function winRange(){
+function winRange(sansJour){
   const T0 = today();
   if(state.win==='custom' && state.from && state.to) return [parse(state.from), parse(state.to)];
-  if(state.selDay) return [parse(state.selDay), parse(state.selDay)];
+  /* sansJour : la bande des jours veut TOUTE la periode, meme quand un jour
+     est choisi — sinon elle se reduisait a ce seul jour et on ne pouvait plus
+     en choisir un autre sans le deselectionner d'abord. */
+  if(state.selDay && !sansJour) return [parse(state.selDay), parse(state.selDay)];
   /* Des periodes de CALENDRIER, aux bornes que tout le monde connait : le
      mois passe va du 1er au dernier jour du mois passe, le mois en cours du
      1er au dernier jour de ce mois-ci, le mois prochain de meme. Les
@@ -3390,7 +3432,7 @@ function renderAlerts(){
    passe — au lieu d'une table figee qui partait toujours d'aujourd'hui.
    Plafond de 92 jours : au-dela, une bande n'est plus lisible. */
 function stripDays(){
-  const [A,B] = winRange();
+  const [A,B] = winRange(true);
   const n = Math.round((B - A)/86400000) + 1;
   return {from:A, n:Math.max(1,Math.min(n,92)), total:n};
 }
@@ -3698,6 +3740,11 @@ function togPanel(k){
   state.pan[k] = state.pan[k] ? 0 : 1;
   document.getElementById('pan_'+k).classList.toggle('collapsed', !state.pan[k]);
   syncRing(); prefSet();
+  /* Bulle des filtres refermee avec un jour choisi dans la bande : plus aucun
+     temoin visible de ce filtre — on l'oublie, la liste revient a la periode. */
+  if(k==='filters' && !state.pan[k] && state.selDay){ state.selDay=null; syncUI(); render(); }
+  /* Le pied s'ouvre tout en bas : on l'amene sous les yeux. */
+  if(k==='foot' && state.pan[k]){ const e=document.getElementById('pan_foot'); if(e) setTimeout(function(){ e.scrollIntoView({block:'end',behavior:'smooth'}); }, 60); }
 }
 function togOrb(){ togPanel('alerts'); renderAlerts(); }
 function togBoard(cat){

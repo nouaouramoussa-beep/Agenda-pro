@@ -1,5 +1,5 @@
 {
- "genere": "2026-09-23T16:10:12.939Z",
+ "genere": "2026-09-23T18:54:11.973Z",
  "fichiers": {
   ".nojekyll": {
    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -42,8 +42,8 @@
    "octets": 68141
   },
   "app/google/gbridge.js": {
-   "sha256": "c63cad2cf1c5d0d01575be9da8e4957ab24bd9c0b0380ceacaa7833caacff28f",
-   "octets": 77430
+   "sha256": "05105d3858233d08648200e2a5f89503b708d321696840b1de1c7a11d606d381",
+   "octets": 79170
   },
   "app/google/gsync.js": {
    "sha256": "df3faa13c33c2ea5573c16766191b845130842d822786cf9c3feb65fd9b0a51f",
@@ -114,7 +114,7 @@
    "octets": 1650
   },
   "app/pwa/sw.js": {
-   "sha256": "8de8f556df35f2b84814bb935d95ed760d4940ff3160943fde4a9686ca11f2d9",
+   "sha256": "3f41ec65da1270897aeabc188d3eb920bfe2ed9a2e2c65d481639251e1841c0b",
    "octets": 30781
   },
   "app/setup/setup.css": {
@@ -146,8 +146,8 @@
    "octets": 17791
   },
   "index.html": {
-   "sha256": "420200c257dfd502f06411204c5f6d087aa70e28bf225a7b7c2c1afad7cccfaf",
-   "octets": 289273
+   "sha256": "c90605c69afdaec66afd3996af512562f07f13c799028c0fd69b667b1b470c10",
+   "octets": 293771
   },
   "sw.js": {
    "sha256": "bdca343b03eb8d6eaed1c3eec1de2ab2ac9d94e351beed282ab563ca0635e8c7",

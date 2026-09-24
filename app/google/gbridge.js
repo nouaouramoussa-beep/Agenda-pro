@@ -151,6 +151,9 @@
 
       jamaisSync:   'لم تتم أي مزامنة بعد',
       derniere:     'آخر مزامنة {x}',
+      classementIci:'التصنيف (مؤسسة/شخصي) يُرسَل من هذا الجهاز: {n} سلسلة',
+      classementOk: 'التصنيف وصل من الحاسوب: {n} سلسلة — {x}',
+      classementNon:'التصنيف لم يصل بعد: اربط الحاسوب بـ Google مرة واحدة (مع Drive) ثم اضغط 🔄 هنا',
       tNow:         'قبل لحظات',
       tMin:         'منذ {n} دقيقة',
       tHour:        'منذ {n} ساعة',
@@ -222,6 +225,9 @@
 
       jamaisSync:   'aucune synchronisation pour l\'instant',
       derniere:     'derniere synchro {x}',
+      classementIci:'Le classement (entreprise / personnel) part de cet appareil : {n} serie(s)',
+      classementOk: 'Classement recu du bureau : {n} serie(s) — {x}',
+      classementNon:'Classement pas encore recu : reliez le bureau a Google une fois (avec Drive), puis 🔄 ici',
       tNow:         'a l\'instant',
       tMin:         'il y a {n} min',
       tHour:        'il y a {n} h',
@@ -1165,6 +1171,24 @@
       ch.appendChild(chiffre(i.enAttente || 0, M('attente')));
       ch.appendChild(chiffre(DERNIER_MASQUE, M('masques')));
       s.appendChild(ch);
+
+      /* D'ou vient le classement des sections ? Sans cette ligne, un
+         telephone qui range tout dans « personnel » ne dit pas pourquoi. */
+      if (AP.gsync && typeof AP.gsync.classement === 'function') {
+        var cl = AP.gsync.classement();
+        var enDur = (taches() || []).some(function (t) { return t && EN_DUR.indexOf(t.src) >= 0; });
+        /* l appareil source compte ce qu il ENVOIE (photo vivante), l autre ce qu il a RECU */
+        var nbCl = enDur ? Object.keys(PAQUET_ENTIER || paquetClassement() || {}).length : Object.keys(cl.s || {}).length;
+        var lc = document.createElement('div');
+        lc.className = 'apg-etat apg-classement';
+        var pc = document.createElement('span');
+        pc.className = 'apg-dot' + ((enDur || nbCl) ? ' on' : ' warn');
+        var tc = document.createElement('div');
+        tc.textContent = enDur ? M('classementIci', { n: nbCl })
+                       : (nbCl ? M('classementOk', { n: nbCl, x: depuis(cl.q || 0) }) : M('classementNon'));
+        lc.appendChild(pc); lc.appendChild(tc);
+        s.appendChild(lc);
+      }
     }
 
     if (i.erreur) { s.appendChild(bloc_erreur(i.erreur)); }
