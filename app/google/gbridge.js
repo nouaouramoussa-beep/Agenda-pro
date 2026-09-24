@@ -155,6 +155,7 @@
       classementOk: 'التصنيف وصل من الحاسوب: {n} سلسلة — {x}',
       classementNon:'التصنيف لم يصل بعد: اربط الحاسوب بـ Google مرة واحدة (مع Drive) ثم اضغط 🔄 هنا',
       classementDriveManque:'هذا الجهاز رُبط قبل إضافة هذه الخاصية، فلم يُمنح إذن Drive بعد — اضغط الزر لمنحه (لن تفقد ربط التقويم).',
+      classementDriveManqueIci:'التصنيف لا يصل إلى الأجهزة الأخرى: هذا الجهاز (الذي يحمل بياناتك) لم يُمنح إذن Drive بعد — اضغط الزر لتفعيله.',
       classementActiver:'تفعيل تصنيف الأقسام',
       classementEnCours:'جارٍ الطلب من Google…',
       classementEchec:'رُفض الإذن أو أُغلقت النافذة — أعد المحاولة',
@@ -233,6 +234,7 @@
       classementOk: 'Classement recu du bureau : {n} serie(s) — {x}',
       classementNon:'Classement pas encore recu : reliez le bureau a Google une fois (avec Drive), puis 🔄 ici',
       classementDriveManque:'Cet appareil a ete relie avant cette fonction : la permission Drive lui manque encore — cliquez pour l\'accorder (le calendrier reste relie).',
+      classementDriveManqueIci:'Le classement ne part vers aucun autre appareil : CET appareil (qui porte vos donnees) n\'a pas la permission Drive — cliquez pour l\'activer.',
       classementActiver:'Activer le classement',
       classementEnCours:'Demande a Google…',
       classementEchec:'Permission refusee ou fenetre fermee — reessayez',
@@ -1190,13 +1192,18 @@
         /* « i.drive » vient du dernier jeton EFFECTIVEMENT obtenu, pas
            seulement du reglage local — un renouvellement silencieux qui
            echoue doit aussi se voir ici. */
-        var manqueDrive = !enDur && !i.drive;
+        /* AUCUN role n'echappe a la regle : sans le droit Drive, l'appareil
+           SOURCE ne peut pas ECRIRE le fichier (ecrireNuage echoue en
+           silence), l'appareil qui REÇOIT ne peut pas le LIRE. Avant ce
+           correctif, un appareil source sans ce droit affichait quand meme
+           « envoye : N series » — un faux succes qui cachait le vrai blocage. */
+        var manqueDrive = !i.drive;
         var lc = document.createElement('div');
         lc.className = 'apg-etat apg-classement';
         var pc = document.createElement('span');
         pc.className = 'apg-dot' + (manqueDrive ? ' warn' : ((enDur || nbCl) ? ' on' : ' warn'));
         var tc = document.createElement('div');
-        tc.textContent = manqueDrive ? M('classementDriveManque')
+        tc.textContent = manqueDrive ? (enDur ? M('classementDriveManqueIci') : M('classementDriveManque'))
                        : enDur ? M('classementIci', { n: nbCl })
                        : (nbCl ? M('classementOk', { n: nbCl, x: depuis(cl.q || 0) }) : M('classementNon'));
         lc.appendChild(pc); lc.appendChild(tc);
