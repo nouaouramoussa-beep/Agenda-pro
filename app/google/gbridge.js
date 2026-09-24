@@ -125,7 +125,7 @@
   /* Les origines qui viennent du fichier index.html lui-meme. Une tache
      'manuel' est une tache que l'artisan a tapee a la main : elle n'est
      JAMAIS cachee, meme si elle ressemble a un rendez-vous de Google. */
-  var EN_DUR = ['principal', 'famille'];
+  var EN_DUR = ['principal', 'famille', 'feries'];   /* feries : sinon chaque jour ferie etait double des que l'agenda des fetes est suivi */
 
   var T = {
     ar: {
@@ -835,7 +835,11 @@
       }
 
       /* 3. Le mode « remplacer » : dans la periode couverte, Google fait foi. */
-      var dansLaFenetre = remplace && t.date >= borneBasse && t.date <= borneHaute;
+      /* Les jours feries ecrits dans le programme ne s effacent que devant leur
+         JUMEAU Google (agenda des fetes suivi) : la regle « Google fait foi sur
+         la periode » ne les concerne pas, sinon ils disparaitraient des que
+         l agenda des fetes n est pas coche. */
+      var dansLaFenetre = remplace && t.src !== 'feries' && t.date >= borneBasse && t.date <= borneHaute;
 
       if (!jumeau && !dansLaFenetre) { continue; }
 

@@ -663,6 +663,13 @@
             suivi: !!(reglages().agendas[c.id] || {}).suivi
           };
         });
+        /* L alias « primary » (bouton de secours) et la vraie adresse tous deux
+           suivis : on retire l alias des reglages, une fois pour toutes. */
+        var r0 = reglages(), reel0 = idPrincipal();
+        if (reel0 && r0.agendas.primary && r0.agendas.primary.suivi && r0.agendas[reel0] && r0.agendas[reel0].suivi) {
+          delete r0.agendas.primary; poserReglages({ agendas: r0.agendas });
+          dire('alias « primary » retire : l agenda principal est deja suivi sous ' + reel0);
+        }
         emettre('agendas', AGENDAS.slice());
         return agendas();
       });
@@ -691,9 +698,27 @@
     }
     return reglages();
   }
+  /* L'adresse reelle de l'agenda principal, quand Google nous l'a donnee
+     (liste des agendas) : c'est elle qui fait foi, « primary » n'est qu'un
+     alias de secours. */
+  var PRINCIPAL_RESERVE = null;   // l adresse reelle relue de la reserve, avant que Google reponde
+  function idPrincipal() {
+    for (var i = 0; i < AGENDAS.length; i++) if (AGENDAS[i].principal) return AGENDAS[i].id;
+    return PRINCIPAL_RESERVE;
+  }
   function agendasSuivis() {
     var r = reglages(); var out = [];
     Object.keys(r.agendas || {}).forEach(function (id) { if (r.agendas[id] && r.agendas[id].suivi) out.push(id); });
+    /* LE MEME AGENDA SOUS DEUX NOMS = CHAQUE RENDEZ-VOUS EN DOUBLE.
+       Le bouton de secours suit l'agenda principal sous l'alias « primary » ;
+       la liste des agendas, elle, le fait cocher sous sa vraie adresse. Les
+       deux cochees, on le lisait deux fois et chaque rendez-vous apparaissait
+       deux fois — c'est exactement ce que l'artisan a vu. Des que la vraie
+       adresse est suivie, l'alias ne compte plus. */
+    var reel = idPrincipal();
+    if (out.indexOf('primary') >= 0 && reel && out.indexOf(reel) >= 0) {
+      out = out.filter(function (id) { return id !== 'primary'; });
+    }
     return out;
   }
 
@@ -821,7 +846,7 @@
       lecture: ETAT.derniereLecture || 0,
       complet: ETAT.derniereComplete || 0,
       agendas: AGENDAS.length
-        ? AGENDAS.map(function (a) { return { id: a.id, nom: a.nom, rappels: a.rappels || [] }; })
+        ? AGENDAS.map(function (a) { return { id: a.id, nom: a.nom, rappels: a.rappels || [], principal: !!a.principal }; })
         : Object.keys(NOMS).map(function (id) { return { id: id, nom: NOMS[id], rappels: RAPPELS[id] || [] }; }),
       ev: ev
     };
@@ -869,7 +894,7 @@
       EVENEMENTS[id] = { cal: e.cal, ev: e.ev, jour: e.jour };
       n++;
     });
-    (p.agendas || []).forEach(function (a) { if (a && a.id) { NOMS[a.id] = a.nom || a.id; RAPPELS[a.id] = a.rappels || []; } });
+    (p.agendas || []).forEach(function (a) { if (a && a.id) { NOMS[a.id] = a.nom || a.id; RAPPELS[a.id] = a.rappels || []; if (a.principal) PRINCIPAL_RESERVE = a.id; } });
     if (n) {
       ETAT.derniereLecture  = p.lecture || 0;
       ETAT.derniereComplete = p.complet || 0;
@@ -1074,7 +1099,18 @@
   /* La liste complete, triee comme index.html trie la sienne. */
   function tasks() {
     var out = [], regl = reglages();
-    Object.keys(EVENEMENTS).forEach(function (id) { var t = tacheDe(id, regl); if (t) out.push(t); });
+    /* Le meme evenement lu sous deux noms d'agenda (« primary » et l'adresse
+       reelle) : une seule tache, celle de l'adresse reelle. */
+    var vus = {};
+    Object.keys(EVENEMENTS).sort(function (a, b) {
+      var pa = EVENEMENTS[a].cal === 'primary' ? 1 : 0, pb = EVENEMENTS[b].cal === 'primary' ? 1 : 0;
+      return pa - pb;
+    }).forEach(function (id) {
+      var ev = EVENEMENTS[id] && EVENEMENTS[id].ev; if (!ev || !ev.id) return;
+      if (vus[ev.id]) return;
+      vus[ev.id] = 1;
+      var t = tacheDe(id, regl); if (t) out.push(t);
+    });
     return out.sort(function (a, b) {
       return a.date === b.date ? (a.start || '').localeCompare(b.start || '') : a.date.localeCompare(b.date);
     });
@@ -2198,6 +2234,12 @@
     var ids = agendasSuivis();
     if (!ids.length) return Promise.resolve(false);
     if (!connecte()) return Promise.resolve(false);
+    /* Menage : les rendez-vous d'un agenda qu'on ne suit plus (dont l'alias
+       « primary » ecarte ci-dessus) ne doivent pas rester a l'ecran. */
+    var suivi = {}; ids.forEach(function (id) { suivi[id] = 1; });
+    var orphelins = 0;
+    Object.keys(EVENEMENTS).forEach(function (id) { if (!suivi[EVENEMENTS[id].cal]) { delete EVENEMENTS[id]; orphelins++; } });
+    if (orphelins) dire(orphelins + ' rendez-vous d\'un agenda non suivi (ou en double sous « primary ») retires.');
 
     /* LA LISTE EST VIDE : ON RELIT TOUT, ET PAS LE SEUL DELTA.
        Le curseur du syncToken ne rapporte QUE ce qui a change depuis la
