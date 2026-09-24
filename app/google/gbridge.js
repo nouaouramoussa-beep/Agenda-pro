@@ -154,6 +154,10 @@
       classementIci:'التصنيف (مؤسسة/شخصي) يُرسَل من هذا الجهاز: {n} سلسلة',
       classementOk: 'التصنيف وصل من الحاسوب: {n} سلسلة — {x}',
       classementNon:'التصنيف لم يصل بعد: اربط الحاسوب بـ Google مرة واحدة (مع Drive) ثم اضغط 🔄 هنا',
+      classementDriveManque:'هذا الجهاز رُبط قبل إضافة هذه الخاصية، فلم يُمنح إذن Drive بعد — اضغط الزر لمنحه (لن تفقد ربط التقويم).',
+      classementActiver:'تفعيل تصنيف الأقسام',
+      classementEnCours:'جارٍ الطلب من Google…',
+      classementEchec:'رُفض الإذن أو أُغلقت النافذة — أعد المحاولة',
       tNow:         'قبل لحظات',
       tMin:         'منذ {n} دقيقة',
       tHour:        'منذ {n} ساعة',
@@ -228,6 +232,10 @@
       classementIci:'Le classement (entreprise / personnel) part de cet appareil : {n} serie(s)',
       classementOk: 'Classement recu du bureau : {n} serie(s) — {x}',
       classementNon:'Classement pas encore recu : reliez le bureau a Google une fois (avec Drive), puis 🔄 ici',
+      classementDriveManque:'Cet appareil a ete relie avant cette fonction : la permission Drive lui manque encore — cliquez pour l\'accorder (le calendrier reste relie).',
+      classementActiver:'Activer le classement',
+      classementEnCours:'Demande a Google…',
+      classementEchec:'Permission refusee ou fenetre fermee — reessayez',
       tNow:         'a l\'instant',
       tMin:         'il y a {n} min',
       tHour:        'il y a {n} h',
@@ -1179,15 +1187,34 @@
         var enDur = (taches() || []).some(function (t) { return t && EN_DUR.indexOf(t.src) >= 0; });
         /* l appareil source compte ce qu il ENVOIE (photo vivante), l autre ce qu il a RECU */
         var nbCl = enDur ? Object.keys(PAQUET_ENTIER || paquetClassement() || {}).length : Object.keys(cl.s || {}).length;
+        /* « i.drive » vient du dernier jeton EFFECTIVEMENT obtenu, pas
+           seulement du reglage local — un renouvellement silencieux qui
+           echoue doit aussi se voir ici. */
+        var manqueDrive = !enDur && !i.drive;
         var lc = document.createElement('div');
         lc.className = 'apg-etat apg-classement';
         var pc = document.createElement('span');
-        pc.className = 'apg-dot' + ((enDur || nbCl) ? ' on' : ' warn');
+        pc.className = 'apg-dot' + (manqueDrive ? ' warn' : ((enDur || nbCl) ? ' on' : ' warn'));
         var tc = document.createElement('div');
-        tc.textContent = enDur ? M('classementIci', { n: nbCl })
+        tc.textContent = manqueDrive ? M('classementDriveManque')
+                       : enDur ? M('classementIci', { n: nbCl })
                        : (nbCl ? M('classementOk', { n: nbCl, x: depuis(cl.q || 0) }) : M('classementNon'));
         lc.appendChild(pc); lc.appendChild(tc);
         s.appendChild(lc);
+        /* Le geste qui manque, a portee de main — pas une explication qu'il
+           faut aller retraduire en clic ailleurs. */
+        if (manqueDrive && AP.gsync && typeof AP.gsync.demanderDrive === 'function') {
+          var lb = document.createElement('div');
+          lb.className = 'apg-bas';
+          lb.appendChild(bouton(M('classementActiver'), false, function (ev) {
+            var btn = ev.currentTarget; btn.disabled = true; var avant = btn.textContent; btn.textContent = M('classementEnCours');
+            AP.gsync.demanderDrive().then(function (ok) {
+              if (!ok) { btn.disabled = false; btn.textContent = M('classementEchec'); setTimeout(function () { dessiner(); }, 1800); }
+              else { dessiner(); }
+            }).catch(function () { btn.disabled = false; btn.textContent = M('classementEchec'); });
+          }));
+          s.appendChild(lb);
+        }
       }
     }
 

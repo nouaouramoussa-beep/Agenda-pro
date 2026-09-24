@@ -49,7 +49,7 @@
    =========================================================================== */
 
 /* >>> A CHANGER A CHAQUE PUBLICATION <<< (1.0.0 -> 1.0.1 -> 1.1.0 ...) */
-var VERSION = '1.2.0+20260923T185411';   /* 1.2.0 : periodes de calendrier, liaison sans gel (23/09/2026) — 1.1.0 : synchronisation Google */
+var VERSION = '1.2.0+20260924T123744';   /* 1.2.0 : periodes de calendrier, liaison sans gel (23/09/2026) — 1.1.0 : synchronisation Google */
 
 /* Le prefixe commun sert au menage : tout ce qui commence par « agendapro- »
    et qui n'est pas dans la liste du jour sera efface a l'activation. */

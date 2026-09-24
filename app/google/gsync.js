@@ -1774,6 +1774,17 @@
   }
   /* A la fin d'une lecture : on reprend le classement s'il manque ou s'il
      date de plus d'un jour. Sans reseau ni Drive, rien ne se passe. */
+  /* Demande la permission Drive maintenant, sur un geste de l'artisan (le
+     bouton l'appelle directement : Google exige un clic, pas un appel en
+     arriere-plan). Si Google l'accorde, on va aussitot chercher le
+     classement — inutile d'attendre le prochain cycle. */
+  function demanderDrive() {
+    return jetonValide({ interactif: true, avecDrive: true, force: true }).then(function () {
+      poserReglages({ driveOk: JETON.permsDrive });
+      if (!JETON.permsDrive) return false;
+      return classementDescendre().then(function () { return true; });
+    });
+  }
   function classementRafraichir() {
     var c = classement();
     if (Object.keys(c.s).length && (maintenant() - (c.q || 0)) < 24 * 60 * 60 * 1000) return;
@@ -2411,6 +2422,7 @@
     classement: classement,
     classementMonter: classementMonter,
     classementDescendre: classementDescendre,
+    demanderDrive: demanderDrive,
 
     journal: function () { return jget(K.journal, []); },
     viderJournal: function () { jset(K.journal, []); return true; },
