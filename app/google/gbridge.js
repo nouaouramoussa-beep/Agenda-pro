@@ -188,6 +188,14 @@
       chargerTaches:'تحديث قائمة المهام',
       tachesKo:     'تعذّر جلب قوائم المهام من Google.',
 
+      /* --- ecrire dans Google Tasks : statut، عنوان، ملاحظة (app/google/gtasks.js) --- */
+      titreEcritureTaches: 'كتابة التغييرات في Google Tasks الحقيقي',
+      aideEcritureTaches: 'عند التفعيل: وضع علامة "أُنجزت"، أو تعديل العنوان أو الملاحظة لمهمة قادمة من Google Tasks داخل هذا البرنامج، يُكتب أيضاً في تطبيق Google Tasks الحقيقي (على هاتفك وفي كل مكان). يتطلب موافقة إضافية من Google تظهر مرة واحدة فقط.',
+      caseEcritureTaches: 'كتابة الإتمام والعنوان والملاحظة في Google Tasks الحقيقي',
+      ecritureTachesActivee: 'تم التفعيل — التغييرات القادمة ستظهر في Google Tasks.',
+      ecritureTachesDesactivee: 'تم الإيقاف — لن تُكتب التغييرات في Google Tasks بعد الآن.',
+      ecritureTachesRefusee: 'تم رفض الإذن أو إغلاق النافذة — لم يتم التفعيل.',
+
       /* --- le retour honnete pendant la synchronisation --- */
       travail:      'جارٍ المزامنة مع Google…',
       lus:          'مواعيد مقروءة',
@@ -279,6 +287,14 @@
       aucuneTache:  'Aucune liste cochee pour l\'instant.',
       chargerTaches:'Actualiser la liste des taches',
       tachesKo:     'La liste des taches n\'a pas pu etre lue depuis Google.',
+
+      /* --- ecrire dans Google Tasks : statut, titre, note (app/google/gtasks.js) --- */
+      titreEcritureTaches: 'Ecrire les changements dans Google Tasks',
+      aideEcritureTaches: 'Une fois active : cocher "termine", ou modifier le titre ou la note d\'une tache venue de Google Tasks dans ce programme s\'ecrit aussi dans l\'application Google Tasks reelle (sur votre telephone, partout). Necessite une autorisation Google supplementaire, demandee une seule fois.',
+      caseEcritureTaches: 'Ecrire l\'achevement, le titre et la note dans Google Tasks reel',
+      ecritureTachesActivee: 'Active — les prochains changements apparaitront dans Google Tasks.',
+      ecritureTachesDesactivee: 'Desactive — les changements ne seront plus ecrits dans Google Tasks.',
+      ecritureTachesRefusee: 'Autorisation refusee ou fenetre fermee — rien n\'a ete active.',
 
       travail:      'Synchronisation avec Google…',
       lus:          'rendez-vous lus',
@@ -1189,6 +1205,7 @@
     /* --- 3. Les agendas a suivre ---------------------------------------- */
     if (i.connecte) { corps.appendChild(sectionAgendas(i)); }
     if (i.connecte && AP.gtasks) { corps.appendChild(sectionListesTaches()); }
+    if (i.connecte && AP.gtasks) { corps.appendChild(sectionEcritureTaches()); }
 
     /* --- 4. Les rendez-vous ecrits en dur ------------------------------- */
     if (i.connecte) { corps.appendChild(sectionEnDur()); }
@@ -1549,6 +1566,49 @@
     var bas = document.createElement('div'); bas.className = 'apg-bas';
     bas.appendChild(bouton(M('chargerTaches'), false, chargerListesTaches));
     s.appendChild(bas);
+    return s;
+  }
+
+  /* --- 7.3 ter Ecrire dans Google Tasks (statut, titre, note) -------------
+     Case a cocher, meme esprit que sectionDetailsVisibles() : desactivee par
+     defaut, et la premiere activation declenche le consentement Google
+     supplementaire (AP.gtasks.demanderEcriture(), qui repose sur
+     AP.gauth.demanderTachesEcriture()) — jamais en silence. */
+  function sectionEcritureTaches() {
+    var it = infoTaches();
+    if (!it || !it.connecte) { return document.createDocumentFragment(); }
+
+    var s = document.createElement('div');
+    s.className = 'apg-sec';
+    s.innerHTML = '<p class="apg-h">' + propre(M('titreEcritureTaches')) + '</p>' +
+                  '<p class="apg-aide">' + propre(M('aideEcritureTaches')) + '</p>';
+
+    var row = document.createElement('div');
+    row.className = 'apg-cal';
+    var cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = !!it.ecrireVersGoogle;
+    cb.id = 'apgEcritureTaches';
+    cb.addEventListener('change', function () {
+      if (!cb.checked) {
+        try { AP.gtasks.poserReglages({ ecrireVersGoogle: false }); } catch (e) { avert('ecrireVersGoogle : ' + e.message); }
+        toast(M('ecritureTachesDesactivee'));
+        dessiner();
+        return;
+      }
+      cb.disabled = true;
+      AP.gtasks.demanderEcriture().then(function (ok) {
+        toast(ok ? M('ecritureTachesActivee') : M('ecritureTachesRefusee'));
+        dessiner();
+      });
+    });
+    row.appendChild(cb);
+    var lab = document.createElement('label');
+    lab.setAttribute('for', cb.id);
+    var span = document.createElement('span'); span.className = 'apg-nom'; span.textContent = M('caseEcritureTaches');
+    lab.appendChild(span);
+    row.appendChild(lab);
+    s.appendChild(row);
     return s;
   }
 

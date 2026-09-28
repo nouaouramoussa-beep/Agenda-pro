@@ -11,14 +11,14 @@
    « lier » ni bouton « delier » ici : des que Google est branche, les listes
    de taches apparaissent dans le meme panneau.
 
-   LECTURE SEULE, ET C'EST UN CHOIX ASSUME. Ce fichier n'ecrit rien dans
-   Google Tasks — ne coche rien, ne cree rien, ne modifie rien la-bas. Les
-   memes raisons que pour app/microsoft/msync.js : c'est exactement ce qui a
-   ete demande (voir les taches ici, a cote des rendez-vous), et une regle
-   d'ecriture digne de ce nom est un chantier a part entiere qu'on ne bricole
-   pas pour gagner du temps sur le VRAI compte de l'artisan. Un statut ou une
-   note poses ICI sur une tache Google Tasks reste sur cet appareil, comme
-   pour tout ce que ce produit ne renvoie pas encore.
+   LECTURE SEULE PAR DEFAUT — ET UNE SEULE EXCEPTION, ELLE AUSSI VOULUE.
+   Ce fichier ne cree rien et ne supprime rien dans Google Tasks. Il peut, en
+   revanche, PATCHER une tache existante (achevement, titre, note) — mais
+   seulement si l'artisan a explicitement coche « ecrire dans Google Tasks »
+   (app/google/gbridge.js, sectionEcritureTaches()), ce qui demande d'abord une
+   autorisation Google supplementaire (PORTEE.tachesEcriture, gauth.js). Sans
+   cette case cochee, ce fichier se comporte exactement comme avant : un
+   statut ou une note poses ICI restent sur cet appareil. Voir PARTIE 10 bis.
 
    TANT QU'AUCUN googleClientId N'EST CONNU ET QUE GOOGLE N'EST PAS BRANCHE,
    CE FICHIER NE FAIT RIEN.
@@ -40,8 +40,8 @@
      ========================================================================= */
 
   var T = {
-    ar: { pasConfigure: 'لم يتم إعداد Google بعد.', liste: 'قائمة مهام' },
-    fr: { pasConfigure: 'Google n\'est pas encore configure.', liste: 'Liste de taches' }
+    ar: { pasConfigure: 'لم يتم إعداد Google بعد.', liste: 'قائمة مهام', ecritureKo: 'تعذّر إرسال التغيير إلى Google Tasks.' },
+    fr: { pasConfigure: 'Google n\'est pas encore configure.', liste: 'Liste de taches', ecritureKo: 'Le changement n\'a pas pu etre envoye a Google Tasks.' }
   };
   function langue() {
     if (AP.ui && typeof AP.ui.lang === 'function') { return AP.ui.lang(); }
@@ -81,7 +81,7 @@
     return (CFG.googleClientId || jget('agendapro_g_reglages_v1', {}).clientId || '').trim();
   }
 
-  var DEFAUTS = { listes: {} };
+  var DEFAUTS = { listes: {}, ecrireVersGoogle: false };
   function reglages() {
     var r = jget(K.cfg, {});
     return Object.assign({}, DEFAUTS, r, { listes: Object.assign({}, (r && r.listes) || {}) });
@@ -344,7 +344,11 @@
       routine: false,
       link: t.selfLink || '',
       gcal: e.liste,
-      gev: t.id
+      gev: t.id,
+      /* Vrai seulement si l'artisan a coche ET obtenu « ecrire dans Google
+         Tasks » (PARTIE 10 bis) : index.html s'en sert pour decider d'ouvrir
+         le titre et la note en modification plutot qu'en simple lecture. */
+      peutEcrireSource: !!(reglages().ecrireVersGoogle && peutEcrire())
     };
   }
 
@@ -421,6 +425,7 @@
     if (enveloppe) { return; }
     enveloppe = true;
     raccrocherMoveCat();
+    raccrocherStatut();
     if (typeof W.buildTasks !== 'function' || W.buildTasks.__apgt) { return; }
     var orig = W.buildTasks;
 
@@ -500,8 +505,102 @@
       taches: tasks().length,
       derniereLecture: ETAT.derniereLecture,
       derniereComplete: ETAT.derniereComplete,
-      erreur: ETAT.erreur
+      erreur: ETAT.erreur,
+      ecrireVersGoogle: !!reglages().ecrireVersGoogle,
+      ecritureAutorisee: peutEcrire()
     };
+  }
+
+
+  /* =========================================================================
+     PARTIE 10 bis — ECRIRE DANS GOOGLE TASKS (statut, titre, note)
+     ---------------------------------------------------------------------
+     Une exception unique, voulue et bornee, a la regle « lecture seule » du
+     haut de ce fichier. Rien ne part tant que l'artisan n'a pas coche
+     explicitement « ecrire dans Google Tasks » (app/google/gbridge.js,
+     sectionEcritureTaches()) ET que Google n'a pas accorde
+     PORTEE.tachesEcriture (gauth.js) — les deux conditions, verifiees ici a
+     chaque appel. Le gardien final reste malgre tout gauth.js :
+     verifierEcriture() n'accepte que title/notes/status/completed, et
+     seulement avec la permission explicite (sa PARTIE 3).
+     ========================================================================= */
+
+  function peutEcrire() {
+    var g = (AP.gauth && typeof AP.gauth.etat === 'function') ? AP.gauth.etat() : null;
+    return !!(g && g.connecte && AP.gauth.PORTEE && Array.isArray(g.portees) &&
+      g.portees.indexOf(AP.gauth.PORTEE.tachesEcriture) >= 0);
+  }
+
+  /* Le geste qui declenche l'ecran de consentement supplementaire — appele
+     par gbridge.js quand l'artisan coche la case pour la premiere fois. */
+  function demanderEcriture() {
+    if (!(AP.gauth && typeof AP.gauth.demanderTachesEcriture === 'function')) { return Promise.resolve(false); }
+    return AP.gauth.demanderTachesEcriture().then(function (ok) {
+      poserReglages({ ecrireVersGoogle: !!ok });
+      try { if (typeof W.buildTasks === 'function') { W.buildTasks(); } } catch (e) { }
+      try { if (typeof W.render === 'function') { W.render(); } } catch (e) { }
+      return ok;
+    });
+  }
+
+  function ecrireDansGoogle(idTache, champs) {
+    if (!reglages().ecrireVersGoogle || !peutEcrire()) { return Promise.resolve(false); }
+    var e = TACHES[idTache]; if (!e) { return Promise.resolve(false); }
+    if (!(AP.gauth && typeof AP.gauth.appel === 'function')) { return Promise.resolve(false); }
+    var chemin = '/lists/' + encodeURIComponent(e.liste) + '/tasks/' + encodeURIComponent(e.tache.id);
+    return AP.gauth.appel(TASKS_API + chemin, {
+      methode: 'PATCH',
+      corps: champs,
+      permission: AP.gauth.PERMISSION_EXPLICITE
+    }).then(function (frais) {
+      if (frais && TACHES[idTache]) { TACHES[idTache].tache = frais; ranger(); }
+      try { if (typeof W.buildTasks === 'function') { W.buildTasks(); } } catch (er) { }
+      try { if (typeof W.render === 'function') { W.render(); } } catch (er) { }
+      return true;
+    }).catch(function (err) {
+      avert('ecriture vers Google Tasks : ' + (err && err.message));
+      try { if (P.toast) { P.toast(tr('ecritureKo')); } } catch (er) { }
+      return false;
+    });
+  }
+
+  /* « done » -> completed (avec l'horodatage) ; tout le reste (attente,
+     reporte, urgent, remise a zero) -> needsAction, faute d'equivalent. */
+  function ecrireStatut(idTache, v) {
+    if (!estGtache(idTache)) { return Promise.resolve(false); }
+    var champs = (v === 'done')
+      ? { status: 'completed', completed: new Date().toISOString() }
+      : { status: 'needsAction' };
+    return ecrireDansGoogle(idTache, champs);
+  }
+
+  function ecrireTitre(idTache, v) {
+    if (!estGtache(idTache)) { return Promise.resolve(false); }
+    var titre = String(v == null ? '' : v).trim();
+    if (!titre) { return Promise.resolve(false); }
+    return ecrireDansGoogle(idTache, { title: titre });
+  }
+
+  function ecrireNote(idTache, v) {
+    if (!estGtache(idTache)) { return Promise.resolve(false); }
+    return ecrireDansGoogle(idTache, { notes: String(v == null ? '' : v) });
+  }
+
+  /* Le geste « cocher termine » (setStatus() dans index.html) n'a, lui non
+     plus, aucun crochet natif vers ce fichier : on l'enveloppe, exactement
+     comme raccrocherMoveCat() le fait deja pour moveCat(). estGtache() a
+     l'interieur de ecrireStatut() rend cet appel sans effet pour toute tache
+     qui ne vient pas de Google Tasks. */
+  function raccrocherStatut() {
+    if (typeof W.setStatus !== 'function' || W.setStatus.__apgt) { return; }
+    var orig = W.setStatus;
+    var neuf = function () {
+      var r = orig.apply(this, arguments);
+      try { ecrireStatut(arguments[0], arguments[1]); } catch (e) { avert('setStatus : ' + e.message); }
+      return r;
+    };
+    neuf.__apgt = true;
+    W.setStatus = neuf;
   }
 
 
@@ -526,6 +625,10 @@
     poserReglages: poserReglages,
     info: info,
     tr: tr,
+    demanderEcriture: demanderEcriture,
+    ecrireStatut: ecrireStatut,
+    ecrireTitre: ecrireTitre,
+    ecrireNote: ecrireNote,
     _: { tacheDe: tacheDe, taches: function () { return TACHES; } }
   };
 

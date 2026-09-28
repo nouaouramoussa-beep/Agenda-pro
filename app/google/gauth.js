@@ -229,10 +229,14 @@
 
     /* Demandee des l'etape 1 elle aussi, comme « compte » ci-dessus : LECTURE
        SEULE des listes Google Tasks (app/google/gtasks.js), pour les faire
-       apparaitre a cote des rendez-vous. Jamais de niveau « ecriture » pour
-       celle-ci : ce fichier-la n'ecrit rien dans Google Tasks, voir sa note de
-       tete de fichier. */
-    taches: 'https://www.googleapis.com/auth/tasks.readonly'
+       apparaitre a cote des rendez-vous. */
+    taches: 'https://www.googleapis.com/auth/tasks.readonly',
+
+    /* Consentement incremental supplementaire, demande uniquement quand
+       l'artisan active « ecrire dans Google Tasks » (app/google/gtasks.js,
+       demanderTachesEcriture()) : jamais au demarrage, jamais en silence.
+       Cette portee couvre aussi la lecture — voir la note de porteesVoulues(). */
+    tachesEcriture: 'https://www.googleapis.com/auth/tasks'
   };
 
   var GIS = 'https://accounts.google.com/gsi/client';
@@ -378,6 +382,24 @@
     return /\/calendar\/v3\/calendars\/[^\/]+\/events\/[^\/?#]+/.test(url);
   }
 
+  /* .../tasks/v1/lists/LISTE/tasks/ID — une tache Google Tasks precise
+     (app/google/gtasks.js). Meme logique que pour un rendez-vous, sur une
+     adresse totalement differente : ce fichier n'a pas de portee "je ne
+     touche qu'un tiroir prive" pour Google Tasks (elle n'existe pas chez
+     Google), donc CHAQUE champ ecrit ici est visible par l'artisan — la
+     permission explicite est obligatoire, sans aucune exception. */
+  function estUneTachePrecise(url) {
+    return /\/tasks\/v1\/lists\/[^\/]+\/tasks\/[^\/?#]+/.test(url);
+  }
+  /* La meme adresse, en plus large : la liste entiere (creation comprise).
+     Sert a refuser POST/PUT/DELETE sur Google Tasks — voir plus bas — au lieu
+     de les laisser passer sans controle faute de correspondre a la version
+     precise ci-dessus. */
+  function estUneTache(url) {
+    return /\/tasks\/v1\/lists\/[^\/]+\/tasks(\/|\?|$)/.test(url);
+  }
+  var CHAMPS_TACHE_AUTORISES = ['title', 'notes', 'status', 'completed'];
+
   /* LE GARDIEN. Il recoit la methode, l'adresse, le corps de la requete, et
      ce que l'appelant declare ; il rend le corps a envoyer, ou il jette. */
   function verifierEcriture(methode, url, corps, opts) {
@@ -387,12 +409,44 @@
     /* Lire n'a jamais fait de mal. */
     if (methode === 'GET' || methode === 'HEAD') { return corps; }
 
+    var permis = (opts.permission === PERMISSION_EXPLICITE);
+    var notre = (opts.origine === MARQUE);
+
+    /* --- GOOGLE TASKS : une regle a part, plus stricte que celle du
+       calendrier ci-dessous. Il n'existe pas de tiroir prive equivalent a
+       extendedProperties sur une tache Google Tasks : TOUT champ ecrit ici
+       est visible par l'artisan, donc AUCUNE ecriture ne passe sans la
+       permission explicite — pas d'exception « c'est notre tache », puisque
+       app/google/gtasks.js ne cree jamais de tache. */
+    if (estUneTache(url)) {
+      if (methode !== 'PATCH' || !estUneTachePrecise(url)) {
+        throw refus(
+          'Regle d\'ecriture : sur Google Tasks, seul PATCH sur une tache precise ' +
+          'est autorise (jamais de creation ni de suppression). Methode refusee : ' + methode + '.'
+        );
+      }
+      if (!permis) {
+        throw refus(
+          'Regle d\'ecriture : Google Tasks n\'a pas de tiroir prive — toute ' +
+          'modification est visible par l\'artisan. Fournissez permission:"' +
+          PERMISSION_EXPLICITE + '".'
+        );
+      }
+      var clesT = Object.keys(corps || {});
+      var interditsT = clesT.filter(function (c) { return CHAMPS_TACHE_AUTORISES.indexOf(c) < 0; });
+      if (interditsT.length) {
+        throw refus(
+          'Regle d\'ecriture : sur une tache Google Tasks, seuls ces champs sont ' +
+          'autorises : ' + CHAMPS_TACHE_AUTORISES.join(', ') + '. Champs refuses : ' +
+          interditsT.join(', ') + '.'
+        );
+      }
+      return corps;
+    }
+
     /* Une requete qui ne vise pas un evenement (les parametres de l'agenda,
        la liste des agendas…) n'est pas concernee par cette regle-ci. */
     if (!estUnEvenement(url)) { return corps; }
-
-    var permis = (opts.permission === PERMISSION_EXPLICITE);
-    var notre = (opts.origine === MARQUE);
 
     /* --- CREATION : autorisee, mais le programme signe son ouvrage. ------
        Exception n° 1 de la regle : « une tache que l'artisan cree lui-meme
@@ -763,6 +817,9 @@
        defaut que ce garde evite : les renouvellements silencieux continuent
        de ne demander que ce qu'ils demandaient avant l'ajout de gtasks.js. */
     if (PORTEE.taches && (interactif || aLaPortee(PORTEE.taches))) { l.push(PORTEE.taches); }
+    /* Meme garde, meme raison : ne jamais demander tachesEcriture en silence
+       tant que l'artisan ne l'a pas accordee une premiere fois. */
+    if (PORTEE.tachesEcriture && (interactif || aLaPortee(PORTEE.tachesEcriture))) { l.push(PORTEE.tachesEcriture); }
     l.push(niveau === 'ecriture' ? PORTEE.ecriture : PORTEE.lecture);
     return l;
   }
@@ -1066,6 +1123,19 @@
     }
     return connecter({ interactif: true }).then(function () {
       return aLaPortee(PORTEE.taches);
+    });
+  }
+
+  /* LE MEME GESTE, UN CRAN PLUS HAUT : ecrire dans Google Tasks (statut,
+     titre, note). Appelee par app/google/gbridge.js uniquement quand
+     l'artisan coche la case « ecrire les changements dans Google Tasks » —
+     jamais au demarrage, jamais en silence, pour la meme raison que
+     demanderEcriture() ci-dessus. */
+  function demanderTachesEcriture() {
+    if (!S.configure) { return Promise.resolve(false); }
+    if (aLaPortee(PORTEE.tachesEcriture)) { return Promise.resolve(true); }
+    return connecter({ interactif: true }).then(function () {
+      return aLaPortee(PORTEE.tachesEcriture);
     });
   }
 
@@ -1414,6 +1484,7 @@
 
     demanderEcriture: demanderEcriture,
     demanderTaches: demanderTaches,
+    demanderTachesEcriture: demanderTachesEcriture,
     pastille: creerPastille,
 
     /* A appeler apres avoir range un googleClientId dans les reglages :

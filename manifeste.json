@@ -1,5 +1,5 @@
 {
- "genere": "2026-09-28T16:38:19.588Z",
+ "genere": "2026-09-28T17:56:13.786Z",
  "fichiers": {
   ".nojekyll": {
    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -30,28 +30,28 @@
    "octets": 4752
   },
   "app/google/electron-google.js": {
-   "sha256": "45e9016ce45ac9a8d1d2fcd9a6e6d12b2fff780f605479ec09cfb3f21e32d523",
-   "octets": 25039
+   "sha256": "154673569f4722b7dc8feb38aae39bb9ba9dd2d845debd7712242d4070fa3f72",
+   "octets": 25210
   },
   "app/google/gauth.css": {
    "sha256": "77d0d9d79028715aba85aac214854d3b355577e1c7389ec81f2af0d4b316f969",
    "octets": 8597
   },
   "app/google/gauth.js": {
-   "sha256": "e163fcf7b317de2accd2d28f5b0b0fc165be2383e60b536fb5757eac1dba1006",
-   "octets": 70397
+   "sha256": "1b96942d080a98d502180eb4630b98b4e8afc1e372ae3ce15e03566df8ef56f6",
+   "octets": 74015
   },
   "app/google/gbridge.js": {
-   "sha256": "ddeed8dd846d8d6a96f92527d62f154a43f378755799bd2349631617f40a5ac1",
-   "octets": 94473
+   "sha256": "5ccdfe84ce06643adbc4267aec6f8f5cc28f97311c8c50c1af62b40a21f98fdd",
+   "octets": 98295
   },
   "app/google/gsync.js": {
    "sha256": "081ee9a479784a06b6210a5c30c4f158041db924b85334809198540ad5f8043b",
    "octets": 127889
   },
   "app/google/gtasks.js": {
-   "sha256": "ff513df55a9e5f78bae5efdb4549b4c51a9b0a5856c4c0cbf11736ef9c9b6afc",
-   "octets": 22075
+   "sha256": "62c2a4362f47322762be12b2e1576ec412519fe2ce2141288c20ef3f1007e267",
+   "octets": 27245
   },
   "app/lock/lock.css": {
    "sha256": "e598a810130e12661dc4d71800af146bc16edc0e2ff3cc1c43faecc0d12a9318",
@@ -138,7 +138,7 @@
    "octets": 1650
   },
   "app/pwa/sw.js": {
-   "sha256": "11595dcc5b7dc11a9e75f19c0620f54b2b9051bba2347b9fa1d6f9a9608940b0",
+   "sha256": "5b4fec1abb3dd0c694b4b39fe6f87576eb4dec88ffe515527427fe9ebc6a48d3",
    "octets": 30781
   },
   "app/setup/setup.css": {
@@ -170,8 +170,8 @@
    "octets": 17791
   },
   "index.html": {
-   "sha256": "540689f937b0e3de963fc8af138c62189b773d507cfbfedd01e4630e0e9e3cc2",
-   "octets": 302425
+   "sha256": "823075f0a0540f74d610ae2ab54891fb4bc06909bea393681f3d93864693dda6",
+   "octets": 303959
   },
   "sw.js": {
    "sha256": "bdca343b03eb8d6eaed1c3eec1de2ab2ac9d94e351beed282ab563ca0635e8c7",

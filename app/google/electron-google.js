@@ -548,6 +548,9 @@ function installerGoogle(options) {
     'https://www.googleapis.com/auth/userinfo.email',
     /* app/google/gtasks.js — lecture seule des listes Google Tasks. */
     'https://www.googleapis.com/auth/tasks.readonly',
+    /* app/google/gtasks.js — ecriture, demandee seulement quand l'artisan
+       active « ecrire dans Google Tasks ». */
+    'https://www.googleapis.com/auth/tasks',
     'openid', 'email'
   ];
 

@@ -2773,6 +2773,7 @@ ar:{
   months:['جانفي','فيفري','مارس','أفريل','ماي','جوان','جويلية','أوت','سبتمبر','أكتوبر','نوفمبر','ديسمبر'],
   inDays:n=>n===0?'اليوم':n===1?'غداً':n===-1?'أمس':n>0?'بعد '+duree(n,'j'):'منذ '+duree(Math.abs(n),'j'),
   sourceTitle:'العنوان في الأجندة',
+  gTitleEdit:'العنوان', gDescEdit:'التفاصيل', gWriteHint:'يُكتب في Google Tasks الحقيقي',
   gInfo:'من Google Agenda', gPlace:'المكان', gRemind:'التنبيهات', gGuests:'المدعوّون',
   gFiles:'المرفقات', gUntil:'ينتهي يوم', gCal:'التقويم',
   rapPopup:'تنبيه', rapMail:'بريد', rapPile:'عند الموعد', rapAvant:'قبل %1',
@@ -2850,6 +2851,7 @@ fr:{
   months:['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'],
   inDays:n=>n===0?"Aujourd'hui":n===1?'Demain':n===-1?'Hier':n>0?'Dans '+n+' j':'Il y a '+Math.abs(n)+' j',
   sourceTitle:"Intitulé dans l'agenda",
+  gTitleEdit:'Titre', gDescEdit:'Détails', gWriteHint:'Écrit dans Google Tasks réel',
   gInfo:'Depuis Google Agenda', gPlace:'Lieu', gRemind:'Rappels', gGuests:'Invités',
   gFiles:'Pièces jointes', gUntil:'Se termine le', gCal:'Agenda',
   rapPopup:'Notification', rapMail:'E-mail', rapPile:"à l'heure dite", rapAvant:'%1 avant',
@@ -3688,13 +3690,24 @@ function card(it){
   h += '<div class="card-body">';
   h += '<div class="sec"><div class="sec-t">📅 '+fmtDayName(it.date)+' • '+fmtDate(it.date)+
        (it.raw? ' &nbsp;·&nbsp; <span class="orgv">'+t('sourceTitle')+' : “'+esc(it.raw)+'”</span>':'')+'</div></div>';
+  /* Google Tasks seulement, et seulement si l'artisan a active l'ecriture
+     (it.peutEcrireSource, posee par app/google/gtasks.js) : le titre et la
+     note deviennent des champs, et ce qu'on y tape repart vers le VRAI
+     Google Tasks — voir setSrcTitle()/setSrcNote() plus haut. */
+  if(it.peutEcrireSource){
+    h += '<div class="sec"><div class="sec-t">✏️ '+t('gTitleEdit')+' <span class="orgv">('+t('gWriteHint')+')</span></div>'+
+         '<input class="mini" style="width:100%" value="'+esc(it.title[state.lang])+'" onchange="setSrcTitle(\''+it.id+'\',this.value)"></div>';
+  }
   const orgTxt = it.org ? it.org[state.lang] : S[state.lang];
   h += '<div class="sec"><div class="sec-t">🏷️ '+t('orgLbl')+' : <span class="orgv">'+esc(orgTxt)+'</span></div>'+
        '<div class="row2c">'+
        '<input class="mini" placeholder="'+t('contactPh')+'" value="'+esc(store.contact[it.sk]||'')+'" onchange="setMeta(\'contact\',\''+it.sk+'\',this.value)">'+
        '<input class="mini" placeholder="'+t('placePh')+'" value="'+esc(store.place[it.sk]||'')+'" onchange="setMeta(\'place\',\''+it.sk+'\',this.value)">'+
        '</div></div>';
-  if(it.desc){
+  if(it.peutEcrireSource){
+    h += '<div class="sec"><div class="sec-t">📝 '+t('gDescEdit')+' <span class="orgv">('+t('gWriteHint')+')</span></div>'+
+         '<textarea class="notes" onchange="setSrcNote(\''+it.id+'\',this.value)">'+esc(it.desc||'')+'</textarea></div>';
+  } else if(it.desc){
     const long = it.desc.length>260;
     h += '<div class="sec"><div class="sec-t">📝 '+t('details')+'</div>'+
          '<div class="desc'+(long?' collapsed':'')+'" id="d_'+cssId(it.id)+'">'+esc(it.desc)+'</div>'+
@@ -3759,6 +3772,11 @@ function setStatus(id,v){ if(v===null) delete store.status[id]; else store.statu
   if(window.AP&&AP.sync&&AP.sync.setStatus) AP.sync.setStatus(id,v); }
 function setNote(id,v){ store.notes[id]=v; lsSet();
   if(window.AP&&AP.sync&&AP.sync.setNote) AP.sync.setNote(id,v); }
+/* Ces deux-la ne touchent aucun stockage local : le titre et la note "source"
+   d'une tache venue de Google Tasks vivent chez gtasks.js (TACHES), pas dans
+   store. Sans effet si la tache ne vient pas de la avec l'ecriture activee. */
+function setSrcTitle(id,v){ if(window.AP&&AP.gtasks&&AP.gtasks.ecrireTitre) AP.gtasks.ecrireTitre(id,v); }
+function setSrcNote(id,v){ if(window.AP&&AP.gtasks&&AP.gtasks.ecrireNote) AP.gtasks.ecrireNote(id,v); }
 function setMeta(kind,sk,v){ store[kind][sk]=v; lsSet(); toast(t('toastSaved')); }
 /* Une tache ajoutee a la main ne pouvait ni etre supprimee ni corrigee : elle
    restait a vie. */
