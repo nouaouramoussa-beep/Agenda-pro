@@ -2744,7 +2744,7 @@ ar:{
   mp:'الشهر الماضي', mc:'الشهر الحالي', mn:'الشهر القادم',
   s1:'الأسبوع الأول', s2:'الأسبوع الثاني', s3:'الأسبوع الثالث', s4:'الأسبوع الرابع', custom:'تاريخ محدد',
   st:{pending:'معلقة',overdue:'متأخرة',done:'مكتملة',waiting:'تحت المتابعة',postponed:'مؤجلة',passed:'منقضية'},
-  bk:{overdue:'متأخر — يحتاج تدخلاً عاجلاً',today:'اليوم',tomorrow:'غداً',week:'هذا الأسبوع',next:'الأسبوع القادم',later:'لاحقاً',closed:'منجزة ومؤرشفة'},
+  bk:{overdue:'متأخر — يحتاج تدخلاً عاجلاً',today:'اليوم',tomorrow:'غداً',week:'هذا الأسبوع',next:'الأسبوع القادم',later:'لاحقاً',nodate:'بدون تاريخ',closed:'منجزة ومؤرشفة'},
   kpi:{k1:'متأخرة تحتاج تدخلاً',k2:'المؤسسة — هذا الأسبوع',k3:'شخصية قادمة',k4:'تحت المتابعة',k5:'مكتملة هذا الشهر',k6:'روتين اليوم'},
   greet:'مرحباً 👋', greetM:'صباح الخير ☀️', greetE:'مساء الخير 🌙',
   briefNone:'لا توجد التزامات في النطاق المحدد. يمكنك توسيع المدة الزمنية من الأعلى.',
@@ -2774,6 +2774,11 @@ ar:{
   inDays:n=>n===0?'اليوم':n===1?'غداً':n===-1?'أمس':n>0?'بعد '+duree(n,'j'):'منذ '+duree(Math.abs(n),'j'),
   sourceTitle:'العنوان في الأجندة',
   gTitleEdit:'العنوان', gDescEdit:'التفاصيل', gWriteHint:'يُكتب في Google Tasks الحقيقي',
+  sansDateLbl:'بدون تاريخ', gtInfo:'من Google Tasks', gtEcheance:'تاريخ الاستحقاق', gtFaitLe:'أُنجزت يوم',
+  gtMaj:'آخر تعديل', gtParent:'مهمة فرعية من', gtLiens:'الروابط', gtAssigne:'مُسندة من',
+  gtSurf:{DOCUMENT:'مستند Google', SPACE:'مساحة Google Chat', GMAIL:'Gmail'},
+  gtSous:'المهام الفرعية في Google Tasks', openTasks:'فتح في Google Tasks',
+  gtAttente:'الإرسال', gtAttenteTxt:'تعديلك محفوظ وسيُرسل إلى Google Tasks تلقائياً',
   gInfo:'من Google Agenda', gPlace:'المكان', gRemind:'التنبيهات', gGuests:'المدعوّون',
   gFiles:'المرفقات', gUntil:'ينتهي يوم', gCal:'التقويم',
   rapPopup:'تنبيه', rapMail:'بريد', rapPile:'عند الموعد', rapAvant:'قبل %1',
@@ -2785,6 +2790,7 @@ ar:{
   gemQuota:'تجاوزت الحصة اليومية لكل النماذج المتاحة — أعد المحاولة غداً', gemNet:'لا اتصال بالإنترنت', rapJourA:'في يوم الموعد على الساعة',
   delTask:'حذف', delTaskQ:'حذف هذه المهمة نهائياً؟',
   routinesCachees:'👁 إظهار المهام الروتينية المخفية (%1)',
+  cachesFiltres:'👁 إظهار العناصر المخفية بالفلاتر (%1)',
   gemAuto:'اختير النموذج تلقائياً: %1', gemBadKey:'المفتاح مرفوض — تأكّد أنك نسخته كاملاً'
 },
 fr:{
@@ -2821,7 +2827,7 @@ fr:{
   mp:'Mois passé', mc:'Mois en cours', mn:'Mois prochain',
   s1:'Semaine 1', s2:'Semaine 2', s3:'Semaine 3', s4:'Semaine 4', custom:'Date précise',
   st:{pending:'En attente',overdue:'En retard',done:'Terminée',waiting:'En suivi',postponed:'Reportée',passed:'Passée'},
-  bk:{overdue:'En retard — action urgente',today:"Aujourd'hui",tomorrow:'Demain',week:'Cette semaine',next:'Semaine prochaine',later:'Plus tard',closed:'Terminées et archivées'},
+  bk:{overdue:'En retard — action urgente',today:"Aujourd'hui",tomorrow:'Demain',week:'Cette semaine',next:'Semaine prochaine',later:'Plus tard',nodate:'Sans date',closed:'Terminées et archivées'},
   kpi:{k1:'En retard',k2:'Entreprise — cette semaine',k3:'Personnel à venir',k4:'En suivi',k5:'Terminées ce mois',k6:"Routine du jour"},
   greet:'Bonjour 👋', greetM:'Bonjour ☀️', greetE:'Bonsoir 🌙',
   briefNone:'Aucune échéance dans la période choisie. Élargissez la fenêtre ci-dessus.',
@@ -2852,6 +2858,11 @@ fr:{
   inDays:n=>n===0?"Aujourd'hui":n===1?'Demain':n===-1?'Hier':n>0?'Dans '+n+' j':'Il y a '+Math.abs(n)+' j',
   sourceTitle:"Intitulé dans l'agenda",
   gTitleEdit:'Titre', gDescEdit:'Détails', gWriteHint:'Écrit dans Google Tasks réel',
+  sansDateLbl:'Sans date', gtInfo:'Depuis Google Tasks', gtEcheance:'Échéance', gtFaitLe:'Terminée le',
+  gtMaj:'Dernière modification', gtParent:'Sous-tâche de', gtLiens:'Liens', gtAssigne:'Assignée depuis',
+  gtSurf:{DOCUMENT:'Document Google', SPACE:'Espace Google Chat', GMAIL:'Gmail'},
+  gtSous:'Sous-tâches dans Google Tasks', openTasks:'Ouvrir dans Google Tasks',
+  gtAttente:'Envoi', gtAttenteTxt:'Votre modification est gardée et partira toute seule vers Google Tasks',
   gInfo:'Depuis Google Agenda', gPlace:'Lieu', gRemind:'Rappels', gGuests:'Invités',
   gFiles:'Pièces jointes', gUntil:'Se termine le', gCal:'Agenda',
   rapPopup:'Notification', rapMail:'E-mail', rapPile:"à l'heure dite", rapAvant:'%1 avant',
@@ -2863,6 +2874,7 @@ fr:{
   gemQuota:'Quota du jour dépassé sur tous les modèles disponibles — réessayez demain', gemNet:'Pas de connexion internet', rapJourA:'le jour même à',
   delTask:'Supprimer', delTaskQ:'Supprimer définitivement cette tâche ?',
   routinesCachees:'👁 Afficher les routines masquées (%1)',
+  cachesFiltres:'👁 Afficher les éléments masqués par les filtres (%1)',
   gemAuto:'Modèle choisi automatiquement : %1', gemBadKey:'Clé refusée — vérifiez qu\'elle est copiée en entier'
 }};
 const t = k => { const o=T[state.lang]; return k.split('.').reduce((a,b)=>a&&a[b],o) ?? k; };
@@ -2989,6 +3001,10 @@ function renSub(id, ar, fr, ic, c){
 function delSection(id){
   const s=secById(id); if(!s || s.builtin) return;
   TASKS.forEach(it=>{ if(catOf(it)===id) store.cat[it.id]='ent'; });
+  /* Aussi les choix des taches absentes en ce moment (une tache Google Tasks
+     pas encore relue, par exemple) : sinon elles reviendraient vers une
+     section qui n'existe plus, invisibles mais comptees partout. */
+  Object.keys(store.cat||{}).forEach(k=>{ if(store.cat[k]===id) store.cat[k]='ent'; });
   (store.custom||[]).forEach(c=>{ if(c.cat===id) c.cat='ent'; });
   store.sections=(store.sections||[]).filter(x=>x.id!==id);
   delete state.boards[id];
@@ -3238,9 +3254,15 @@ function gcalLink(d){ const [y,m,dd]=d.split('-'); return 'https://calendar.goog
 /* --- catégorie effective (avec surcharge utilisateur) -------------------- */
 const catOf = it => store.cat[it.id] || it.cat;
 /* --- statut ------------------------------------------------------------- */
+/* Le statut pose ici par l'artisan passe toujours en premier. Sinon, une
+   tache que sa source dit achevee (Google Tasks : it.gFait) est achevee, et
+   une tache SANS DATE n'est jamais « en retard » : sa date n'est qu'un repli
+   technique (aujourd'hui), elle ne dit rien d'une echeance. */
 function statusOf(it){
   const u = store.status[it.id];
   if(u) return u;
+  if(it.gFait) return 'done';
+  if(it.sansDate) return 'pending';
   const dd = diffDays(it.date);
   if(dd < 0) return it.routine ? 'passed' : 'overdue';
   return 'pending';
@@ -3319,11 +3341,22 @@ function winRange(sansJour){
 }
 function visible(){
   const [A,B] = winRange();
+  const T0v = today();
   const q = state.q.trim().toLowerCase();
   return TASKS.filter(it=>{
     const st = statusOf(it);
     const d = parse(it.date);
-    const inWin = d>=A && d<=B;
+    /* Une tache sans date et pas encore faite n'a pas de periode : elle reste
+       visible quelle que soit la fenetre, dans sa propre rubrique. Faite, elle
+       retombe sur son jour d'achevement comme n'importe quelle tache close. */
+    /* Une tache Google Tasks encore ouverte et en retard reste du travail a
+       faire : elle se montre dans toute vue qui va jusqu'a aujourd'hui (sa
+       rubrique « متأخر »), meme si son echeance est vieille de plusieurs mois
+       — sauf un jour choisi, ou une periode precise choisie a la main (a
+       moins de chercher justement les retards). */
+    const gOuverte = it.gtache && st==='overdue' && !state.selDay && B>=T0v &&
+      (state.win==='custom' ? state.status==='overdue' : A<=T0v);
+    const inWin = (d>=A && d<=B) || (it.sansDate && st!=='done') || gOuverte;
     /* Quand on cherche, on cherche PARTOUT. Enfermer la recherche dans la
        fenetre de temps revenait a cacher a l'artisan des rendez-vous qu'il
        sait pourtant exister : sur deux ans de donnees, la plupart. */
@@ -3336,7 +3369,7 @@ function visible(){
     if(state.sub!=='all' && it.sub!==state.sub) return false;
     if(state.status!=='all' && st!==state.status) return false;
     if(q){
-      const hay = (it.title.ar+' '+it.title.fr+' '+it.raw+' '+it.desc+' '+(SUBS[it.sub]?SUBS[it.sub].ar+' '+SUBS[it.sub].fr:'')).toLowerCase();
+      const hay = (it.title.ar+' '+it.title.fr+' '+it.raw+' '+it.desc+' '+(SUBS[it.sub]?SUBS[it.sub].ar+' '+SUBS[it.sub].fr:'')+' '+(it.org?(it.org.ar||'')+' '+(it.org.fr||''):'')+' '+(it.srch||'')).toLowerCase();
       if(hay.indexOf(q)<0) return false;
     }
     return true;
@@ -3365,6 +3398,34 @@ function render(){
   requestAnimationFrame(function(){ syncMains(); syncBarre(); });
 }
 
+/* Un redessin demande par l'ARRIERE-PLAN (une relecture Google, un autre
+   onglet) attend que l'artisan ait quitte le champ ou il ecrit : le texte est
+   d'abord enregistre (son « change »), puis la page se redessine. Sans cela,
+   la carte etait reconstruite sous ses doigts et ce qu'il tapait disparaissait.
+   Ses propres gestes (clics, filtres) continuent d'appeler render() direct. */
+/* A la sortie du champ, on ne redessine pas tout de suite : si l'artisan
+   passe a un AUTRE champ d'une carte (Tab, clic), renderFond attend encore ;
+   et pendant un clic (bouton de la souris enfonce), on attend qu'il soit
+   relache, sinon le bouton vise disparaissait sous son doigt. */
+let AP_PTR_BAS=false;
+['pointerdown','pointerup','pointercancel'].forEach(t=>document.addEventListener(t,e=>{ AP_PTR_BAS=(e.type==='pointerdown'); },true));
+function renderFond(){
+  const a=document.activeElement;
+  if(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && a.closest && a.closest('.card')){
+    if(!a.__apRenduEnAttente){
+      a.__apRenduEnAttente=true;
+      a.addEventListener('blur', function(){
+        a.__apRenduEnAttente=false;
+        const suite=()=>setTimeout(renderFond,0);
+        if(AP_PTR_BAS) document.addEventListener('pointerup', suite, {once:true, capture:true});
+        else suite();
+      }, {once:true});
+    }
+    return;
+  }
+  render();
+}
+
 /* --- KPI ---------------------------------------------------------------- */
 function renderKPI(){
   const T0=today(), W=addDays(T0,7);
@@ -3373,11 +3434,11 @@ function renderKPI(){
   const curM = iso(T0).slice(0,7);
   TASKS.forEach(it=>{
     const s = statusOf(it), c = catOf(it), d = parse(it.date);
-    if(s==='overdue' && d>=addDays(T0,-60)) k1++;
-    if(c==='ent' && !it.routine && d>=T0 && d<=W && notDone(s)) k2++;
-    if(c==='perso' && !it.routine && d>=T0 && d<=addDays(T0,31) && notDone(s)) k3++;
+    if(s==='overdue' && (it.gtache || d>=addDays(T0,-60))) k1++;
+    if(c==='ent' && !it.routine && !it.sansDate && d>=T0 && d<=W && notDone(s)) k2++;
+    if(c==='perso' && !it.routine && !it.sansDate && d>=T0 && d<=addDays(T0,31) && notDone(s)) k3++;
     if(s==='waiting') k4++;
-    if(s==='done' && it.date.slice(0,7)===curM) k5++;
+    if(s==='done' && !(it.sansDate && !it.gFait && !it.gFaitIci) && it.date.slice(0,7)===curM) k5++;
     if(it.routine && it.date===iso(T0)) k6++;
   });
   const K=[['k1',k1,'k1'],['k2',k2,'k2'],['k3',k3,'k3'],['k4',k4,'k4'],['k5',k5,'k5'],['k6',k6,'k6']];
@@ -3437,11 +3498,11 @@ function renderBrief(vis){
     : '<span class="ins">'+t('noneOpen')+'</span>';
 
   /* --- deux repères utiles : jour le plus chargé & premier jour libre --- */
-  const cnt={}; act.forEach(i=>{ if(diffDays(i.date)>=0) cnt[i.date]=(cnt[i.date]||0)+1; });
+  const cnt={}; act.forEach(i=>{ if(!i.sansDate && diffDays(i.date)>=0) cnt[i.date]=(cnt[i.date]||0)+1; });
   const busy = Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]||a.localeCompare(b))[0];
   let free=null;
   for(let i=0;i<30;i++){ const s=iso(addDays(today(),i)); if(!cnt[s]){ free=s; break; } }
-  const late = TASKS.filter(i=>statusOf(i)==='overdue' && parse(i.date)>=addDays(today(),-60)).length;
+  const late = TASKS.filter(i=>statusOf(i)==='overdue' && (i.gtache || parse(i.date)>=addDays(today(),-60))).length;
   let ins='';
   if(busy) ins += '<button class="ins" onclick="pickDay(\''+busy+'\')">🔥 '+t('busiest')+' : <b>'+fmtDayName(busy)+' '+parse(busy).getDate()+' '+T[state.lang].months[parse(busy).getMonth()]+'</b> · '+cnt[busy]+'</button>';
   if(free) ins += '<button class="ins" onclick="pickDay(\''+free+'\')">🌿 '+t('freeDay')+' : <b>'+fmtDayName(free)+' '+parse(free).getDate()+'</b></button>';
@@ -3450,7 +3511,7 @@ function renderBrief(vis){
 
   const nxt = TASKS.filter(it=>{
     const s=statusOf(it);
-    return !it.routine && s!=='done' && s!=='passed' && parse(it.date)>=today();
+    return !it.routine && !it.sansDate && s!=='done' && s!=='passed' && parse(it.date)>=today();
   }).slice(0,4);
   document.getElementById('nextUp').innerHTML = nxt.length ? nxt.map(it=>{
     const dd = diffDays(it.date);
@@ -3463,16 +3524,30 @@ function renderBrief(vis){
 }
 function pickSub(k){ state.sub = state.sub===k ? 'all' : k; syncUI(); render(); }
 function pickStatus(s){ state.status = state.status===s ? 'all' : s; syncUI(); render(); }
+function montrerFiltres(){ state.status='all'; state.sub='all'; state.selDay=null; syncUI(); render(); }
 
 /* --- Alertes ------------------------------------------------------------ */
 function renderAlerts(){
   const A=[], T0=today();
   TASKS.forEach(it=>{
-    const s=statusOf(it), d=parse(it.date), dd=diffDays(it.date);
     if(it.routine) return;
+    /* Sans date = sans echeance : rien a annoncer « pour aujourd'hui ». Mais
+       un drapeau pose A LA MAIN (urgent, en attente) ne depend d'aucune date :
+       il merite son alerte, sans le « en retard de N jours » qui n'a pas de sens. */
+    if(it.sansDate){
+      const s0=statusOf(it), nm0=esc(it.title[state.lang]);
+      if(s0==='overdue') A.push({p:0,k:'a-bad',ic:'🔴',h:state.lang==='ar'
+        ? '<b>'+nm0+'</b> معلّمة كعاجلة (بدون تاريخ) — أنجزها أو حدّد لها موعداً.'
+        : '<b>'+nm0+'</b> marquée urgente (sans date) — terminez-la ou fixez-lui une date.'});
+      else if(s0==='waiting') A.push({p:3,k:'a-info',ic:'⏳',h:state.lang==='ar'
+        ? '<b>'+nm0+'</b> تحت المتابعة — تحقق من الرد.'
+        : '<b>'+nm0+'</b> en suivi — vérifiez la réponse.'});
+      return;
+    }
+    const s=statusOf(it), d=parse(it.date), dd=diffDays(it.date);
     const nm = esc(it.title[state.lang]);
     const list = clOf(it), done = clDone(it);
-    if(s==='overdue' && d>=addDays(T0,-60)){
+    if(s==='overdue' && (it.gtache || d>=addDays(T0,-60))){
       A.push({p:0,k:'a-bad',ic:'🔴',h:state.lang==='ar'
         ? '<b>'+nm+'</b> متأخرة منذ '+duree(Math.abs(dd),'j')+' — سجّلها كمكتملة أو أعد برمجتها.'
         : '<b>'+nm+'</b> en retard de '+duree(Math.abs(dd),'j')+' — marquez-la terminée ou reprogrammez-la.'});
@@ -3521,7 +3596,7 @@ function renderStrip(){
       curMo = d.getMonth();
       out += '<div class="strip-mo">'+L.months[curMo]+' '+d.getFullYear()+'</div>';
     }
-    const items = TASKS.filter(x=>x.date===s && (state.routine || !x.routine) && statusOf(x)!=='done');
+    const items = TASKS.filter(x=>x.date===s && !x.sansDate && (state.routine || !x.routine) && statusOf(x)!=='done');
     const ent = items.filter(x=>catOf(x)==='ent').length;
     const per = items.length - ent;
     const kls = !items.length ? 'none' : (per===0 ? 'ent' : ent===0 ? 'per' : 'mix');
@@ -3542,6 +3617,7 @@ function pickDay(s){ state.selDay = (state.selDay===s ? null : s); syncUI(); ren
 function bucketOf(it){
   const s = statusOf(it), dd = diffDays(it.date);
   if(s==='done'||s==='passed') return 'closed';
+  if(it.sansDate) return 'nodate';
   if(dd<0) return 'overdue';
   if(dd===0) return 'today';
   if(dd===1) return 'tomorrow';
@@ -3549,7 +3625,7 @@ function bucketOf(it){
   if(dd<=14) return 'next';
   return 'later';
 }
-const BK_ORDER = ['overdue','today','tomorrow','week','next','later','closed'];
+const BK_ORDER = ['overdue','today','tomorrow','week','next','later','nodate','closed'];
 let PRINTING = false;
 /* Construit une carte de tableau par section. Appelee au demarrage et apres
    toute modification de la liste des sections. */
@@ -3605,8 +3681,17 @@ function renderBoard(cat, items){
        cette periode ? Si oui, on le dit et on offre de les afficher. */
     let caches = 0;
     if(!state.routine){ state.routine = true; try{ caches = visible().filter(i=>catOf(i)===cat).length; } finally { state.routine = false; } }
+    /* Meme regle pour les autres filtres (etat, categorie, jour choisi) : une
+       liste vide doit dire ce qu'elle cache, et offrir de le montrer. */
+    let filtres = 0;
+    if(state.status!=='all' || state.sub!=='all' || state.selDay){
+      const sv = [state.status, state.sub, state.selDay];
+      state.status='all'; state.sub='all'; state.selDay=null;
+      try{ filtres = visible().filter(i=>catOf(i)===cat).length; } finally { state.status=sv[0]; state.sub=sv[1]; state.selDay=sv[2]; }
+    }
     el.innerHTML = '<div class="empty"><span class="e-ic">🗂️</span>'+t('empty')+'<br><small style="opacity:.7">'+t('emptyHint')+'</small>'+
-      (caches ? '<br><button class="plus" style="margin-top:12px" onclick="toggleRoutine()">'+t('routinesCachees').replace('%1',caches)+'</button>' : '')+'</div>';
+      (caches ? '<br><button class="plus" style="margin-top:12px" onclick="toggleRoutine()">'+t('routinesCachees').replace('%1',caches)+'</button>' : '')+
+      (filtres ? '<br><button class="plus" style="margin-top:12px" onclick="montrerFiltres()">'+t('cachesFiltres').replace('%1',filtres)+'</button>' : '')+'</div>';
     return;
   }
   if((state.group[cat]||'date')==='cat'){ el.innerHTML = groupByCat(cat, items); return; }
@@ -3638,11 +3723,11 @@ function groupByCat(cat, items){
   const keys = Object.keys(g).sort((a,b)=>g[b].length-g[a].length);
   return keys.map(k=>{
     const S = SUBS[k]||SUBS.perso;
-    const list = g[k].slice().sort((a,b)=>a.date.localeCompare(b.date));
+    const list = g[k].slice().sort((a,b)=>((a.sansDate?1:0)-(b.sansDate?1:0)) || a.date.localeCompare(b.date));
     const key = cat+':'+k;
     const isOpen = !!state.gopen[key];
     const late = list.filter(i=>statusOf(i)==='overdue').length;
-    const next = list.find(i=>diffDays(i.date)>=0);
+    const next = list.find(i=>!i.sansDate && statusOf(i)!=='done' && diffDays(i.date)>=0);
     const sub = (next ? T[state.lang].inDays(diffDays(next.date))+' · '+esc(next.title[state.lang]) : '')
               + (late ? ' · ⚠️ '+late+' '+t('lateLbl') : '');
     return '<div class="cgroup'+(isOpen?' open':'')+'">'+
@@ -3671,14 +3756,19 @@ function card(it){
   const list = clOf(it), done = clDone(it);
   const pct = list.length ? Math.round(done.length/list.length*100) : 0;
   const isOpen = !!state.open[it.id];
-  const relCls = dd<0?'neg':dd===0?'now':'';
-  let h = '<article class="card s-'+st+(dd===0?' is-today':'')+(isOpen?' open':'')+'" id="c_'+cssId(it.id)+'">';
+  /* Sans date : la date de l'objet n'est qu'un repli (aujourd'hui, ou le jour
+     d'achevement). La carte ne doit jamais la presenter comme une echeance. */
+  const nd = !!it.sansDate, ndOuvert = nd && (st!=='done' || (!it.gFait && !it.gFaitIci));
+  const relCls = nd ? '' : dd<0?'neg':dd===0?'now':'';
+  let h = '<article class="card s-'+st+(dd===0 && !nd?' is-today':'')+(isOpen?' open':'')+'" id="c_'+cssId(it.id)+'">';
   h += '<button class="card-head" onclick="tog(\''+it.id+'\')">';
-  h += '<div class="dchip"><div class="d">'+d.getDate()+'</div><div class="m">'+T[state.lang].months[d.getMonth()].slice(0,4)+'</div></div>';
+  h += ndOuvert
+    ? '<div class="dchip"><div class="d">—</div><div class="m">'+t('sansDateLbl')+'</div></div>'
+    : '<div class="dchip"><div class="d">'+d.getDate()+'</div><div class="m">'+T[state.lang].months[d.getMonth()].slice(0,4)+'</div></div>';
   h += '<div class="c-main"><h4>'+S.ic+' '+esc(it.title[state.lang])+'</h4><div class="c-meta">';
   h += '<span class="tag" style="background:'+hex(S.c,.14)+';color:color-mix(in srgb,'+S.c+',var(--ink) 42%)">'+S[state.lang]+'</span>';
-  h += '<span class="tag time">'+(it.allDay? t('allDay') : it.start+(it.end?'–'+it.end:''))+'</span>';
-  h += '<span class="tag rel '+relCls+'">'+T[state.lang].inDays(dd)+'</span>';
+  if(!it.gtache) h += '<span class="tag time">'+(it.allDay? t('allDay') : it.start+(it.end?'–'+it.end:''))+'</span>';
+  h += '<span class="tag rel '+relCls+'">'+(nd ? t('sansDateLbl') : T[state.lang].inDays(dd))+'</span>';
   if(list.length) h += '<span class="tag time">📎 '+done.length+'/'+list.length+'</span>';
   h += '</div></div>';
   h += '<span class="pill p-'+st+'">'+t('st.'+st)+'</span><span class="chev">▼</span></button>';
@@ -3688,7 +3778,7 @@ function card(it){
      corps est fabrique a l'ouverture (tog() redessine). */
   if(!isOpen){ h += '<div class="card-body"></div></article>'; return h; }
   h += '<div class="card-body">';
-  h += '<div class="sec"><div class="sec-t">📅 '+fmtDayName(it.date)+' • '+fmtDate(it.date)+
+  h += '<div class="sec"><div class="sec-t">📅 '+(nd ? t('sansDateLbl') : fmtDayName(it.date)+' • '+fmtDate(it.date))+
        (it.raw? ' &nbsp;·&nbsp; <span class="orgv">'+t('sourceTitle')+' : “'+esc(it.raw)+'”</span>':'')+'</div></div>';
   /* Google Tasks seulement, et seulement si l'artisan a active l'ecriture
      (it.peutEcrireSource, posee par app/google/gtasks.js) : le titre et la
@@ -3704,7 +3794,7 @@ function card(it){
        '<input class="mini" placeholder="'+t('contactPh')+'" value="'+esc(store.contact[it.sk]||'')+'" onchange="setMeta(\'contact\',\''+it.sk+'\',this.value)">'+
        '<input class="mini" placeholder="'+t('placePh')+'" value="'+esc(store.place[it.sk]||'')+'" onchange="setMeta(\'place\',\''+it.sk+'\',this.value)">'+
        '</div></div>';
-  if(it.peutEcrireSource){
+  if(it.peutEcrireSource && it.notesModifiables!==false){
     h += '<div class="sec"><div class="sec-t">📝 '+t('gDescEdit')+' <span class="orgv">('+t('gWriteHint')+')</span></div>'+
          '<textarea class="notes" onchange="setSrcNote(\''+it.id+'\',this.value)">'+esc(it.desc||'')+'</textarea></div>';
   } else if(it.desc){
@@ -3721,9 +3811,31 @@ function card(it){
   if(it.inv && it.inv.length) gl.push(['👥', t('gGuests'), esc(it.inv.join(' • '))]);
   if(it.pj && it.pj.length) gl.push(['📎', t('gFiles'), esc(it.pj.join(' • '))]);
   if(it.calId) gl.push(['🗂️', t('gCal'), esc(t('cal.'+it.calId))]);
+  /* Google Tasks : tout ce que l'API donne, en lignes, jamais en HTML fourni
+     par la source (tout est echappe ici, liens compris). */
+  if(it.gtache){
+    gl.push(['📅', t('gtEcheance'), it.gDue ? esc(fmtDate(it.gDue)) : t('sansDateLbl')]);
+    if(it.gFaitLe) gl.push(['✔️', t('gtFaitLe'), esc(heureLocale(it.gFaitLe))]);
+    else if(it.gFaitIci && statusOf(it)==='done') gl.push(['✔️', t('gtFaitLe'), esc(fmtDate(it.gFaitIci))]);
+    if(it.gEnAttente) gl.push(['⏳', t('gtAttente'), t('gtAttenteTxt')]);
+    if(it.gMaj) gl.push(['🕘', t('gtMaj'), esc(heureLocale(it.gMaj))]);
+    if(it.gParent) gl.push(['↳', t('gtParent'), esc(it.gParent.titre)]);
+    if(it.gLiens && it.gLiens.length) gl.push(['🔗', t('gtLiens'), it.gLiens.map(l=>lienSur(l.link, l.description||l.type||l.link)).filter(Boolean).join(' • ')]);
+    if(it.gAssign) gl.push(['📨', t('gtAssigne'), esc((T[state.lang].gtSurf||{})[it.gAssign.type] || it.gAssign.type || '')+(it.gAssign.lien ? ' '+lienSur(it.gAssign.lien, '↗') : '')]);
+  }
   if(gl.length){
-    h += '<div class="sec"><div class="sec-t">🔗 '+t('gInfo')+'</div><div class="ginfo">';
+    h += '<div class="sec"><div class="sec-t">🔗 '+t(it.gtache ? 'gtInfo' : 'gInfo')+'</div><div class="ginfo">';
     gl.forEach(g=>{ h += '<div class="grow"><span class="gic">'+g[0]+'</span><span class="glbl">'+g[1]+'</span><span class="gval">'+g[2]+'</span></div>'; });
+    h += '</div></div>';
+  }
+  /* Les sous-taches Google : en lecture seule, pour ne pas laisser croire
+     qu'une case cochee ici partirait vers Google. Chacune garde aussi sa
+     propre carte : rien n'est cache. */
+  if(it.gEnfants && it.gEnfants.length){
+    h += '<div class="sec"><div class="sec-t">🧩 '+t('gtSous')+'</div><div class="checklist">';
+    it.gEnfants.forEach(c=>{
+      h += '<label class="chk'+(c.fait?' done':'')+'"><input type="checkbox" disabled '+(c.fait?'checked':'')+'><span>'+esc(c.titre)+'</span></label>';
+    });
     h += '</div></div>';
   }
   h += '<div class="sec"><div class="sec-t">✅ '+t('checklist')+'</div>';
@@ -3751,7 +3863,7 @@ function card(it){
   if(it.manual) h += '<button class="act" onclick="delCustom(\''+it.id+'\')">🗑 '+t('delTask')+'</button>';
   const lst=allSections().map(s=>s.id), nxt=lst[(lst.indexOf(catOf(it))+1)%lst.length];
   h += '<button class="act" onclick="moveCat(\''+it.id+'\')">'+t('moveTo')+' '+secName(secById(nxt))+'</button>';
-  h += '<a class="act link" href="'+it.link+'" target="_blank" rel="noopener">📅 '+t('openCal')+'</a>';
+  if(it.link) h += '<a class="act link" href="'+esc(it.link)+'" target="_blank" rel="noopener">'+(it.gtache ? '✅ '+t('openTasks') : '📅 '+t('openCal'))+'</a>';
   h += '</div></div></article>';
   return h;
 }
@@ -3759,6 +3871,12 @@ const btn = (cls,on,lbl,id,v) => '<button class="act '+cls+(on?' on':'')+'" oncl
 const cssId = s => s.replace(/[^a-zA-Z0-9]/g,'_');
 const TID = id => TASKS.find(x=>x.id===id);
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+/* Un horodatage RFC 3339 (Google) en date + heure LOCALES : couper la chaine
+   donnerait le jour UTC, qui n'est pas celui de l'artisan entre minuit et 1 h. */
+function heureLocale(ts){ const x=new Date(ts); return isNaN(x) ? '' : fmtDate(iso(x))+' '+pad(x.getHours())+':'+pad(x.getMinutes()); }
+/* Un lien venu d'une source exterieure : seulement http(s) ou mailto, et tout
+   echappe. Le reste n'est pas un lien. */
+function lienSur(url, lbl){ const u=String(url||''); return /^(https?:|mailto:)/i.test(u) ? '<a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(lbl||u)+'</a>' : ''; }
 function hex(c,a){ const n=parseInt(c.slice(1),16); return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')'; }
 
 /* ============================================================================
@@ -4238,7 +4356,9 @@ function exportOne(kind){
 }
 /* Exporte TOUT ce qui est visible vers un seul fichier .ics. */
 function exportAllICS(){
-  const list=visible().map(it=>{
+  /* Une tache sans date n'a pas de jour : l'exporter inventerait un rendez-vous
+     « aujourd'hui » dans l'agenda du telephone. */
+  const list=visible().filter(it=>!it.sansDate).map(it=>{
     const l=clOf(it), d=clDone(it);
     const done=l.length? ('\n\n'+t('checklist')+' : '+d.length+'/'+l.length+'\n'+l.map(x=>(d.indexOf(x)>=0?'[x] ':'[ ] ')+x).join('\n')) : '';
     return {
@@ -4263,7 +4383,7 @@ function exportAllICS(){
 function exportJSON(){
   const vis = visible();
   const map = it=>({
-    id:it.id, title:it.title[state.lang], source_title:it.raw, date:it.date,
+    id:it.id, title:it.title[state.lang], source_title:it.raw, date:it.sansDate ? '' : it.date, no_date:!!it.sansDate,
     time:(it.allDay?'':it.start+(it.end?'-'+it.end:'')),
     sub_category:SUBS[it.sub]?SUBS[it.sub][state.lang]:it.sub,
     status:t('st.'+statusOf(it)), sub_tasks:clOf(it), done_tasks:clDone(it),
@@ -4502,7 +4622,7 @@ async function gemini(prompt, essais){
    et non de generalites. */
 function dailyContext(){
   const T0=today(), W=addDays(T0,7);
-  const live=TASKS.filter(it=>{ const s=statusOf(it); return !it.routine && s!=='done' && s!=='passed'; });
+  const live=TASKS.filter(it=>{ const s=statusOf(it); return !it.routine && !it.sansDate && s!=='done' && s!=='passed'; });
   const late=live.filter(i=>parse(i.date)<T0 && parse(i.date)>=addDays(T0,-60));
   const soon=live.filter(i=>parse(i.date)>=T0 && parse(i.date)<=W)
                  .sort((a,b)=>a.date.localeCompare(b.date));

@@ -201,17 +201,19 @@
                   fr: 'Il manque l’identifiant Google — cliquez « Reglage »' },
     gdNoCal:    { ar: 'مربوط — لكن لم تختر أي تقويم بعد',
                   fr: 'Lie — mais aucun agenda n’est coche pour l’instant' },
-    gdOn:       { ar: 'مربوط بـ <b>{m}</b> — {n} تقويم، آخر مزامنة {x}',
-                  fr: 'Lie a <b>{m}</b> — {n} agenda(s), derniere synchro {x}' },
-    gdOnNo:     { ar: 'مربوط — {n} تقويم، لم تتم أي مزامنة بعد',
-                  fr: 'Lie — {n} agenda(s), aucune synchronisation pour l’instant' },
-    gdWait:     { ar: 'مربوط — {n} تعديلًا في انتظار الشبكة',
-                  fr: 'Lie — {n} modification(s) attendent le reseau' },
+    /* {n} porte le nom compte en entier (« 3 تقاويم », « تقويمان ») : voir
+       compteAr(), pour que l'accord arabe soit juste a tous les nombres. */
+    gdOn:       { ar: 'مربوط بـ <b>{m}</b> — {n}، آخر مزامنة {x}',
+                  fr: 'Lie a <b>{m}</b> — {n}, derniere synchro {x}' },
+    gdOnNo:     { ar: 'مربوط — {n}، لم تتم أي مزامنة بعد',
+                  fr: 'Lie — {n}, aucune synchronisation pour l’instant' },
+    gdWait:     { ar: 'مربوط — {n} في انتظار الشبكة',
+                  fr: 'Lie — {n} en attente du reseau' },
     gdErr:      { ar: 'مربوط — آخر محاولة فشلت: {x}',
                   fr: 'Lie — la derniere tentative a echoue : {x}' },
     gdLink:     { ar: 'اربط',                      fr: 'Lier' },
     gdSetupBtn: { ar: 'الإعداد',                   fr: 'Reglage' },
-    gdCals:     { ar: 'التقاويم',                  fr: 'Agendas' },
+    gdCals:     { ar: 'التقاويم والمهام',           fr: 'Agendas et taches' },
     gdSync:     { ar: 'زامن الآن',                 fr: 'Synchroniser' },
     gdForget:   { ar: 'افصل',                      fr: 'Delier' },
 
@@ -315,6 +317,33 @@
   function lang() {
     var l = (document.documentElement.lang || '').toLowerCase();
     return (l.indexOf('fr') === 0) ? 'fr' : 'ar';   // l'arabe est la langue par defaut
+  }
+
+  /* Un nombre et son nom, avec le bon accord : en arabe sur les deux
+     derniers chiffres (1 واحد، 2 مثنى، 3-10 جمع، ثم مفرد منصوب/مفرد). */
+  var NOMS = {
+    cal:   { ar: ['تقويم واحد', 'تقويمان', 'تقاويم', 'تقويمًا', 'تقويم'], fr: ['agenda', 'agendas'] },
+    liste: { ar: ['قائمة مهام واحدة', 'قائمتا مهام', 'قوائم مهام', 'قائمة مهام', 'قائمة مهام'], fr: ['liste de taches', 'listes de taches'] },
+    modif: { ar: ['تعديل واحد', 'تعديلان', 'تعديلات', 'تعديلًا', 'تعديل'], fr: ['modification', 'modifications'] }
+  };
+  function compte(n, nom) {
+    var f = NOMS[nom];
+    if (lang() === 'fr') { return n + ' ' + (n > 1 ? f.fr[1] : f.fr[0]); }
+    var r = n % 100;
+    if (n === 1) { return f.ar[0]; }
+    if (n === 2) { return f.ar[1]; }
+    if (r >= 3 && r <= 10) { return n + ' ' + f.ar[2]; }
+    if (r >= 11 && r <= 99) { return n + ' ' + f.ar[3]; }
+    return n + ' ' + f.ar[4];
+  }
+  /* Google compte comme « actif » avec des agendas OU des listes de taches
+     suivis : un artisan qui ne suit que ses taches n'a rien a regler. */
+  function gActif(G) { return !!(G && G.connecte && ((G.suivis || 0) > 0 || (G.tachesSuivies || 0) > 0)); }
+  function gCompte(G) {
+    var b = [];
+    if (G.suivis) { b.push(compte(G.suivis, 'cal')); }
+    if (G.tachesSuivies) { b.push(compte(G.tachesSuivies, 'liste')); }
+    return b.join(lang() === 'fr' ? ', ' : '، ');
   }
 
   /* T('cle', {x: 'valeur'}) — les accolades sont remplacees. */
@@ -435,7 +464,7 @@
          liaison Microsoft directe, ou l'ancienne liaison par le serveur.
          UNE SEULE suffit : le bouton « Actualiser » du haut a quelque chose
          a aller chercher des qu'une des trois repond. */
-      liaison: (!!gdir && gdir.connecte && gdir.suivis > 0) ||
+      liaison: gActif(gdir) ||
                (!!mdir && mdir.connecte && mdir.suivis > 0) ||
                (pret && mode === 'in' && !!g.lieLe)
     };
@@ -637,7 +666,7 @@
     /* Lie, mais rien de coche : c'est l'etat le plus trompeur de tous, parce
        que tout a l'air en place et que rien n'arrive. On le dit, et on met en
        avant le bouton qui mene aux cases a cocher. */
-    if (!G.suivis) {
+    if (!gActif(G)) {
       return { dot: 'warn', say: T('gdNoCal'),
                act: [
                  { lbl: T('gdCals'),   fn: ouvrirGoogle, pri: true },
@@ -649,17 +678,20 @@
        Trois cas viennent avant, parce qu'ils sont plus urgents a savoir. */
     var say;
     var pastille = 'on';
-    if (G.erreur) {
+    var errG = (G.suivis ? G.erreur : null) || G.tachesErreur;
+    var derniere = G.derniereTout !== undefined ? G.derniereTout : G.derniere;
+    var depuisTxt = G.depuisTout !== undefined ? G.depuisTout : G.depuis;
+    if (errG) {
       pastille = 'bad';
-      say = T('gdErr', { x: esc(G.erreur) });
+      say = T('gdErr', { x: esc(errG) });
     } else if (G.enAttente) {
       pastille = 'warn';
-      say = T('gdWait', { n: G.enAttente });
-    } else if (!G.derniere) {
+      say = T('gdWait', { n: compte(G.enAttente, 'modif') });
+    } else if (!derniere) {
       pastille = 'warn';
-      say = T('gdOnNo', { n: G.suivis });
+      say = T('gdOnNo', { n: gCompte(G) });
     } else {
-      say = T('gdOn', { m: esc(G.courriel || "—"), n: G.suivis, x: esc(G.depuis) });
+      say = T('gdOn', { m: esc(G.courriel || "—"), n: gCompte(G), x: esc(depuisTxt) });
     }
 
     return {
@@ -718,7 +750,7 @@
      avant cela, choisir entre elles n'a aucun sens, il n'y a rien a choisir. */
   function ligneSources(E) {
     var g = E.gdirect, m = E.mdirect;
-    var gOk = !!(g && g.disponible && g.connecte && g.suivis > 0);
+    var gOk = !!(g && g.disponible && gActif(g));
     var mOk = !!(m && m.disponible && m.connecte && m.suivis > 0);
     if (!gOk || !mOk) { return null; }
     var b = (AP.mbridge && AP.mbridge.source) ? AP.mbridge : null;
@@ -843,7 +875,7 @@
        renseigne sans liaison. Gris : rien n'est configure, et c'est un etat
        parfaitement normal pour qui travaille en local. */
     var aFaire = E.pret || !!(E.gdirect && E.gdirect.configure && !E.gdirect.connecte)
-                        || !!(E.gdirect && E.gdirect.connecte && !E.gdirect.suivis)
+                        || !!(E.gdirect && E.gdirect.connecte && !gActif(E.gdirect))
                         || !!(E.mdirect && E.mdirect.configure && !E.mdirect.connecte)
                         || !!(E.mdirect && E.mdirect.connecte && !E.mdirect.suivis);
     d.className = 'aps-dot' + (E.liaison ? ' on' : (aFaire ? ' warn' : ''));

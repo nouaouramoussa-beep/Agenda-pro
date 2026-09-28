@@ -365,9 +365,9 @@ function installerGoogle(options) {
     };
   }
 
-  async function lireCourriel() {
+  async function lireCourriel(jeton) {
     try {
-      const r = await fetch(QUI_SUIS_JE, { headers: { Authorization: 'Bearer ' + jetonAcces } });
+      const r = await fetch(QUI_SUIS_JE, { headers: { Authorization: 'Bearer ' + (jeton || jetonAcces) } });
       if (!r.ok) { return ''; }
       const d = await r.json();
       return (d && d.email) || '';
@@ -385,6 +385,12 @@ function installerGoogle(options) {
     flotEnCours = (async function () {
       const pkce = fabriquerPkce();
       const etat = base64url(crypto.randomBytes(24));
+      /* Le compte deja lie. Une permission EN PLUS (taches, ecriture) ne
+         doit jamais changer de compte en douce : si le navigateur connait
+         deux comptes Google et que l'artisan choisit l'autre, les agendas
+         suivis appartiendraient a l'un et les taches a l'autre. */
+      if (!courriel && jetonAcces) { courriel = await lireCourriel(); }
+      const attendu = courriel;
 
       /* On lance l'ecoute AVANT d'ouvrir le navigateur : il faut connaitre le
          port pour pouvoir le donner a Google comme adresse de retour. */
@@ -398,7 +404,7 @@ function installerGoogle(options) {
 
       const redirection = 'http://127.0.0.1:' + retour.port + '/retour';
 
-      const adresse = AUTORISATION + '?' + new URLSearchParams({
+      const champsAdresse = {
         client_id: clientId,
         redirect_uri: redirection,
         response_type: 'code',
@@ -417,7 +423,9 @@ function installerGoogle(options) {
            demander l'ecriture plus tard sans perdre la lecture (le
            consentement incremental de gauth.js, PARTIE 7). */
         include_granted_scopes: 'true'
-      }).toString();
+      };
+      if (attendu) { champsAdresse.login_hint = attendu; }
+      const adresse = AUTORISATION + '?' + new URLSearchParams(champsAdresse).toString();
 
       journal('ouverture du navigateur de l\'artisan');
       try {
@@ -440,7 +448,27 @@ function installerGoogle(options) {
         redirect_uri: redirection
       });
 
-      courriel = '';   /* le compte a pu changer : on le relira */
+      /* Echange rate : rien ne change, et surtout pas l'adresse connue. */
+      if (!(reponse && reponse.access_token)) { return null; }
+
+      /* Verifier le compte AVANT de toucher au coffre ou au jeton en cours :
+         un autre compte est refuse, et la liaison actuelle reste exactement
+         ce qu'elle etait. Son jeton est simplement JETE, pas revoque : chez
+         Google, revoquer retire l'acces de ce compte a ce programme sur TOUS
+         ses appareils (un autre poste lie a ce compte-la serait coupe).
+         Adresse illisible : refus aussi, sans rien revoquer. Changer de compte
+         volontairement passe par « delier » puis « lier ». */
+      if (attendu) {
+        const nouveau = await lireCourriel(reponse.access_token);
+        if (!nouveau) { journal('adresse du nouveau jeton illisible — liaison inchangee'); return null; }
+        if (nouveau.toLowerCase() !== attendu.toLowerCase()) {
+          journal('autre compte choisi — refuse, liaison inchangee');
+          return { erreur: 'autre-compte' };
+        }
+        courriel = nouveau;
+      } else {
+        courriel = '';   /* premiere liaison : on la lira */
+      }
       return await ranger(reponse);
     })();
 

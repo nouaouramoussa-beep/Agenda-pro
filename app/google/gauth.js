@@ -286,6 +286,9 @@
       plusTard:       'لاحقًا',
       bandeau:        'انتهت مهلة الربط مع Google. عملك محفوظ وينتظر — أعد الربط ليكمل الإرسال.',
       refuse:         'تم إلغاء الربط. البرنامج يواصل العمل محليًا كالمعتاد.',
+      refusSupplement:'لم يُمنح الإذن الإضافي — ربط التقويم باقٍ كما هو.',
+      fenetreOuverte: 'نافذة Google مفتوحة بالفعل في المتصفح — أكمل هناك أو أغلقها ثم أعد المحاولة.',
+      autreCompte:    'اخترت حساب Google آخر — لم يتغيّر الربط. لتغيير الحساب: افصل أولاً ثم اربط من جديد.',
       erreur:         'تعذّر الربط مع Google. حاول مرة أخرى لاحقًا.',
       lecture:        'قراءة فقط',
       ecriture:       'قراءة وكتابة',
@@ -306,6 +309,9 @@
       plusTard:       'Plus tard',
       bandeau:        'La liaison avec Google a expire. Votre travail est garde et attend — reconnectez-vous pour qu\'il parte.',
       refuse:         'Connexion annulee. Le programme continue en local, comme avant.',
+      refusSupplement:'Autorisation supplementaire non accordee — votre agenda reste lie.',
+      fenetreOuverte: 'Une fenetre Google est deja ouverte dans le navigateur — terminez-la ou fermez-la, puis reessayez.',
+      autreCompte:    'Vous avez choisi un autre compte Google — la liaison n\'a pas change. Pour changer de compte : deliez d\'abord, puis reliez.',
       erreur:         'Connexion a Google impossible. Reessayez plus tard.',
       lecture:        'lecture seule',
       ecriture:       'lecture et ecriture',
@@ -389,14 +395,15 @@
      Google), donc CHAQUE champ ecrit ici est visible par l'artisan — la
      permission explicite est obligatoire, sans aucune exception. */
   function estUneTachePrecise(url) {
-    return /\/tasks\/v1\/lists\/[^\/]+\/tasks\/[^\/?#]+/.test(url);
+    return /\/tasks\/v1\/lists\/[^\/?#]+\/tasks\/[^\/?#]+(\?|#|$)/.test(url);
   }
-  /* La meme adresse, en plus large : la liste entiere (creation comprise).
-     Sert a refuser POST/PUT/DELETE sur Google Tasks — voir plus bas — au lieu
-     de les laisser passer sans controle faute de correspondre a la version
-     precise ci-dessus. */
+  /* TOUTE adresse de l'API Google Tasks (listes, taches, « clear », « move »,
+     creation ou suppression d'une liste…) : tout ce qui y ecrit passe par la
+     regle stricte plus bas, qui n'accepte qu'un PATCH sur UNE tache precise.
+     Une version plus etroite laissait passer, sans controle, la suppression
+     d'une liste entiere ou l'effacement des taches terminees. */
   function estUneTache(url) {
-    return /\/tasks\/v1\/lists\/[^\/]+\/tasks(\/|\?|$)/.test(url);
+    return /\/tasks\/v1\//.test(url);
   }
   var CHAMPS_TACHE_AUTORISES = ['title', 'notes', 'status', 'completed'];
 
@@ -803,7 +810,7 @@
      nouveau jeton porte l'ancienne portee ET la nouvelle. On ne perd rien.
      ========================================================================= */
 
-  function porteesVoulues(niveau, interactif) {
+  function porteesVoulues(niveau, interactif, avecEcritureTaches) {
     var l = [];
     if (PORTEE.compte) { l.push(PORTEE.compte); }
     /* « taches » (Google Tasks, app/google/gtasks.js) n'est ajoutee ICI que
@@ -817,9 +824,13 @@
        defaut que ce garde evite : les renouvellements silencieux continuent
        de ne demander que ce qu'ils demandaient avant l'ajout de gtasks.js. */
     if (PORTEE.taches && (interactif || aLaPortee(PORTEE.taches))) { l.push(PORTEE.taches); }
-    /* Meme garde, meme raison : ne jamais demander tachesEcriture en silence
-       tant que l'artisan ne l'a pas accordee une premiere fois. */
-    if (PORTEE.tachesEcriture && (interactif || aLaPortee(PORTEE.tachesEcriture))) { l.push(PORTEE.tachesEcriture); }
+    /* tachesEcriture (voir, modifier, creer, SUPPRIMER toutes ses taches) :
+       jamais parce qu'une demande est interactive — sinon le simple bouton
+       « السماح بقراءة المهام », ou la premiere liaison, afficherait chez
+       Google un ecran demandant tout cela alors que l'ecriture est desactivee.
+       Seulement quand l'artisan coche la case d'ecriture (demanderTachesEcriture
+       -> avecEcritureTaches), ou si elle est deja accordee. */
+    if (PORTEE.tachesEcriture && (avecEcritureTaches || aLaPortee(PORTEE.tachesEcriture))) { l.push(PORTEE.tachesEcriture); }
     l.push(niveau === 'ecriture' ? PORTEE.ecriture : PORTEE.lecture);
     return l;
   }
@@ -902,6 +913,16 @@
     } catch (e) { }
   }
 
+  /* Une seule pile pour tous les bandeaux du bas (Google, Microsoft, Google
+     Tasks) : ils s'empilent au lieu de se recouvrir. Voir gauth.css. */
+  AP.bandeaux = AP.bandeaux || {
+    poser: function (el) {
+      var pile = document.querySelector('.ap-g-pile');
+      if (!pile) { pile = document.createElement('div'); pile.className = 'ap-g-pile'; document.body.appendChild(pile); }
+      pile.appendChild(el);
+    }
+  };
+
   function montrerBandeau() {
     if (!document.body) { return; }
     poserCss();
@@ -928,7 +949,7 @@
     bandeau.appendChild(txt);
     bandeau.appendChild(ok);
     bandeau.appendChild(plusTard);
-    document.body.appendChild(bandeau);
+    AP.bandeaux.poser(bandeau);
 
     if (AP.ui && typeof AP.ui.onLang === 'function') {
       AP.ui.onLang(function () {
@@ -1052,16 +1073,24 @@
   function connecter(opts) {
     opts = opts || {};
     if (!S.configure) { return Promise.resolve(false); }
-    if (S.connexionEnCours) { return Promise.resolve(S.connecte); }
+    /* Une fenetre Google deja ouverte (sur le bureau, l'attente dure jusqu'a
+       cinq minutes) : un nouveau clic ne faisait rien, sans un mot. */
+    if (S.connexionEnCours) {
+      S.dernierRefus = 'fenetre-ouverte';
+      if (opts.interactif !== false) { toast(M('fenetreOuverte')); }
+      return Promise.resolve(S.connecte);
+    }
+    S.dernierRefus = null;
 
     var niveau = opts.ecriture ? 'ecriture' : 'lecture';
-    var portees = porteesVoulues(niveau, opts.interactif !== false);
+    var portees = porteesVoulues(niveau, opts.interactif !== false, !!opts.tachesEcriture);
     if (opts.drive) { portees.push(PORTEE.reglages); }
 
     /* L'application de bureau sans le pont : on le DIT, une fois, au lieu
        d'ouvrir une fenetre Google qui finirait sur « origine non autorisee ».
        Voir l'explication des deux environnements, en tete de fichier. */
     if (S.environnement === 'bureau-sans-pont') {
+      S.dernierRefus = 'bureau-absent';
       toast(M('bureauAbsent'));
       journal('pont Google absent du programme de bureau — voir CONSOLE-GOOGLE.md');
       return Promise.resolve(false);
@@ -1070,25 +1099,55 @@
     S.connexionEnCours = true;
     prevenir();
 
+    /* Le compte deja lie : une permission EN PLUS ne doit jamais changer de
+       compte en douce (le navigateur peut connaitre deux comptes Google). Le
+       bureau le verifie lui-meme (electron-google.js) ; ici, le web. */
+    var attendu = (S.connecte && S.courriel) ? S.courriel : '';
     var pont = pontBureau();
     var demande = pont
       ? pont.googleConnecter(portees)
       : demanderJetonGis(portees, opts.interactif !== false);
 
+    function refuserAutreCompte() {
+      S.dernierRefus = 'autre-compte';
+      prevenir();
+      if (opts.interactif !== false) { toast(M('autreCompte')); }
+      return false;
+    }
+
     return demande.then(function (r) {
       S.connexionEnCours = false;
+      if (r && r.erreur === 'autre-compte') { return refuserAutreCompte(); }
       if (r && r.access_token) {
-        poserJeton(r);
-        if (r.email) { S.courriel = r.email; }
-        return lireLeCompte().then(function () { return true; });
+        var controle = (!pont && attendu)
+          ? fetch(API_COMPTE, { headers: { Authorization: 'Bearer ' + r.access_token } })
+              .then(function (x) { return x.ok ? x.json() : null; })
+              .then(function (d) { return (d && d.email) || ''; }, function () { return ''; })
+          : Promise.resolve(null);
+        return controle.then(function (courrielNouveau) {
+          /* Adresse illisible pour une permission en plus : on ne prend pas le
+             risque d'adopter un jeton d'un autre compte. */
+          if (courrielNouveau !== null &&
+              (courrielNouveau ? courrielNouveau.toLowerCase() !== attendu.toLowerCase() : !!opts.supplement)) {
+            return refuserAutreCompte();
+          }
+          poserJeton(r);
+          if (r.email) { S.courriel = r.email; }
+          S.dernierRefus = null;
+          return lireLeCompte().then(function () { return true; });
+        });
       }
       /* L'artisan a ferme la fenetre, ou a refuse : ce n'est pas une panne.
-         On le dit calmement et on retourne travailler en local. */
+         On le dit calmement et on retourne travailler en local. Pour une
+         permission EN PLUS (taches, ecriture), dire « الربط أُلغي » serait
+         faux : le calendrier, lui, reste lie. */
+      S.dernierRefus = 'refus';
       prevenir();
-      if (opts.interactif !== false) { toast(M('refuse')); }
+      if (opts.interactif !== false) { toast(opts.supplement && S.connecte ? M('refusSupplement') : M('refuse')); }
       return false;
     }).catch(function (e) {
       S.connexionEnCours = false;
+      S.dernierRefus = 'erreur';
       prevenir();
       journal('connexion: ', e && e.message);
       if (opts.interactif !== false) { toast(M('erreur')); }
@@ -1103,7 +1162,7 @@
     if (aLaPortee(PORTEE.ecriture)) { return Promise.resolve(true); }
     if (!S.connecte) { return connecter({ interactif: true, ecriture: true }); }
     toast(M('demandeEcriture'));
-    return connecter({ interactif: true, ecriture: true }).then(function () {
+    return connecter({ interactif: true, ecriture: true, supplement: true }).then(function () {
       return aLaPortee(PORTEE.ecriture);
     });
   }
@@ -1115,14 +1174,15 @@
      quand l'artisan ouvre la section « Google Tasks », qui lui propose
      l'unique ecran de consentement supplementaire dont il a besoin — une
      fois, comme demanderEcriture() le fait deja pour l'ecriture. */
+  /* La portee complete « tasks » couvre aussi la lecture : un artisan qui,
+     sur l'ecran detaille de Google, n'aurait garde qu'elle doit pouvoir lire. */
+  function peutLireTaches() { return aLaPortee(PORTEE.taches) || aLaPortee(PORTEE.tachesEcriture); }
+
   function demanderTaches() {
     if (!S.configure) { return Promise.resolve(false); }
-    if (aLaPortee(PORTEE.taches)) { return Promise.resolve(true); }
-    if (!S.connecte) {
-      return connecter({ interactif: true }).then(function () { return aLaPortee(PORTEE.taches); });
-    }
-    return connecter({ interactif: true }).then(function () {
-      return aLaPortee(PORTEE.taches);
+    if (peutLireTaches()) { return Promise.resolve(true); }
+    return connecter({ interactif: true, supplement: true, ecriture: aLaPortee(PORTEE.ecriture) }).then(function () {
+      return peutLireTaches();
     });
   }
 
@@ -1134,7 +1194,7 @@
   function demanderTachesEcriture() {
     if (!S.configure) { return Promise.resolve(false); }
     if (aLaPortee(PORTEE.tachesEcriture)) { return Promise.resolve(true); }
-    return connecter({ interactif: true }).then(function () {
+    return connecter({ interactif: true, supplement: true, tachesEcriture: true, ecriture: aLaPortee(PORTEE.ecriture) }).then(function () {
       return aLaPortee(PORTEE.tachesEcriture);
     });
   }
@@ -1302,6 +1362,9 @@
       if (opts.interactif || ((manqueEcriture || manqueDrive) && S.connecte)) {
         return connecter({
           interactif: true,
+          /* Une permission EN PLUS pour un compte deja lie : un refus ne
+             « coupe » pas la liaison, et le message doit le dire. */
+          supplement: !!(S.connecte && (manqueEcriture || manqueDrive)),
           ecriture: veutEcriture || aLaPortee(PORTEE.ecriture),
           drive: veutDrive || aLaPortee(PORTEE.reglages)
         }).then(function (ok) {
@@ -1386,7 +1449,11 @@
           S._jeton = '';
           S._expireA = 0;
           return renouveler().then(function () {
-            return jeton().then(function (neuf) {
+            /* Le choix de l'appelant vaut aussi pour la reprise : une ecriture
+               qui ne doit pas attendre en memoire (gtasks : attendre:false)
+               recoit AP_SANS_JETON tout de suite, et va dans sa file sur le
+               disque, au lieu d'etre suspendue jusqu'a la reconnexion. */
+            return jeton({ attendre: options.attendre !== false }).then(function (neuf) {
               if (!neuf) { throw nommer(new Error('jeton indisponible'), 'AP_SANS_JETON'); }
               return envoyer(neuf, true);
             });
@@ -1485,6 +1552,12 @@
     demanderEcriture: demanderEcriture,
     demanderTaches: demanderTaches,
     demanderTachesEcriture: demanderTachesEcriture,
+    /* Pourquoi la derniere fenetre Google s'est terminee : 'refus',
+       'fenetre-ouverte', 'autre-compte', 'erreur', 'bureau-absent' ou null.
+       Les appelants s'en servent pour ne pas ecraser le message juste que
+       connecter() vient d'afficher par un « refuse » generique. */
+    dernierRefus: function () { return S.dernierRefus || null; },
+    peutLireTaches: peutLireTaches,
     pastille: creerPastille,
 
     /* A appeler apres avoir range un googleClientId dans les reglages :

@@ -187,14 +187,28 @@
       aucuneTache:  'لم تختر أي قائمة بعد.',
       chargerTaches:'تحديث قائمة المهام',
       tachesKo:     'تعذّر جلب قوائم المهام من Google.',
+      porteeTaches: 'لم يُمنح البرنامج بعدُ إذن قراءة مهامك في Google Tasks. اضغط الزر أدناه ووافق في نافذة Google — مرة واحدة فقط.',
+      autoriserTaches: 'السماح بقراءة المهام',
+      resumeTaches: 'وصلت {n}: منها {s} بدون تاريخ و{f} منجزة.',
+      tachesLues:   'Google Tasks : {n}',
+      bandeauTaches: 'مهامك في Google Tasks لا تظهر بعد: البرنامج يحتاج إذناً بقراءتها.',
+      plusTardTaches: 'لاحقاً',
 
       /* --- ecrire dans Google Tasks : statut، عنوان، ملاحظة (app/google/gtasks.js) --- */
       titreEcritureTaches: 'كتابة التغييرات في Google Tasks الحقيقي',
-      aideEcritureTaches: 'عند التفعيل: وضع علامة "أُنجزت"، أو تعديل العنوان أو الملاحظة لمهمة قادمة من Google Tasks داخل هذا البرنامج، يُكتب أيضاً في تطبيق Google Tasks الحقيقي (على هاتفك وفي كل مكان). يتطلب موافقة إضافية من Google تظهر مرة واحدة فقط.',
+      aideEcritureTaches: 'عند التفعيل: الضغط على «✓ مكتملة»، أو تعديل العنوان أو الملاحظة لمهمة مصدرها Google Tasks داخل هذا البرنامج، يُكتب أيضاً في تطبيق Google Tasks الحقيقي (على هاتفك وفي كل مكان). لا يُنشئ البرنامج أي مهمة ولا يحذف أي مهمة. يتطلب موافقة إضافية من Google تظهر مرة واحدة فقط.',
+      tachesArrivees: 'وصلت مهامك من Google Tasks: {n}.',
+      tachesChargement: 'جارٍ جلب مهامك من Google Tasks…',
+      resumeZero:   'لم تصل أي مهمة بعد — القوائم المختارة فارغة.',
+      tachesEnAttente: 'تغييرات بانتظار الإرسال إلى Google Tasks: {n}',
+      bandeauTachesErreur: 'مهامك في Google Tasks لم تصل: {e}',
+      ouvrirReglagesTaches: 'فتح الإعدادات',
       caseEcritureTaches: 'كتابة الإتمام والعنوان والملاحظة في Google Tasks الحقيقي',
       ecritureTachesActivee: 'تم التفعيل — التغييرات القادمة ستظهر في Google Tasks.',
       ecritureTachesDesactivee: 'تم الإيقاف — لن تُكتب التغييرات في Google Tasks بعد الآن.',
       ecritureTachesRefusee: 'تم رفض الإذن أو إغلاق النافذة — لم يتم التفعيل.',
+      ecritureSansPermis: 'الكتابة في Google Tasks مفعّلة، لكن إذن Google لم يعد موجوداً (بعد فصل الحساب وإعادة ربطه مثلاً). التغييرات تبقى هنا فقط حتى تعيد منح الإذن.',
+      ecritureRedemander: 'إعادة منح الإذن',
 
       /* --- le retour honnete pendant la synchronisation --- */
       travail:      'جارٍ المزامنة مع Google…',
@@ -287,14 +301,28 @@
       aucuneTache:  'Aucune liste cochee pour l\'instant.',
       chargerTaches:'Actualiser la liste des taches',
       tachesKo:     'La liste des taches n\'a pas pu etre lue depuis Google.',
+      porteeTaches: 'Le programme n\'a pas encore le droit de lire vos taches Google Tasks. Cliquez le bouton ci-dessous et acceptez dans la fenetre Google — une seule fois.',
+      autoriserTaches: 'Autoriser la lecture des taches',
+      resumeTaches: '{n} tache(s) recue(s) : {s} sans date et {f} terminee(s).',
+      tachesLues:   'Google Tasks : {n}',
+      bandeauTaches: 'Vos taches Google Tasks ne s\'affichent pas encore : le programme a besoin du droit de les lire.',
+      plusTardTaches: 'Plus tard',
 
       /* --- ecrire dans Google Tasks : statut, titre, note (app/google/gtasks.js) --- */
       titreEcritureTaches: 'Ecrire les changements dans Google Tasks',
-      aideEcritureTaches: 'Une fois active : cocher "termine", ou modifier le titre ou la note d\'une tache venue de Google Tasks dans ce programme s\'ecrit aussi dans l\'application Google Tasks reelle (sur votre telephone, partout). Necessite une autorisation Google supplementaire, demandee une seule fois.',
+      aideEcritureTaches: 'Une fois active : cliquer « ✓ Terminée », ou modifier le titre ou la note d\'une tache venue de Google Tasks dans ce programme s\'ecrit aussi dans l\'application Google Tasks reelle (sur votre telephone, partout). Le programme ne cree ni ne supprime jamais une tache. Necessite une autorisation Google supplementaire, demandee une seule fois.',
+      tachesArrivees: 'Vos taches Google Tasks sont arrivees : {n}.',
+      tachesChargement: 'Lecture de vos taches Google Tasks…',
+      resumeZero:   'Aucune tache recue pour l\'instant — les listes choisies sont vides.',
+      tachesEnAttente: 'Changements en attente d\'envoi vers Google Tasks : {n}',
+      bandeauTachesErreur: 'Vos taches Google Tasks ne sont pas arrivees : {e}',
+      ouvrirReglagesTaches: 'Ouvrir les reglages',
       caseEcritureTaches: 'Ecrire l\'achevement, le titre et la note dans Google Tasks reel',
       ecritureTachesActivee: 'Active — les prochains changements apparaitront dans Google Tasks.',
       ecritureTachesDesactivee: 'Desactive — les changements ne seront plus ecrits dans Google Tasks.',
       ecritureTachesRefusee: 'Autorisation refusee ou fenetre fermee — rien n\'a ete active.',
+      ecritureSansPermis: 'L\'ecriture dans Google Tasks est activee, mais l\'autorisation de Google n\'existe plus (apres avoir delie puis relie le compte, par exemple). Les changements restent ici jusqu\'a ce que vous la redonniez.',
+      ecritureRedemander: 'Redonner l\'autorisation',
 
       travail:      'Synchronisation avec Google…',
       lus:          'rendez-vous lus',
@@ -431,7 +459,7 @@
     /* Le meme pont, pour les listes Google Tasks (app/google/gtasks.js) :
        il n'a besoin que de TASKS et toast, pas du reste. */
     if (AP.gtasks && typeof AP.gtasks.bind === 'function') {
-      try { AP.gtasks.bind({ TASKS: P.TASKS, toast: P.toast, store: P.store }); } catch (e) { avert('bind des taches : ' + e.message); }
+      try { AP.gtasks.bind({ TASKS: P.TASKS, toast: P.toast, store: P.store, lsSet: P.lsSet }); } catch (e) { avert('bind des taches : ' + e.message); }
     }
 
     /* LE DEMARRAGE DU MOTEUR — SANS LUI, RIEN NE REPART TOUT SEUL.
@@ -639,6 +667,10 @@
       if (e.besoinReconnexion || !e.connecte) { etaitRelie = false; return; }
       if (etaitRelie) { return; }              // on ne repart qu'au passage
       etaitRelie = true;
+      /* Relie PENDANT la session (par la pastille du haut, par exemple) :
+         demarrer() n'avait pas tourne au chargement, et sans lui le panneau,
+         le bandeau et l'annonce du resultat des taches restaient sourds. */
+      try { demarrer(); } catch (err) { }
       dire('compte Google relie — le moteur se met au travail.');
       try {
         Promise.resolve(AP.gsync.vider())
@@ -832,6 +864,11 @@
     var nGoogle = 0;
     liste.forEach(function (t) {
       if (!t || t.src !== 'google') { return; }
+      /* Une tache Google Tasks (« g|t| ») n'est ni la preuve d'un rendez-vous
+         ni son jumeau : une tache sans date porte le jour d'aujourd'hui comme
+         simple repli, et cacherait chaque jour un rendez-vous different ; et
+         leur nombre ferait sauter les deux filets de securite (nGoogle). */
+      if (typeof t.id === 'string' && t.id.indexOf('g|t|') === 0) { return; }
       nGoogle++;
       if (t.gev) { idsGoogle[t.gev] = t; }
       clesNaturelles(t).forEach(function (c) { if (!clesGoogle[c]) { clesGoogle[c] = t; } });
@@ -1157,18 +1194,18 @@
        qu'il trouve quelque chose a cocher. */
     var i = infoMoteur();
     if (i && i.connecte && (!i.agendas || !i.agendas.length)) { chargerAgendas(); }
-    /* La meme condition « i.connecte » que dessiner() utilise pour DECIDER
-       D'AFFICHER la section Taches (PARTIE 7.3 bis) — pas celle de gtasks
-       lui-meme (infoTaches().connecte, qui verifie la portee Google Tasks
-       REELLEMENT accordee et peut donc diverger). Sinon, un artisan dont le
-       calendrier reste marque « lie » mais dont la portee Taches manque
-       verrait la section apparaitre vide sans que ce chargement automatique
-       n'ait jamais ete tente. */
+    /* Les listes Google Tasks : chargees d'office SEULEMENT si la permission
+       de les lire est deja la. Sinon, jamais de fenetre Google ouverte parce
+       que l'artisan a simplement ouvert ce panneau (sur le bureau, c'etait
+       son navigateur qui s'ouvrait, a chaque ouverture) : la section affiche
+       le message et LE bouton « السماح بقراءة المهام ». */
     var it = infoTaches();
-    if (i && i.connecte && it && (!it.listes || !it.listes.length)) { chargerListesTaches(); }
+    if (i && i.connecte && it && it.connecte && (!it.listes || !it.listes.length)) {
+      AP.gtasks.chargerListes().then(function () { dessiner(); });
+    }
     return true;
   }
-  function fermer() { if (elPanneau) { elPanneau.classList.remove('show'); } }
+  function fermer() { if (elPanneau) { elPanneau.classList.remove('show'); } majBandeauTaches(); }
 
   function bouton(txt, prim, fn, id) {
     var b = document.createElement('button');
@@ -1491,21 +1528,74 @@
     try { return AP.gtasks.info(); } catch (e) { return null; }
   }
 
+  /* LE BOUTON « السماح بقراءة المهام » (panneau et bandeau). Il demande la
+     permission de LIRE les taches — jamais celle d'ecrire (gauth.js,
+     porteesVoulues) —, charge les listes, et suit le resultat jusqu'au bout :
+     quand la lecture qui suit est finie, un message dit combien de taches
+     sont arrivees, ou pourquoi aucune (voir ecouter(), AP.gtasks.on). */
+  var attenteResultatTaches = false;
+  /* Qui attend la fin de la lecture des taches en cours (actualiser). Filet :
+     une minute au plus, pour ne jamais rester bloque. */
+  var ATTENTES_FIN = [];
+  function attendreFinTaches() {
+    return new Promise(function (ok) {
+      var fini = false;
+      function fin() { if (!fini) { fini = true; ok(); } }
+      ATTENTES_FIN.push(fin);
+      setTimeout(fin, 60000);
+    });
+  }
+  /* Pourquoi la derniere fenetre Google s'est fermee (gauth.js). Quand gauth
+     a deja affiche la vraie raison, on ne l'ecrase pas par un message
+     generique, et un simple « fenetre deja ouverte » n'est pas un refus. */
+  function raisonGoogle() { return (AP.gauth && typeof AP.gauth.dernierRefus === 'function') ? AP.gauth.dernierRefus() : null; }
+  function raisonDejaDite() { var r = raisonGoogle(); return r === 'fenetre-ouverte' || r === 'autre-compte' || r === 'bureau-absent'; }
   function chargerListesTaches() {
     if (!(AP.gtasks && typeof AP.gtasks.chargerListes === 'function')) { return Promise.resolve([]); }
-    /* La portee Google Tasks manque encore (artisan connecte avant l'ajout de
-       cette fonction, ou l'ayant decochee sur l'ecran de consentement) : on
-       la demande maintenant, UNE FOIS, par le meme geste que « Actualiser la
-       liste des taches » — exactement comme demanderEcriture() le fait deja
-       pour le droit d'ecriture. Sans cela, cette portee ne serait jamais
-       redemandee pour un compte deja lie. */
     var it0 = infoTaches();
     var manque = it0 && !it0.connecte && AP.gauth && typeof AP.gauth.demanderTaches === 'function';
     var pret = manque ? AP.gauth.demanderTaches() : Promise.resolve(true);
     return pret
-      .then(function () { return AP.gtasks.chargerListes(); })
-      .then(function (l) { dessiner(); return l; })
+      .then(function (ok) {
+        if (manque && !ok) {
+          /* Seul un vrai refus range le bandeau pour la session ; une fenetre
+             deja ouverte ou un autre compte choisi le laissent revenir. */
+          if (!raisonDejaDite()) { bandeauTachesRange = true; }
+          majBandeauTaches(); dessiner(); return [];
+        }
+        attenteResultatTaches = !!manque;
+        return AP.gtasks.chargerListes().then(function (l) {
+          var it1 = infoTaches() || {};
+          /* Permission tout juste accordee et des listes deja suivies (rien
+             de nouveau a suivre, donc aucune lecture lancee) : on lit. */
+          if (manque && !it1.enCours && (it1.suivis || []).length) { AP.gtasks.pull({ complet: true }); it1 = infoTaches() || {}; }
+          /* Aucune lecture ne suivra (rien a lire, ou echec) : le message
+             tombe maintenant plutot que jamais. */
+          if (!it1.enCours) { annoncerResultatTaches(); }
+          dessiner();
+          return l;
+        });
+      })
       .catch(function (e) { avert('liste des taches : ' + (e && e.message)); dessiner(); return []; });
+  }
+  function annoncerResultatTaches() {
+    if (!attenteResultatTaches) { return; }
+    attenteResultatTaches = false;
+    var it = infoTaches() || {};
+    if (it.erreur) { toast(M('echec') + ' — ' + it.erreur); }
+    else if ((it.suivis || []).length) {
+      toast(it.taches ? M('tachesArrivees', { n: langue() === 'ar' ? nbMaham(it.taches) : it.taches }) : M('resumeZero'));
+    }
+  }
+
+  /* Le compte en arabe, avec le bon accord, sur les DEUX derniers chiffres
+     (103 مهام, 111 مهمة) : 1 مهمة واحدة, 2 مهمتان, 3-10 مهام, sinon مهمة. */
+  function nbMaham(n) {
+    var r = n % 100;
+    if (n === 1) { return 'مهمة واحدة'; }
+    if (n === 2) { return 'مهمتان'; }
+    if (r >= 3 && r <= 10) { return n + ' مهام'; }
+    return n + ' مهمة';
   }
 
   function sectionListesTaches() {
@@ -1517,22 +1607,67 @@
     s.innerHTML = '<p class="apg-h">' + propre(M('titreTaches')) + '</p>' +
                   '<p class="apg-aide">' + propre(M('aideTaches')) + '</p>';
 
-    /* Le vrai message de Google, comme sectionEtat() le fait deja pour le
-       calendrier : sans lui, un scope refuse ou un jeton absent restait un
-       echec muet, indiscernable d'une simple liste vide. */
-    if (it.erreur) { s.appendChild(bloc_erreur(it.erreur)); }
+    /* La permission de LIRE les taches n'a jamais ete donnee (compte lie
+       avant l'arrivee de Google Tasks) : on le dit tel quel, avec LE bouton
+       qui la demande — et rien d'autre : pas de cadre rouge « فشلت
+       المزامنة » en plus, ce n'est pas une panne. */
+    if (!it.connecte) {
+      var pp = document.createElement('p');
+      pp.className = 'apg-aide';
+      pp.style.color = 'var(--warn)';
+      pp.textContent = M('porteeTaches');
+      s.appendChild(pp);
+      var basP = document.createElement('div');
+      basP.className = 'apg-bas';
+      basP.appendChild(bouton(M('autoriserTaches'), true, chargerListesTaches));
+      s.appendChild(basP);
+      return s;
+    }
+
+    /* Une vraie erreur : le texte de Google tel quel seulement quand c'en est
+       un ; nos propres messages (hors ligne, patience) en simple ligne. */
+    if (it.erreur) {
+      if (it.codeErreur === 'autre') { s.appendChild(bloc_erreur(it.erreur)); }
+      else {
+        var pe = document.createElement('p'); pe.className = 'apg-aide'; pe.style.color = 'var(--warn)';
+        pe.textContent = it.erreur;
+        s.appendChild(pe);
+      }
+    }
 
     var liste = it.listes || [];
     if (!liste.length) {
       var p = document.createElement('p');
       p.className = 'apg-aide';
-      p.textContent = M('tachesKo');
+      p.textContent = it.enCours ? M('tachesChargement') : M('tachesKo');
       s.appendChild(p);
       var bas0 = document.createElement('div');
       bas0.className = 'apg-bas';
       bas0.appendChild(bouton(M('chargerTaches'), false, chargerListesTaches));
       s.appendChild(bas0);
       return s;
+    }
+
+    /* Ce qui est arrive, en chiffres : la preuve, sous les yeux de
+       l'artisan, que ses taches sont bien la. */
+    if ((it.suivis || []).length) {
+      var txtRes = '';
+      if (it.enCours && !it.taches) { txtRes = M('tachesChargement'); }
+      /* Zero tache ET une erreur : c'est l'erreur (deja affichee au-dessus)
+         qui explique, pas des « listes vides » qui seraient faux. */
+      else if (!it.taches) { txtRes = it.erreur ? '' : M('resumeZero'); }
+      else { txtRes = M('resumeTaches', { n: langue() === 'ar' ? nbMaham(it.taches) : it.taches, s: it.sansDate || 0, f: it.faites || 0 }); }
+      if (txtRes) {
+        var res = document.createElement('p');
+        res.className = 'apg-aide';
+        res.textContent = txtRes;
+        s.appendChild(res);
+      }
+    }
+    if (it.enAttente) {
+      var pa = document.createElement('p'); pa.className = 'apg-aide';
+      pa.textContent = M('tachesEnAttente', { n: it.enAttente });
+      s.appendChild(pa);
     }
 
     var suivis = it.suivis || [];
@@ -1551,7 +1686,7 @@
       cb.id = 'apgTaches_' + Math.abs(hachage(l.id));
       cb.addEventListener('change', function () {
         try { AP.gtasks.suivre(l.id, cb.checked); } catch (e) { avert('suivre (taches) : ' + e.message); }
-        if (cb.checked) { AP.gtasks.pull({ complet: true }).then(function () { rendre(); dessiner(); }); }
+        if (cb.checked) { AP.gtasks.pull({ complet: true }).then(function () { rendre({ fond: true }); dessiner(); }); }
         else { rendre(); dessiner(); }
       });
       row.appendChild(cb);
@@ -1583,22 +1718,52 @@
     s.innerHTML = '<p class="apg-h">' + propre(M('titreEcritureTaches')) + '</p>' +
                   '<p class="apg-aide">' + propre(M('aideEcritureTaches')) + '</p>';
 
+    /* La case montre ce qui est VRAI : cochee seulement si le reglage est
+       active ET que Google a encore accorde la permission. Reglage active
+       sans permission (compte delie puis relie, acces retire chez Google) :
+       une ligne le dit, avec le bouton qui la redemande. */
+    var sansPermis = !!(it.ecrireVersGoogle && !it.ecritureAutorisee);
+    if (sansPermis) {
+      var pw = document.createElement('p'); pw.className = 'apg-aide'; pw.style.color = 'var(--warn)';
+      pw.textContent = M('ecritureSansPermis');
+      s.appendChild(pw);
+      var bw = document.createElement('div'); bw.className = 'apg-bas';
+      bw.appendChild(bouton(M('ecritureRedemander'), true, function () {
+        AP.gtasks.demanderEcriture().then(function (ok) {
+          if (ok) { toast(M('ecritureTachesActivee')); }
+          else if (!raisonDejaDite()) { toast(M('ecritureTachesRefusee')); }
+          rendre(); dessiner();
+        });
+      }));
+      s.appendChild(bw);
+    }
+
     var row = document.createElement('div');
     row.className = 'apg-cal';
     var cb = document.createElement('input');
     cb.type = 'checkbox';
-    cb.checked = !!it.ecrireVersGoogle;
+    cb.checked = !!(it.ecrireVersGoogle && it.ecritureAutorisee);
     cb.id = 'apgEcritureTaches';
     cb.addEventListener('change', function () {
       if (!cb.checked) {
-        try { AP.gtasks.poserReglages({ ecrireVersGoogle: false }); } catch (e) { avert('ecrireVersGoogle : ' + e.message); }
-        toast(M('ecritureTachesDesactivee'));
+        var abandonnees = 0;
+        try { abandonnees = AP.gtasks.couperEcriture(); } catch (e) { avert('ecrireVersGoogle : ' + e.message); }
+        /* couperEcriture() a deja dit ce qu'il advenait des changements en
+           attente ; sinon, le message habituel. */
+        if (!abandonnees) { toast(M('ecritureTachesDesactivee')); }
+        /* Les cartes repassent en lecture seule TOUT DE SUITE : sinon leurs
+           champs restaient ouverts et ce qu'on y tapait se perdait. */
+        rendre();
         dessiner();
         return;
       }
       cb.disabled = true;
       AP.gtasks.demanderEcriture().then(function (ok) {
-        toast(ok ? M('ecritureTachesActivee') : M('ecritureTachesRefusee'));
+        /* gauth a peut-etre deja dit la vraie raison (fenetre deja ouverte,
+           autre compte) : ne pas l'ecraser par « تم رفض الإذن ». */
+        if (ok) { toast(M('ecritureTachesActivee')); }
+        else if (!raisonDejaDite()) { toast(M('ecritureTachesRefusee')); }
+        rendre();
         dessiner();
       });
     });
@@ -1729,8 +1894,12 @@
     /* Pas encore lie : le bouton du haut doit ouvrir la porte, pas se taire. */
     if (!i.connecte) { ouvrir(); return Promise.resolve(false); }
 
-    /* Lie, mais rien de coche : on le dit, et on ouvre la ou il faut cocher. */
-    if (!i.suivis || !i.suivis.length) {
+    /* Lie, mais rien de coche : on le dit, et on ouvre la ou il faut cocher.
+       Des listes Google Tasks cochees suffisent : un artisan qui ne suit que
+       ses taches doit pouvoir les rafraichir aussi. */
+    var itT = infoTaches() || {};
+    var calendriers = !!(i.suivis && i.suivis.length);
+    if (!calendriers && !(itT.suivis && itT.suivis.length)) {
       toast(M('rienAFaire'));
       ouvrir();
       return Promise.resolve(false);
@@ -1756,26 +1925,42 @@
     }
 
     return Promise.resolve()
-      .then(function () { return AP.gsync.pull({ complet: !!opts.complet }); })
+      .then(function () { return calendriers ? AP.gsync.pull({ complet: !!opts.complet }) : null; })
       .then(function () {
         /* Les listes Google Tasks suivies : un seul geste de synchronisation
-           rafraichit les deux, comme l'artisan s'y attend. Une erreur ici ne
-           doit pas faire echouer le compte-rendu du calendrier. */
-        try {
-          if (AP.gtasks && typeof AP.gtasks.pull === 'function') { AP.gtasks.pull({ complet: !!opts.complet }); }
-        } catch (e) { }
+           rafraichit les deux, comme l'artisan s'y attend. On ATTEND leur
+           lecture, pour que le compte-rendu dise aussi combien de taches sont
+           arrivees. Une erreur ici ne fait pas echouer celui du calendrier. */
+        if (!(AP.gtasks && typeof AP.gtasks.pull === 'function')) { return null; }
+        /* Une lecture des taches tourne deja (reveil, relecture des cinq
+           minutes) : on attend SA fin, au lieu d'annoncer l'ancien chiffre. */
+        if ((infoTaches() || {}).enCours) { return attendreFinTaches(); }
+        return Promise.resolve(AP.gtasks.pull({ complet: !!opts.complet })).catch(function () { return null; });
+      })
+      .then(function () {
         var ap = infoMoteur() || {};
-        rendre();
+        rendre({ fond: true });
 
-        if (ap.erreur) {
+        var it2 = infoTaches();
+        var tachesSuivies = !!(it2 && it2.suivis && it2.suivis.length);
+        /* Permission de lecture absente : c'est un echec a dire, pas un
+           « انتهت المزامنة » avec l'ancien chiffre. */
+        var errT = tachesSuivies ? (it2.erreur || (!it2.connecte ? M('porteeTaches') : null)) : null;
+        if (calendriers && ap.erreur) {
           toast(M('echec') + ' — ' + ap.erreur);
+          return false;
+        }
+        /* Seulement des taches, et leur lecture a echoue : c'est un echec, pas
+           un « انتهت المزامنة » avec l'ancien chiffre. */
+        if (!calendriers && errT) {
+          toast(M('echec') + ' — ' + errT);
           return false;
         }
 
         /* Le compte-rendu, en clair, et seulement des chiffres vrais. */
-        var bouts = [
-          (ap.taches || 0) + ' ' + M('lus')
-        ];
+        var bouts = [];
+        if (calendriers) { bouts.push((ap.taches || 0) + ' ' + M('lus')); }
+        if (tachesSuivies) { bouts.push(errT ? ('Google Tasks : ' + M('echec') + ' — ' + errT) : M('tachesLues', { n: it2.taches })); }
         if (ENVOI_SESSION)    { bouts.push(ENVOI_SESSION + ' ' + M('ecrits')); }
         if (ap.enAttente)     { bouts.push(ap.enAttente + ' ' + M('attente')); }
         if (DERNIER_MASQUE)   { bouts.push(DERNIER_MASQUE + ' ' + M('masques')); }
@@ -1823,17 +2008,99 @@
     toast(M('delie'));
   }
 
+  /* LE BANDEAU « GOOGLE TASKS N'EST PAS ENCORE AUTORISE ».
+     Un compte lie AVANT l'arrivee de Google Tasks n'a jamais donne le droit
+     de lire les taches, et rien ne pouvait le lui demander en silence (voir
+     gauth.js, porteesVoulues). Sans ce bandeau, la seule porte etait cachee
+     au fond du panneau Google : l'artisan cherchait ses taches « partout »
+     sans les trouver. Il apparait sur l'ecran principal, un bouton suffit, et
+     « لاحقاً » le range pour la session. */
+  var bandeauTaches = null, bandeauTachesRange = false, modeBandeau = '';
+  function textesBandeauTaches() {
+    if (!bandeauTaches) { return; }
+    var e = bandeauTaches.children;
+    if (modeBandeau === 'erreur') {
+      e[0].textContent = M('bandeauTachesErreur', { e: (infoTaches() || {}).erreur || '' });
+      e[1].textContent = M('ouvrirReglagesTaches');
+    } else {
+      e[0].textContent = M('bandeauTaches');
+      e[1].textContent = M('autoriserTaches');
+    }
+    e[2].textContent = M('plusTardTaches');
+  }
+  /* Deux cas, et deux seulement :
+     - 'portee' : Google est lie mais la lecture des taches n'est pas
+       permise — un bouton la demande ;
+     - 'erreur' : permise, des listes suivies, mais AUCUNE tache n'est
+       arrivee a cause d'une erreur (API non activee, par exemple) — le
+       bandeau le dit au lieu de disparaitre en silence, et ouvre le panneau. */
+  function majBandeauTaches() {
+    try {
+      var g = (AP.gauth && typeof AP.gauth.etat === 'function') ? AP.gauth.etat() : null;
+      var it = infoTaches();
+      var mode = '';
+      if (g && g.connecte && !g.besoinReconnexion && it && !bandeauTachesRange) {
+        if (!it.connecte) { mode = 'portee'; }
+        else if (it.erreur && (it.suivis || []).length && !it.taches && !it.enCours) { mode = 'erreur'; }
+      }
+      /* Le panneau ouvert montre deja l'erreur dans sa section : le bandeau
+         ne le couvre pas. Il reviendra a la fermeture si l'erreur demeure. */
+      if (mode === 'erreur' && elPanneau && elPanneau.classList.contains('show')) { mode = ''; }
+      if (!mode) { if (bandeauTaches) { bandeauTaches.classList.remove('on'); } return; }
+      if (!document.body) { return; }
+      if (!bandeauTaches) {
+        bandeauTaches = document.createElement('div');
+        bandeauTaches.className = 'ap-g-bandeau';
+        bandeauTaches.style.borderColor = 'var(--warn)';
+        bandeauTaches.setAttribute('role', 'status');
+        var txt = document.createElement('span');
+        txt.className = 'ap-g-bandeau-txt';
+        var ok = document.createElement('button');
+        ok.className = 'ap-g-btn primaire';
+        ok.onclick = function () {
+          if (modeBandeau === 'erreur') { bandeauTaches.classList.remove('on'); ouvrir(); return; }
+          bandeauTaches.classList.remove('on');
+          chargerListesTaches().then(majBandeauTaches);
+        };
+        var tard = document.createElement('button');
+        tard.className = 'ap-g-btn';
+        tard.onclick = function () { bandeauTachesRange = true; bandeauTaches.classList.remove('on'); };
+        bandeauTaches.appendChild(txt);
+        bandeauTaches.appendChild(ok);
+        bandeauTaches.appendChild(tard);
+        if (AP.bandeaux && typeof AP.bandeaux.poser === 'function') { AP.bandeaux.poser(bandeauTaches); }
+        else { document.body.appendChild(bandeauTaches); }
+        /* La langue change : les textes suivent (et seulement les textes —
+           la visibilite, elle, ne bouge pas en plein consentement). */
+        if (AP.ui && typeof AP.ui.onLang === 'function') { AP.ui.onLang(textesBandeauTaches); }
+      }
+      modeBandeau = mode;
+      textesBandeauTaches();
+      bandeauTaches.classList.add('on');
+    } catch (e) { avert('bandeau des taches : ' + e.message); }
+  }
+
   /* Reconstruire la liste et repeindre, dans le bon ordre. C'est l'enveloppe
      de la PARTIE 6 qui remet les taches de Google et retire les doublons. */
-  function rendre() {
+  /* opts.fond : un redessin demande par l'arriere-plan (fin de lecture,
+     changement d'etat du compte) passe par renderFond (index.html), qui
+     attend que l'artisan ait quitte le champ ou il ecrit. Ses propres gestes
+     redessinent tout de suite. */
+  var ECRIVABLE_PEINT = null;
+  function ecrivableMaintenant() { var it = infoTaches(); return !!(it && it.ecrireVersGoogle && it.ecritureAutorisee); }
+  function rendre(opts) {
+    opts = opts || {};
     try {
       if (typeof W.buildTasks === 'function') { W.buildTasks(); }
       else if (P.buildTasks) { P.buildTasks(); }
     } catch (e) { avert('buildTasks : ' + e.message); }
     try {
-      if (typeof W.render === 'function') { W.render(); }
+      if (opts.fond && typeof W.renderFond === 'function') { W.renderFond(); }
+      else if (typeof W.render === 'function') { W.render(); }
       else if (P.render) { P.render(); }
     } catch (e) { avert('render : ' + e.message); }
+    ECRIVABLE_PEINT = ecrivableMaintenant();
+    majBandeauTaches();
   }
 
 
@@ -1960,6 +2227,35 @@
     envelopperBuildTasks();
     ecouter();
     rendre();
+    /* L'etat du compte change : le bandeau suit, et si les cartes Google
+       Tasks passent d'ecrivables a lecture seule (ou l'inverse), on les
+       redessine aussitot. */
+    if (AP.gauth && typeof AP.gauth.onChange === 'function') {
+      try {
+        AP.gauth.onChange(function () {
+          /* Compare a ce qui est REELLEMENT peint (ECRIVABLE_PEINT), pas a
+             l'evenement precedent : sinon un renouvellement de jeton, une
+             heure apres un changement de la case, redessinait pour rien. */
+          if (ECRIVABLE_PEINT !== null && ecrivableMaintenant() !== ECRIVABLE_PEINT) { rendre({ fond: true }); }
+          else { majBandeauTaches(); }
+        });
+      } catch (e) { }
+    }
+    /* Une lecture des taches vient de finir : le panneau ouvert se redessine
+       avec les vrais chiffres, le bandeau se met a jour, et si l'artisan
+       attendait le resultat de sa permission, on le lui dit. */
+    if (AP.gtasks && typeof AP.gtasks.on === 'function') {
+      try {
+        AP.gtasks.on(function (ev) {
+          if (ev && ev.fin) {
+            annoncerResultatTaches();
+            var l = ATTENTES_FIN; ATTENTES_FIN = []; l.forEach(function (f) { try { f(); } catch (e) { } });
+          }
+          majBandeauTaches();
+          if (elPanneau && elPanneau.classList.contains('show')) { dessiner(); }
+        });
+      } catch (e) { }
+    }
     dire('en place (v' + VERSION + ').');
     return true;
   }
@@ -2013,7 +2309,17 @@
     etat: function () {
       var i = infoMoteur() || {};
       var c = infoCompte() || {};
+      var t = infoTaches() || {};
+      var tachesSuivies = (t.connecte && t.suivis) ? t.suivis.length : 0;
+      var derniere = Math.max(i.derniereLecture || 0, tachesSuivies ? (t.derniereLecture || 0) : 0);
       return {
+        /* Des listes Google Tasks suivies comptent comme « quelque chose de
+           suivi » : un artisan qui ne suit que ses taches n'a rien a regler. */
+        tachesSuivies: tachesSuivies,
+        tachesNb:      t.taches || 0,
+        tachesErreur:  tachesSuivies ? (t.erreur || null) : null,
+        derniereTout:  derniere,
+        depuisTout:    depuis(derniere),
         disponible: !!(AP.gsync && AP.gauth),
         configure:  !!clientId(),
         connecte:   !!i.connecte,

@@ -1,5 +1,5 @@
 {
- "genere": "2026-09-28T17:56:13.786Z",
+ "genere": "2026-09-28T21:39:54.033Z",
  "fichiers": {
   ".nojekyll": {
    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -30,28 +30,28 @@
    "octets": 4752
   },
   "app/google/electron-google.js": {
-   "sha256": "154673569f4722b7dc8feb38aae39bb9ba9dd2d845debd7712242d4070fa3f72",
-   "octets": 25210
+   "sha256": "659affb2fdb33f3c9973af22b364e28791940dd21944b10b8f61174ed2cfcf57",
+   "octets": 26824
   },
   "app/google/gauth.css": {
-   "sha256": "77d0d9d79028715aba85aac214854d3b355577e1c7389ec81f2af0d4b316f969",
-   "octets": 8597
+   "sha256": "79ef05a55fd3a698a5896f903aa5fe894ebac894c8a5f005bf5db28a8feb6fa0",
+   "octets": 9452
   },
   "app/google/gauth.js": {
-   "sha256": "1b96942d080a98d502180eb4630b98b4e8afc1e372ae3ce15e03566df8ef56f6",
-   "octets": 74015
+   "sha256": "6b84ea480b3ed99ac3ecec23cd93b952022fa3559af3997b8adc2a71bfa3ee2e",
+   "octets": 78907
   },
   "app/google/gbridge.js": {
-   "sha256": "5ccdfe84ce06643adbc4267aec6f8f5cc28f97311c8c50c1af62b40a21f98fdd",
-   "octets": 98295
+   "sha256": "d2bfdd16ad0b0e08f867858e920109e45d8023a6ef5f3f1d24e46f5962de4e96",
+   "octets": 115601
   },
   "app/google/gsync.js": {
-   "sha256": "081ee9a479784a06b6210a5c30c4f158041db924b85334809198540ad5f8043b",
-   "octets": 127889
+   "sha256": "f02029d16f1ce3e0d818fe743f338f0efcdbd055176696bf66523163685a06be",
+   "octets": 129581
   },
   "app/google/gtasks.js": {
-   "sha256": "62c2a4362f47322762be12b2e1576ec412519fe2ce2141288c20ef3f1007e267",
-   "octets": 27245
+   "sha256": "c0e045ffd6f62e1acaee7315ebbe565af5f62912d79eae66f469fd26b807d417",
+   "octets": 72274
   },
   "app/lock/lock.css": {
    "sha256": "e598a810130e12661dc4d71800af146bc16edc0e2ff3cc1c43faecc0d12a9318",
@@ -70,8 +70,8 @@
    "octets": 13797
   },
   "app/microsoft/mauth.js": {
-   "sha256": "3cb5289543751352cd3a795dd8486fd22b36af0a45da07e05d3fa7f4114cb287",
-   "octets": 30034
+   "sha256": "76a4f6e4bc012d40f5a03d757de90dda8898b5752cb62d9b311d1e20d0ea6907",
+   "octets": 30265
   },
   "app/microsoft/mbridge.js": {
    "sha256": "5bbbad4e3e771aaf0f60b779f3b5113bcbce2f0574fa16dbad3573bbc4120d27",
@@ -138,7 +138,7 @@
    "octets": 1650
   },
   "app/pwa/sw.js": {
-   "sha256": "5b4fec1abb3dd0c694b4b39fe6f87576eb4dec88ffe515527427fe9ebc6a48d3",
+   "sha256": "abc2af791a1d48714e44cc5e8981b85aad48d4e93094698b9c9bbd61de636899",
    "octets": 30781
   },
   "app/setup/setup.css": {
@@ -146,8 +146,8 @@
    "octets": 10903
   },
   "app/setup/setup.js": {
-   "sha256": "de521e2ba0eb8deaeaff592683c2a0aa24c9be48f4a0142b5b873e06c0d0ab1a",
-   "octets": 70105
+   "sha256": "18903ac5303018468f3389a5ab691f56d85d2f48ca6275315407979499f7ea0c",
+   "octets": 71928
   },
   "app/supabase-client.js": {
    "sha256": "052b16e0fa2dca2ca3a00490ba26c9d1824ff8b5e48202ce9286f2d5a1b921ce",
@@ -166,12 +166,12 @@
    "octets": 10994
   },
   "confidentialite.html": {
-   "sha256": "d86625274b0d300d33591aab8ac60c99ed4b8a3ebf9abd99009366f23f8ecae6",
-   "octets": 17791
+   "sha256": "1a1b7aa12f4901276649cd1cbd9cd3434d647baa2d01be2fadb366a82e665085",
+   "octets": 20404
   },
   "index.html": {
-   "sha256": "823075f0a0540f74d610ae2ab54891fb4bc06909bea393681f3d93864693dda6",
-   "octets": 303959
+   "sha256": "e25a920bcbcd7731f67375ff64b74c394d9d21712f3e11956034dee8c19d7f67",
+   "octets": 313035
   },
   "sw.js": {
    "sha256": "bdca343b03eb8d6eaed1c3eec1de2ab2ac9d94e351beed282ab563ca0635e8c7",

@@ -423,7 +423,10 @@
     var plusTard = document.createElement('button'); plusTard.className = 'ap-g-btn'; plusTard.textContent = M('plusTard');
     plusTard.onclick = function () { cacherBandeau(); };
     bandeau.appendChild(txt); bandeau.appendChild(ok); bandeau.appendChild(plusTard);
-    document.body.appendChild(bandeau);
+    /* La pile commune (gauth.js) : sans elle, ce bandeau recouvrait celui de
+       Google au meme endroit. */
+    if (W.AP && W.AP.bandeaux && typeof W.AP.bandeaux.poser === 'function') { W.AP.bandeaux.poser(bandeau); }
+    else { document.body.appendChild(bandeau); }
   }
   function cacherBandeau() { if (bandeau) { bandeau.classList.remove('on'); } }
 

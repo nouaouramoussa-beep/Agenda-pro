@@ -355,7 +355,12 @@
   }
   function sauverLocal() { try { if (P.lsSet) P.lsSet(); } catch (e) {} }
   function repeindre() {
-    try { if (P.render) P.render(); } catch (e) { avert('render : ' + e.message); }
+    /* renderFond (index.html) attend que l'artisan ait quitte le champ ou il
+       ecrit : la relecture des cinq minutes ne lui arrache plus son texte. */
+    try {
+      if (typeof window.renderFond === 'function') { window.renderFond(); }
+      else if (P.render) { P.render(); }
+    } catch (e) { avert('render : ' + e.message); }
   }
 
   /* ==========================================================================
@@ -2293,6 +2298,22 @@
        de code s'en apercoit (les taches sont deja la) et ne fait rien. */
     if (typeof window.buildTasks === 'function' && !window.buildTasks.__apg) {
       var oBT = window.buildTasks;
+      /* Microsoft s'est branche AVANT nous (premiere liaison Google dans la
+         session) : on s'insere A L'INTERIEUR de son crochet, comme gbridge.js
+         et gtasks.js le font deja — son filtre de sources doit rester le
+         dernier a passer, sinon « Microsoft seul » ne cache plus Google. */
+      if (oBT.__apPontM && oBT.__apPontMInterne) {
+        var interieur = oBT.__apPontMInterne;
+        var brut = interieur.fn;
+        var nInt = function () {
+          var r = brut.apply(this, arguments);
+          try { injecter(); } catch (e) { avert('injection : ' + e.message); }
+          return r;
+        };
+        nInt.__apg = true;
+        interieur.fn = nInt;
+        return;
+      }
       var nBT = function () {
         var r = oBT.apply(this, arguments);
         try { injecter(); } catch (e) { avert('injection : ' + e.message); }
@@ -2333,7 +2354,12 @@
          d injecter les taches Google (et de dedoublonner) : refaire injecter()
          ici retriait dix mille lignes pour rien. On ne le fait que pour un
          buildTasks nu. */
-      if (!(P.buildTasks && P.buildTasks.__apPont)) injecter();
+      /* On regarde la fonction VIVANTE (window.buildTasks) : P.buildTasks
+         n'est que le relais d'index.html, qui ne porte jamais ces marques —
+         le test sur lui etait toujours vrai, et injecter() remettait les
+         rendez-vous Google APRES le filtre « Microsoft seul » de mbridge. */
+      var wb = window.buildTasks;
+      if (!(wb && (wb.__apg || wb.__apPont || wb.__apPontM))) injecter();
       repeindre();
     } catch (e) { avert('rendre : ' + e.message); }
   }
@@ -2429,7 +2455,10 @@
       return liste;
     }, function (e) {
       avert('connexion : ' + (e && e.message));
-      say('refuse');
+      /* gauth.js a deja dit la vraie raison (« fenetre deja ouverte », « autre
+         compte ») : ne pas l'ecraser par un « refuse » generique. */
+      var raison = (window.AP && AP.gauth && typeof AP.gauth.dernierRefus === 'function') ? AP.gauth.dernierRefus() : null;
+      if (raison !== 'fenetre-ouverte' && raison !== 'autre-compte' && raison !== 'bureau-absent') { say('refuse'); }
       throw e;
     });
   }

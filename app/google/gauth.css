@@ -149,6 +149,30 @@
   pointer-events: auto;
 }
 
+/* LA PILE DES BANDEAUX. Google (reconnexion), Microsoft (reconnexion) et
+   Google Tasks (permission) prenaient tous la meme place en bas et se
+   cachaient l'un l'autre. Poses dans cette pile (AP.bandeaux.poser, gauth.js),
+   ils s'empilent au lieu de se recouvrir. */
+.ap-g-pile {
+  position: fixed;
+  inset-inline: 16px auto;
+  bottom: 18px;
+  /* SOUS les fenetres (200) et les messages (300) : un bandeau ne doit ni
+     couvrir le bas d'un panneau ouvert, ni cacher les messages. */
+  z-index: 190;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 10px;
+  max-width: min(460px, calc(100vw - 32px));
+  pointer-events: none;
+}
+.ap-g-pile > .ap-g-bandeau {
+  position: static;
+  inset: auto;
+  max-width: none;
+}
+.ap-g-pile > .ap-g-bandeau:not(.on) { display: none; }
+
 .ap-g-bandeau-txt {
   flex: 1 1 200px;
   font-size: 12.8px;
@@ -211,11 +235,13 @@
    --------------------------------------------------------------------------- */
 
 @media (max-width: 760px) {
-  .ap-g-bandeau {
+  .ap-g-bandeau,
+  .ap-g-pile {
     inset-inline: 12px 12px;
     bottom: 12px;
     max-width: none;
   }
+  .ap-g-pile > .ap-g-bandeau { inset: auto; }
   .ap-g-btn {
     flex: 1 1 auto;
     padding: 11px 13px;     /* 44 px de haut au doigt, comme app/pwa/pwa.js */
@@ -247,6 +273,7 @@
 
 @media print {
   .ap-g-bandeau,
+  .ap-g-pile,
   .ap-g-menu,
   .ap-g-pastille { display: none !important; }
 }

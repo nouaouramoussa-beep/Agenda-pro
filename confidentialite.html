@@ -75,7 +75,7 @@
   <header>
     <div>
       <h1><span lang="fr">Confidentialité</span><span lang="ar">سياسة الخصوصية</span></h1>
-      <p class="maj"><span lang="fr">Dernière mise à jour : 22 septembre 2026</span><span lang="ar">آخر تحديث: 22 سبتمبر 2026</span></p>
+      <p class="maj"><span lang="fr">Dernière mise à jour : 28 septembre 2026</span><span lang="ar">آخر تحديث: 28 سبتمبر 2026</span></p>
     </div>
     <div class="langues">
       <button type="button" data-set="fr" aria-pressed="true">Français</button>
@@ -90,7 +90,7 @@
   </div>
 
   <div class="carte">
-    <h2><span lang="fr">Ce que l'application lit et écrit dans Google Agenda</span><span lang="ar">ما يقرؤه البرنامج ويكتبه في Google Agenda</span></h2>
+    <h2><span lang="fr">Ce que l'application lit et écrit dans Google Agenda et Google Tasks</span><span lang="ar">ما يقرؤه البرنامج ويكتبه في Google Agenda وGoogle Tasks</span></h2>
     <p lang="fr">Après votre autorisation explicite, l'application demande les permissions suivantes, et rien d'autre :</p>
     <p lang="ar">بعد إذنك الصريح، يطلب البرنامج الصلاحيات التالية، ولا شيء غيرها:</p>
     <table>
@@ -118,25 +118,35 @@
           <td><span lang="fr">Afficher quel compte est relié, pour que vous le vérifiiez d'un coup d'œil.</span><span lang="ar">عرض الحساب المرتبط لتتأكّد منه بنظرة.</span></td>
         </tr>
         <tr>
+          <td><code>tasks.readonly</code></td>
+          <td><span lang="fr">Lire vos listes Google Tasks pour afficher vos tâches à côté de vos rendez-vous. Demandée seulement quand vous cliquez « Autoriser la lecture des tâches ».</span><span lang="ar">قراءة قوائم مهامك في Google Tasks لعرضها بجانب مواعيدك. لا تُطلب إلا عندما تضغط «السماح بقراءة المهام».</span></td>
+        </tr>
+        <tr>
+          <td><code>tasks</code></td>
+          <td><span lang="fr">Demandée <span class="fort">uniquement</span> si vous cochez « Écrire les changements dans Google Tasks ». Elle sert à reporter dans Google Tasks ce que vous changez ici : terminée ou non, le titre et la note d'une tâche. L'application ne crée ni ne supprime jamais une tâche ni une liste.</span><span lang="ar">لا تُطلب <span class="fort">إلا</span> إذا فعّلتَ «كتابة التغييرات في Google Tasks الحقيقي». وتُستعمل لنقل ما تغيّره هنا إلى Google Tasks: مُنجزة أم لا، وعنوان المهمة وملاحظتها. ولا يُنشئ البرنامج أي مهمة أو قائمة ولا يحذفها أبداً.</span></td>
+        </tr>
+        <tr>
           <td><code>drive.appdata</code></td>
           <td><span lang="fr">Ranger vos réglages dans un dossier caché de votre propre Drive, invisible aux autres applications. Facultatif.</span><span lang="ar">حفظ إعداداتك في مجلّد مخفي داخل Drive الخاص بك، لا تراه التطبيقات الأخرى. اختياري.</span></td>
         </tr>
       </tbody>
     </table>
-    <p lang="fr" style="margin-top:14px"><span class="fort">Règle d'écriture stricte, appliquée dans le code :</span> sur un rendez-vous qui existe déjà, l'application n'a le droit de modifier <span class="fort">qu'un seul champ</span> — le tiroir d'annotations qui lui appartient. Le titre, l'heure, la description, le lieu, les invités et les rappels que vous avez écrits vous-même ne sont jamais touchés. Toute tentative d'écrire ailleurs est refusée par le programme lui-même.</p>
-    <p lang="ar" style="margin-top:14px"><span class="fort">قاعدة كتابة صارمة، مطبَّقة في الشيفرة:</span> على موعد موجود سلفاً، لا يحقّ للبرنامج تعديل <span class="fort">إلا خانة واحدة</span> — درج الملاحظات الذي يخصّه. أمّا العنوان والوقت والوصف والمكان والمدعوّون والتنبيهات التي كتبتَها أنت، فلا تُمسّ أبداً. وأي محاولة للكتابة في غيرها يرفضها البرنامج نفسه.</p>
+    <p lang="fr" style="margin-top:14px"><span class="fort">Règle d'écriture stricte, appliquée dans le code :</span> sur un rendez-vous qui existe déjà, l'application n'a le droit de modifier <span class="fort">qu'un seul champ</span> — le tiroir d'annotations qui lui appartient. Le titre, l'heure, la description, le lieu, les invités et les rappels que vous avez écrits vous-même ne sont jamais touchés. Toute tentative d'écrire ailleurs est refusée par le programme lui-même. Une seule exception, que vous choisissez : si vous cochez « Afficher les détails dans le rendez-vous », un bloc délimité est ajouté à la description, sans jamais toucher au texte qui s'y trouve. Dans Google Tasks, seuls l'état terminé/non terminé, le titre et la note d'une tâche existante peuvent être modifiés, et seulement si vous l'avez activé.</p>
+    <p lang="ar" style="margin-top:14px"><span class="fort">قاعدة كتابة صارمة، مطبَّقة في الشيفرة:</span> على موعد موجود سلفاً، لا يحقّ للبرنامج تعديل <span class="fort">إلا خانة واحدة</span> — درج الملاحظات الذي يخصّه. أمّا العنوان والوقت والوصف والمكان والمدعوّون والتنبيهات التي كتبتَها أنت، فلا تُمسّ أبداً. وأي محاولة للكتابة في غيرها يرفضها البرنامج نفسه. استثناء واحد تختاره أنت: إن فعّلتَ «إظهار التفاصيل داخل الموعد»، يُضاف مقطع محدَّد إلى الوصف دون أن يُمسّ النص الموجود فيه. وفي Google Tasks لا يُعدَّل إلا الإتمام والعنوان والملاحظة لمهمة موجودة، وفقط إن فعّلتَ ذلك.</p>
   </div>
 
   <div class="carte">
     <h2><span lang="fr">Où vivent vos données</span><span lang="ar">أين تعيش بياناتك</span></h2>
     <ul lang="fr">
       <li><span class="fort">Vos rendez-vous</span> : chez Google, dans votre agenda. L'application en garde une copie de travail dans la mémoire de votre navigateur pour fonctionner hors connexion.</li>
+      <li><span class="fort">Vos tâches Google Tasks</span> : chez Google. L'application en garde une copie réduite (titre, note, dates, liens) dans le stockage local de votre navigateur, sur cet appareil.</li>
       <li><span class="fort">Vos statuts, notes, cases cochées et tâches ajoutées</span> : dans le stockage local de votre navigateur, sur cet appareil. Si vous avez relié Google, ils voyagent aussi dans le tiroir privé des événements, pour se retrouver sur vos autres appareils.</li>
       <li><span class="fort">Le jeton d'accès Google</span> : en mémoire vive uniquement, le temps de la session. Il n'est jamais écrit sur le disque, jamais dans le stockage local. Fermer l'onglet l'efface.</li>
       <li><span class="fort">Votre mot de passe principal</span>, si vous en posez un : il ne quitte jamais l'appareil et n'est stocké nulle part. Seule une empreinte irréversible l'est, et la clé qui en dérive chiffre vos données locales en AES-256.</li>
     </ul>
     <ul lang="ar">
       <li><span class="fort">مواعيدك</span>: عند Google، في تقويمك. ويحتفظ البرنامج بنسخة عمل في ذاكرة متصفّحك ليشتغل بلا إنترنت.</li>
+      <li><span class="fort">مهامك في Google Tasks</span>: عند Google. ويحتفظ البرنامج بنسخة مختصرة منها (العنوان والملاحظة والتواريخ والروابط) في التخزين المحلّي لمتصفّحك، على هذا الجهاز.</li>
       <li><span class="fort">حالاتك وملاحظاتك وتأشيراتك ومهامك المضافة</span>: في التخزين المحلّي لمتصفّحك، على هذا الجهاز. وإن ربطتَ Google، تسافر أيضاً في الدرج الخاص داخل المواعيد لتجدها على أجهزتك الأخرى.</li>
       <li><span class="fort">رمز الدخول إلى Google</span>: في الذاكرة الحيّة فقط، ما دامت الجلسة. لا يُكتب على القرص أبداً ولا في التخزين المحلّي. وإغلاق النافذة يمحوه.</li>
       <li><span class="fort">كلمة السرّ الرئيسية</span>، إن وضعتَ واحدة: لا تغادر الجهاز ولا تُخزَّن في أي مكان. يُخزَّن منها أثر لا يمكن عكسه فقط، والمفتاح المشتقّ منها يُعمّي بياناتك المحلّية بمعيار AES-256.</li>
@@ -191,9 +201,9 @@
 
   <div class="carte">
     <h2><span lang="fr">Portée de ce document</span><span lang="ar">نطاق هذه الوثيقة</span></h2>
-    <p lang="fr">Agenda Pro est un outil personnel, utilisé par son auteur pour organiser son propre travail. Il n'est pas un service commercial, ne crée aucun compte utilisateur et ne collecte rien à des fins statistiques. L'usage des données de Google Agenda par cette application respecte les <span class="fort">Règles relatives aux données utilisateur des services d'API Google</span>, y compris les exigences d'utilisation limitée.</p>
+    <p lang="fr">Agenda Pro est un outil personnel, utilisé par son auteur pour organiser son propre travail. Il n'est pas un service commercial, ne crée aucun compte utilisateur et ne collecte rien à des fins statistiques. L'usage des données de Google Agenda et de Google Tasks par cette application respecte les <span class="fort">Règles relatives aux données utilisateur des services d'API Google</span>, y compris les exigences d'utilisation limitée.</p>
     <p lang="fr">Toute modification de ce document sera publiée sur cette même page, avec sa date.</p>
-    <p lang="ar">«أجندة برو» أداة شخصية يستعملها كاتبها لتنظيم عمله. ليست خدمة تجارية، ولا تُنشئ حسابات مستخدمين، ولا تجمع شيئاً لأغراض إحصائية. واستعمالُها بياناتِ Google Agenda يلتزم <span class="fort">قواعد بيانات المستخدمين لخدمات واجهات Google</span>، بما فيها شروط الاستعمال المحدود.</p>
+    <p lang="ar">«أجندة برو» أداة شخصية يستعملها كاتبها لتنظيم عمله. ليست خدمة تجارية، ولا تُنشئ حسابات مستخدمين، ولا تجمع شيئاً لأغراض إحصائية. واستعمالُها بياناتِ Google Agenda وGoogle Tasks يلتزم <span class="fort">قواعد بيانات المستخدمين لخدمات واجهات Google</span>، بما فيها شروط الاستعمال المحدود.</p>
     <p lang="ar">وأي تعديل على هذه الوثيقة يُنشر في هذه الصفحة نفسها، مؤرّخاً.</p>
   </div>
 
