@@ -68,5 +68,17 @@ window.AP_CONFIG = {
      cote le « client secret ». Cette valeur-ci n'est utile qu'a la brique
      SYNCHRONISATION (pour demander l'acces a l'agenda). La brique COMPTES
      fonctionne sans elle. */
-  googleClientId: '600479837599-dlefudbicp4vc18nrn149hrck7rm7q01.apps.googleusercontent.com'
+  googleClientId: '600479837599-dlefudbicp4vc18nrn149hrck7rm7q01.apps.googleusercontent.com',
+
+  /* Azure Portal > Inscriptions d'applications > (votre application) > ID
+     d'application (client). Ressemble a '3f2e1a9b-....-....-....-............'.
+     A CREER VOUS-MEME (comme pour Google) : la marche a suivre exacte est
+     dans app/microsoft/CONSOLE-MICROSOFT.md — elle donne les deux plateformes
+     a inscrire (Application monopage, pour ce champ-ci ; Applications mobiles
+     et de bureau, pour app/desktop/microsoft.local.json) et les permissions a
+     cocher (Calendars.Read, Tasks.Read, offline_access, User.Read).
+     LAISSER VIDE tant que vous n'etes pas pret : comme pour Google, tant que
+     ce champ est vide, la brique Microsoft ne fait rien — aucune requete,
+     aucun element ajoute a la page. */
+  microsoftClientId: ''
 };

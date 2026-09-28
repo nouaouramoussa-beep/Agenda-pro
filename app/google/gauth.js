@@ -225,7 +225,14 @@
        Pour retirer cette demande : videz la chaine ci-dessous ('') ; tout le
        reste du fichier continue de fonctionner, la pastille dira seulement
        « connecte a Google » sans l'adresse. */
-    compte: 'https://www.googleapis.com/auth/userinfo.email'
+    compte: 'https://www.googleapis.com/auth/userinfo.email',
+
+    /* Demandee des l'etape 1 elle aussi, comme « compte » ci-dessus : LECTURE
+       SEULE des listes Google Tasks (app/google/gtasks.js), pour les faire
+       apparaitre a cote des rendez-vous. Jamais de niveau « ecriture » pour
+       celle-ci : ce fichier-la n'ecrit rien dans Google Tasks, voir sa note de
+       tete de fichier. */
+    taches: 'https://www.googleapis.com/auth/tasks.readonly'
   };
 
   var GIS = 'https://accounts.google.com/gsi/client';
@@ -742,9 +749,20 @@
      nouveau jeton porte l'ancienne portee ET la nouvelle. On ne perd rien.
      ========================================================================= */
 
-  function porteesVoulues(niveau) {
+  function porteesVoulues(niveau, interactif) {
     var l = [];
     if (PORTEE.compte) { l.push(PORTEE.compte); }
+    /* « taches » (Google Tasks, app/google/gtasks.js) n'est ajoutee ICI que
+       si elle est deja accordee, ou si la demande est INTERACTIVE — jamais
+       inconditionnellement. Un renouvellement SILENCIEUX (renouveler(),
+       demarrage()) qui reclamerait une portee jamais consentie echoue en
+       entier, pas partiellement : sur le bureau, le jeton de rafraichissement
+       mine avant l'ajout de cette portee ne la couvre jamais, et couvre()
+       (electron-google.js) rejette alors TOUT le jeton — calendrier compris
+       — pour un artisan qui etait deja connecte hier. C'est exactement le
+       defaut que ce garde evite : les renouvellements silencieux continuent
+       de ne demander que ce qu'ils demandaient avant l'ajout de gtasks.js. */
+    if (PORTEE.taches && (interactif || aLaPortee(PORTEE.taches))) { l.push(PORTEE.taches); }
     l.push(niveau === 'ecriture' ? PORTEE.ecriture : PORTEE.lecture);
     return l;
   }
@@ -980,7 +998,7 @@
     if (S.connexionEnCours) { return Promise.resolve(S.connecte); }
 
     var niveau = opts.ecriture ? 'ecriture' : 'lecture';
-    var portees = porteesVoulues(niveau);
+    var portees = porteesVoulues(niveau, opts.interactif !== false);
     if (opts.drive) { portees.push(PORTEE.reglages); }
 
     /* L'application de bureau sans le pont : on le DIT, une fois, au lieu
@@ -1030,6 +1048,24 @@
     toast(M('demandeEcriture'));
     return connecter({ interactif: true, ecriture: true }).then(function () {
       return aLaPortee(PORTEE.ecriture);
+    });
+  }
+
+  /* LE MEME GESTE, POUR Google Tasks (app/google/gtasks.js).
+     Un artisan deja connecte AVANT que cette portee existe ne l'obtiendra
+     jamais tout seul — porteesVoulues() l'exclut expres des renouvellements
+     silencieux (voir sa note). C'est cette fonction, appelee par gbridge.js
+     quand l'artisan ouvre la section « Google Tasks », qui lui propose
+     l'unique ecran de consentement supplementaire dont il a besoin — une
+     fois, comme demanderEcriture() le fait deja pour l'ecriture. */
+  function demanderTaches() {
+    if (!S.configure) { return Promise.resolve(false); }
+    if (aLaPortee(PORTEE.taches)) { return Promise.resolve(true); }
+    if (!S.connecte) {
+      return connecter({ interactif: true }).then(function () { return aLaPortee(PORTEE.taches); });
+    }
+    return connecter({ interactif: true }).then(function () {
+      return aLaPortee(PORTEE.taches);
     });
   }
 
@@ -1377,6 +1413,7 @@
     fournisseur: fournisseur,
 
     demanderEcriture: demanderEcriture,
+    demanderTaches: demanderTaches,
     pastille: creerPastille,
 
     /* A appeler apres avoir range un googleClientId dans les reglages :

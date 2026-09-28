@@ -160,7 +160,18 @@
     joursFuturs:  400,
     agendas:      {},        // { idAgenda: { suivi:1, sec:'ent', sub:'perso' } }
     agendaEcrit:  'primary', // ou vont les taches creees depuis le programme
-    refaireApres: 7          // jours : au-dela, on refait une lecture complete
+    refaireApres: 7,         // jours : au-dela, on refait une lecture complete
+
+    /* FAUX PAR DEFAUT, ET C'EST VOULU. Quand l'artisan l'active dans le
+       panneau, le statut, les documents coches et la note qu'il pose ICI sont
+       en plus ecrits dans la DESCRIPTION VISIBLE du rendez-vous — celle que
+       l'application Google Agenda affiche sur son telephone, et que
+       n'importe qui d'invite au meme rendez-vous peut lire aussi.
+       C'est une exception DELIBEREE et ETROITE a la regle de la PARTIE 3
+       (qui, par defaut, interdit tout sauf le casier prive) : voir
+       envoyerEtat(), qui est le seul endroit du fichier a passer
+       ['description'] a corpsSur(), a cote de creerTache()/modifierTache(). */
+    afficherDetails: false
   };
 
   /* ==========================================================================
@@ -1451,6 +1462,78 @@
      fait proprietes() pour les morceaux « ap2 », « ap3 »… en trop.
      ========================================================================== */
 
+  /* ==========================================================================
+     11 bis. LA DESCRIPTION VISIBLE — la seule exception voulue par l'artisan
+     ---------------------------------------------------------------------
+     Rappel de la regle (PARTIE 3) : par defaut, RIEN ne sort d'ici a part le
+     casier prive. Cette fonction est la TROISIEME exception nommee du
+     fichier — apres creerTache() et modifierTache() — et elle ne s'active
+     que si reglages().afficherDetails vaut vrai, un choix que l'artisan pose
+     lui-meme dans le panneau (app/google/gbridge.js), en toute connaissance
+     de cause : ce texte devient visible dans l'application Google Agenda,
+     sur tous les appareils du compte, et pour quiconque est invite au meme
+     rendez-vous.
+
+     ON N'ECRASE JAMAIS CE QUI ETAIT DEJA ECRIT. Le texte de l'artisan (ou de
+     l'organisateur d'un rendez-vous partage) reste intact ; on retire
+     seulement NOTRE bloc precedent, marque par deux lignes reconnaissables,
+     et on le repose a la fin, a jour. Si l'artisan n'a plus ni statut, ni
+     document coche, ni note, le bloc disparait entierement — la description
+     redevient exactement ce qu'elle etait avant qu'on y touche.
+     ========================================================================== */
+
+  var DEBUT_BLOC = '[Agenda Pro]';
+  var FIN_BLOC   = '[/Agenda Pro]';
+  var LIBELLES_STATUT = {
+    ar: { pending: 'معلقة', overdue: 'متأخرة', done: 'مكتملة', waiting: 'تحت المتابعة', postponed: 'مؤجلة', passed: 'منقضية' },
+    fr: { pending: 'En attente', overdue: 'En retard', done: 'Terminée', waiting: 'En suivi', postponed: 'Reportée', passed: 'Passée' }
+  };
+  function libelleStatut(v) {
+    var d = LIBELLES_STATUT[langue()] || LIBELLES_STATUT.ar;
+    return d[v] || v;
+  }
+
+  function texteDetails(etat) {
+    var lignes = [];
+    if (etat.st) { lignes.push((langue() === 'fr' ? 'Statut : ' : 'الحالة: ') + libelleStatut(etat.st)); }
+    var liste = (etat.ck && etat.ck.l) || [], coches = (etat.ck && etat.ck.d) || [];
+    liste.forEach(function (lab) { lignes.push((coches.indexOf(lab) >= 0 ? '☑ ' : '☐ ') + lab); });
+    if (etat.nt) { if (lignes.length) lignes.push(''); lignes.push(etat.nt); }
+    return lignes.join('\n');
+  }
+
+  /* Retire un bloc precedent quel que soit son contenu (nos propres marques
+     ne changent jamais, meme si l'artisan change de langue entre-temps).
+     LA DERNIERE occurrence de FIN_BLOC, jamais la premiere : notre propre
+     bloc est toujours pose EN DERNIER (fusionnerDescription() l'ajoute a la
+     fin), donc son terminateur est forcement le dernier de la chaine. Chercher
+     la premiere occurrence se laissait tromper par un « [/Agenda Pro] » que
+     l'artisan aurait tape par coincidence DANS sa propre note : le bloc etait
+     alors coupe au milieu, et le fragment orphelin restait affiche pour de
+     bon dans le vrai rendez-vous, sans que rien ne le nettoie jamais. */
+  function retirerBloc(texte) {
+    var i = texte.indexOf(DEBUT_BLOC);
+    if (i < 0) return texte;
+    var j = texte.lastIndexOf(FIN_BLOC);
+    if (j < i) j = -1;
+    var reste = (j < 0) ? texte.slice(0, i) : (texte.slice(0, i) + texte.slice(j + FIN_BLOC.length));
+    return reste.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').replace(/\s+$/, '');
+  }
+
+  function fusionnerDescription(descActuelle, etat) {
+    var base = retirerBloc(String(descActuelle || ''));
+    var details = texteDetails(etat);
+    if (!details) return base;
+    return (base ? base + '\n\n' : '') + DEBUT_BLOC + '\n' + details + '\n' + FIN_BLOC;
+  }
+
+  /* Au-dela de cette taille, on n'envoie plus la description fusionnee dans
+     CE PATCH : elle depasserait la limite reelle de Google (~8192
+     caracteres) et ferait echouer l'envoi ENTIER, casier prive compris, alors
+     que celui-ci tient largement dessous. Mieux vaut perdre une mise a jour
+     de la description visible qu'une mise a jour du statut/de la checklist. */
+  var MAX_OCTETS_DESCRIPTION = 8000;
+
   function envoyerEtat(idAgenda, idEvenement, etat, privActuel) {
     var p = proprietes(privActuel, etat);
     if (p.trop) {
@@ -1461,9 +1544,48 @@
          seulement de l'envoyer a Google, qui le refuserait de toute facon. */
       return Promise.reject(Object.assign(new Error('trop long'), { tropLong: true }));
     }
-    var corps = corpsSur({ extendedProperties: { private: p.props } }, null);
-    return api('/calendars/' + encodeURIComponent(idAgenda) + '/events/' + encodeURIComponent(idEvenement),
-      { methode: 'PATCH', corps: corps, params: { sendUpdates: 'none' } });
+    var brut = { extendedProperties: { private: p.props } };
+
+    if (!reglages().afficherDetails) {
+      var corpsSimple = corpsSur(brut, null);
+      return api('/calendars/' + encodeURIComponent(idAgenda) + '/events/' + encodeURIComponent(idEvenement),
+        { methode: 'PATCH', corps: corpsSimple, params: { sendUpdates: 'none' } });
+    }
+
+    /* LA DESCRIPTION EST UN CHAMP SIMPLE : Google la REMPLACE en entier a
+       chaque PATCH (contrairement au casier prive, fusionne cle par cle cote
+       serveur — voir la note de la PARTIE 11). Ecrire par-dessus une copie
+       gardee en memoire depuis la derniere lecture — parfois vieille de
+       plusieurs minutes ou heures, tant que l'onglet est en arriere-plan —
+       effacerait sans avertissement un texte que l'organisateur ou l'artisan
+       lui-meme, depuis son telephone, aurait ajoute entre-temps DIRECTEMENT
+       dans Google Agenda. On relit donc ce seul champ juste avant de
+       fusionner, a chaque fois — l'appel est leger (un seul champ demande),
+       et il ne concerne que les artisans qui ont active cette case. */
+    var idTache = idDe(idAgenda, { id: idEvenement });
+    var chemin = '/calendars/' + encodeURIComponent(idAgenda) + '/events/' + encodeURIComponent(idEvenement);
+
+    function fusionEtEnvoi(descFraiche) {
+      if (EVENEMENTS[idTache] && EVENEMENTS[idTache].ev) { EVENEMENTS[idTache].ev.description = descFraiche; }
+      var fusionnee = fusionnerDescription(descFraiche, etat);
+      if (octets(fusionnee) <= MAX_OCTETS_DESCRIPTION) {
+        brut.description = fusionnee;
+      } else {
+        noter('avert', 'description fusionnee trop volumineuse (' + octets(fusionnee) + ' octets) — casier seul envoye pour ' + idEvenement);
+      }
+      var corps = corpsSur(brut, brut.description !== undefined ? ['description'] : null);
+      return api(chemin, { methode: 'PATCH', corps: corps, params: { sendUpdates: 'none' } });
+    }
+
+    return api(chemin, { params: { fields: 'description' } }).then(function (evFrais) {
+      return fusionEtEnvoi((evFrais && evFrais.description) || '');
+    }, function () {
+      /* La relecture a echoue (reseau, evenement disparu…) : on retombe sur
+         la copie locale plutot que de bloquer tout l'envoi, y compris le
+         casier prive. */
+      var repli = (EVENEMENTS[idTache] && EVENEMENTS[idTache].ev && EVENEMENTS[idTache].ev.description) || '';
+      return fusionEtEnvoi(repli);
+    });
   }
 
   /* ==========================================================================

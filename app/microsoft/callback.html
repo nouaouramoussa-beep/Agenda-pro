@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<!-- ============================================================================
+     AGENDA PRO — app/microsoft/callback.html
+     LA PAGE DE RETOUR DE MICROSOFT, ET RIEN D'AUTRE.
+     ----------------------------------------------------------------------------
+     POURQUOI CETTE PAGE EXISTE, A PART DU TABLEAU DE BORD.
+     Microsoft renvoie l'artisan ici apres qu'il a dit oui (ou non). Si on le
+     renvoyait vers index.html, tout le programme se rechargerait — dans une
+     fenetre surgissante ou dans un cadre invisible, selon le cas — pour rien
+     d'autre que lire deux mots dans l'adresse. Cette page-ci ne fait que ca :
+     elle lit le code (ou l'erreur), elle le transmet a qui a ouvert la
+     fenetre, et elle s'arrete. Rien d'autre n'est charge, rien d'autre ne
+     s'execute.
+
+     ELLE NE PARLE QU'A SON PROPRE OUVREUR. window.opener (une fenetre
+     surgissante) ou window.parent (un cadre invisible pour le renouvellement
+     silencieux) : jamais un autre onglet, jamais un serveur. Le message est
+     marque 'ap-ms-auth' pour que app/microsoft/mauth.js sache qu'il vient
+     bien d'ici et pas d'une autre brique qui utiliserait aussi postMessage.
+     ============================================================================ -->
+<html>
+<head><meta charset="utf-8"><title>Agenda Pro</title></head>
+<body style="font-family:sans-serif;background:#0b1220;color:#cbd5e1;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
+<script>
+(function () {
+  'use strict';
+  try {
+    var q = new URLSearchParams(window.location.search);
+    var msg = {
+      source: 'ap-ms-auth',
+      code: q.get('code') || '',
+      state: q.get('state') || '',
+      error: q.get('error') || '',
+      errorDescription: q.get('error_description') || ''
+    };
+    var cible = window.opener || (window.parent !== window ? window.parent : null);
+    if (cible) { cible.postMessage(msg, window.location.origin); }
+  } catch (e) { /* rien a faire : la fenetre qui attend finira par expirer */ }
+  /* Une fenetre surgissante se ferme seule ; un cadre invisible n'a rien a
+     fermer, il reste juste la, vide, jusqu'a ce que mauth.js le retire. */
+  try { if (window.opener) { window.close(); } } catch (e) { }
+})();
+</script>
+</body>
+</html>

@@ -266,11 +266,13 @@ function installerGoogle(options) {
       const serveur = http.createServer(function (requete, reponse) {
         let code = '';
         let ok = false;
+        let estLeRetour = false;
         try {
           /* L'adresse de base n'a aucune importance : elle ne sert qu'a
              donner a l'analyseur d'URL de quoi travailler. */
           const u = new URL(requete.url, 'http://127.0.0.1');
           if (u.pathname === '/retour') {
+            estLeRetour = true;
             /* LA VERIFICATION QUI COMPTE : le « state ». Sans elle, un autre
                logiciel de la machine pourrait nous pousser SON code de retour
                et lier le programme a SON compte Google. */
@@ -287,7 +289,11 @@ function installerGoogle(options) {
         });
         reponse.end(pageDeRetour(ok));
 
-        terminer(code);
+        /* SEULE la vraie requete /retour cloture le serveur. N'importe quelle
+           autre requete arrivant avant elle (favicon.ico du navigateur, un
+           autre logiciel local) fermait jusqu'ici le port avant que Google
+           n'y revienne, et la liaison echouait sans raison comprehensible. */
+        if (estLeRetour) { terminer(code); }
       });
 
       /* Le port est pris par un autre logiciel, ou Windows refuse l'ecoute :
@@ -532,8 +538,16 @@ function installerGoogle(options) {
   const PORTEES_PERMISES = [
     'https://www.googleapis.com/auth/calendar.events',
     'https://www.googleapis.com/auth/calendar.events.readonly',
+    /* gbridge.js elargit PORTEE.lecture a celle-ci des que l'artisan n'est pas
+       encore connecte (corrigerPermissionLecture, necessaire pour lister les
+       agendas) : sans l'ajouter ici, ce pont l'aurait silencieusement retiree
+       de la demande envoyee a Google, et la liste des agendas ne serait
+       jamais arrivee sur le bureau. */
+    'https://www.googleapis.com/auth/calendar.readonly',
     'https://www.googleapis.com/auth/drive.appdata',
     'https://www.googleapis.com/auth/userinfo.email',
+    /* app/google/gtasks.js — lecture seule des listes Google Tasks. */
+    'https://www.googleapis.com/auth/tasks.readonly',
     'openid', 'email'
   ];
 

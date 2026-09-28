@@ -1336,7 +1336,14 @@ input[type="color"]{height:40px;padding:3px;cursor:pointer}
           <div class="fld"><label data-t="secIcon"></label><input id="sNewIc" value="📁" maxlength="4"></div>
           <div class="fld"><label data-t="secColor"></label><input type="color" id="sNewC" value="#a855f7"></div>
         </div>
-        <button class="mb pri" style="width:100%" onclick="uiAddSection()" data-t="secAdd"></button>
+        <div class="row2">
+          <div class="fld"><label data-t="secHintAr"></label><input id="sNewHintAr"></div>
+          <div class="fld"><label data-t="secHintFr"></label><input id="sNewHintFr"></div>
+        </div>
+        <div class="row2">
+          <button class="mb pri" id="sAddBtn" style="width:100%" onclick="uiAddSection()" data-t="secAdd"></button>
+          <button class="mb" id="sCancelBtn" style="width:100%;display:none" onclick="uiCancelEditSection()" data-t="renCancel"></button>
+        </div>
       </div>
 
       <div class="fld" style="margin-top:20px"><label data-t="catList"></label><div id="catList" class="chiplist"></div></div>
@@ -1349,7 +1356,10 @@ input[type="color"]{height:40px;padding:3px;cursor:pointer}
           <div class="fld"><label data-t="secIcon"></label><input id="cNewIc" value="🏷️" maxlength="4"></div>
           <div class="fld"><label data-t="secColor"></label><input type="color" id="cNewC" value="#64748b"></div>
         </div>
-        <button class="mb pri" style="width:100%" onclick="uiAddSub()" data-t="catAdd"></button>
+        <div class="row2">
+          <button class="mb pri" id="cAddBtn" style="width:100%" onclick="uiAddSub()" data-t="catAdd"></button>
+          <button class="mb" id="cCancelBtn" style="width:100%;display:none" onclick="uiCancelEditSub()" data-t="renCancel"></button>
+        </div>
       </div>
       <div class="note-line" data-t="secNote"></div>
     </div>
@@ -2720,7 +2730,9 @@ ar:{
   exportIcs:'تصدير .ics',
   secManage:'الأقسام والتصنيفات', secList:'الأقسام', catList:'التصنيفات',
   secNameAr:'الاسم بالعربية', secNameFr:'الاسم بالفرنسية', secIcon:'الرمز', secColor:'اللون',
+  secHintAr:'وصف مختصر بالعربية (اختياري)', secHintFr:'وصف مختصر بالفرنسية (اختياري)',
   secAdd:'＋ أضف قسماً', catAdd:'＋ أضف تصنيفاً',
+  secSave:'✔ احفظ التعديل', catSave:'✔ احفظ التعديل', renCancel:'إلغاء التعديل', renEdit:'تعديل الاسم',
   secDelAsk:'حذف القسم «%s»؟ مهامه ستنتقل إلى قسم المؤسسة ولن تضيع.',
   catDelAsk:'حذف التصنيف «%s»؟ المهام المرتبطة به ستصبح «شخصي».',
   secNote:'القسمان الأصليان محميّان من الحذف لأن كل بيانات التقويم مصنّفة عليهما. ما تضيفه أنت يظهر فوراً كبطاقة جديدة في الأعلى، وتُعاد توزيع فقاعات الحلقة تلقائياً. زرّ «⇄ نقل إلى» في كل مهمة يدور على كل الأقسام.',
@@ -2794,7 +2806,9 @@ fr:{
   exportIcs:'Exporter .ics',
   secManage:'Sections et catégories', secList:'Sections', catList:'Catégories',
   secNameAr:'Nom en arabe', secNameFr:'Nom en français', secIcon:'Icône', secColor:'Couleur',
+  secHintAr:'Description courte en arabe (optionnel)', secHintFr:'Description courte en français (optionnel)',
   secAdd:'＋ Ajouter une section', catAdd:'＋ Ajouter une catégorie',
+  secSave:'✔ Enregistrer la modification', catSave:'✔ Enregistrer la modification', renCancel:'Annuler la modification', renEdit:'Modifier le nom',
   secDelAsk:'Supprimer la section « %s » ? Ses tâches repassent au pôle Entreprise, rien n\'est perdu.',
   catDelAsk:'Supprimer la catégorie « %s » ? Les tâches concernées deviennent « Personnel ».',
   secNote:"Les deux sections d'origine sont protégées : toutes les données de l'agenda y sont classées. Ce que vous ajoutez apparaît aussitôt comme une nouvelle carte en haut, et les bulles de l'anneau se redistribuent seules. Le bouton « ⇄ Déplacer vers » de chaque tâche fait le tour de toutes les sections.",
@@ -2869,14 +2883,32 @@ const SEC_BUILTIN = [
    ar:'القسم الشخصي', fr:'Pôle Personnel',
    sAr:'وثائق • صحة • عائلة • روتين', sFr:'Documents • santé • famille • routine'}
 ];
-function allSections(){ return SEC_BUILTIN.concat(store.sections||[]); }
+/* store.secLabels{id:{ar,fr,ic,c}} surcharge le NOM (et l'icone/la couleur)
+   d'une section EXISTANTE — d'origine ('ent'/'perso') ou ajoutee — sans
+   jamais toucher a son identifiant : tout ce qui range une tache sous cet
+   id (catOf, EN_DUR, le classement Drive du bureau…) continue de la
+   retrouver exactement pareil. Renommer n'est donc jamais une migration. */
+function allSections(){
+  return SEC_BUILTIN.concat(store.sections||[]).map(s=>{
+    const r=(store.secLabels||{})[s.id];
+    return r ? Object.assign({}, s, {ar:r.ar||s.ar, fr:r.fr||s.fr, ic:r.ic||s.ic, c:r.c||s.c, sAr:r.sAr||s.sAr, sFr:r.sFr||s.sFr}) : s;
+  });
+}
 function secById(id){ const s=allSections().filter(x=>x.id===id)[0]; return s||SEC_BUILTIN[1]; }
 function secName(s){ return (state.lang==='ar'? s.ar : s.fr) || s.id; }
 function secSub(s){ return (state.lang==='ar'? s.sAr : s.sFr) || ''; }
 /* Les categories ajoutees sont fusionnees dans SUBS : tout le code existant
-   qui lit SUBS[...] continue de fonctionner sans modification. */
+   qui lit SUBS[...] continue de fonctionner sans modification. Le meme
+   store.subLabels{id:{ar,fr,ic,c}} que pour les sections surcharge ensuite
+   le nom (d'une categorie d'origine ou ajoutee), toujours par-dessus l'id. */
 function mergeSubs(){
   (store.subs||[]).forEach(s=>{ SUBS[s.id]={ic:s.ic||'🏷️', c:s.c||'#64748b', ar:s.ar, fr:s.fr, custom:1}; });
+  Object.keys(store.subLabels||{}).forEach(id=>{
+    if(!SUBS[id]) return;
+    const r=store.subLabels[id];
+    if(r.ar) SUBS[id].ar=r.ar; if(r.fr) SUBS[id].fr=r.fr;
+    if(r.ic) SUBS[id].ic=r.ic; if(r.c) SUBS[id].c=r.c;
+  });
 }
 function nextId(prefix, taken){
   let i=1; while(taken.indexOf(prefix+i)>=0) i++; return prefix+i;
@@ -2893,11 +2925,12 @@ function okColor(v, fb){
   v = String(v==null?'':v).trim();
   return /^#[0-9a-f]{6}$/i.test(v) ? v : fb;
 }
-function addSection(ar, fr, ic, c){
+function addSection(ar, fr, ic, c, sAr, sFr){
   ar=(ar||'').trim(); if(!ar) return;
   store.sections = store.sections||[];
   const id = nextId('sec', allSections().map(s=>s.id));
-  store.sections.push({id:id, ar:ar, fr:(fr||'').trim()||ar, ic:okIc(ic,'📁'), c:okColor(c,'#a855f7')});
+  store.sections.push({id:id, ar:ar, fr:(fr||'').trim()||ar, ic:okIc(ic,'📁'), c:okColor(c,'#a855f7'),
+                        sAr:(sAr||'').trim(), sFr:(sFr||'').trim()});
   state.boards[id]=0; state.group[id]='date';
   lsSet(); prefSet(); buildBoardsDOM(); applyI18n(); applyPanels(); render();
 }
@@ -2906,6 +2939,46 @@ function addSub(ar, fr, ic, c){
   store.subs = store.subs||[];
   const id = nextId('cat', Object.keys(SUBS));
   store.subs.push({id:id, ar:ar, fr:(fr||'').trim()||ar, ic:okIc(ic,'🏷️'), c:okColor(c,'#64748b')});
+  mergeSubs(); lsSet(); applyI18n(); render();
+}
+/* Renommer une section EXISTANTE (d'origine ou ajoutee), sans jamais changer
+   son id : une section ajoutee est modifiee directement dans store.sections
+   (c'est deja sa propre donnee) ; une section d'origine passe par la
+   surcharge store.secLabels, puisque SEC_BUILTIN est du code, pas une
+   donnee de l'artisan. */
+function renSection(id, ar, fr, ic, c, sAr, sFr){
+  ar=(ar||'').trim(); if(!ar) return;
+  fr=(fr||'').trim()||ar;
+  const custom=(store.sections||[]).find(s=>s.id===id);
+  if(custom){
+    custom.ar=ar; custom.fr=fr;
+    if(ic) custom.ic=okIc(ic, custom.ic);
+    if(c)  custom.c=okColor(c, custom.c);
+    if(sAr!==undefined) custom.sAr=(sAr||'').trim();
+    if(sFr!==undefined) custom.sFr=(sFr||'').trim();
+  } else {
+    store.secLabels = store.secLabels||{};
+    const prev = store.secLabels[id]||{};
+    store.secLabels[id] = {
+      ar, fr, ic: ic?okIc(ic, prev.ic):prev.ic, c: c?okColor(c, prev.c):prev.c,
+      sAr: sAr?(sAr||'').trim():prev.sAr, sFr: sFr?(sFr||'').trim():prev.sFr
+    };
+  }
+  lsSet(); buildBoardsDOM(); applyI18n(); applyPanels(); render();
+}
+function renSub(id, ar, fr, ic, c){
+  ar=(ar||'').trim(); if(!ar) return;
+  fr=(fr||'').trim()||ar;
+  const custom=(store.subs||[]).find(s=>s.id===id);
+  if(custom){
+    custom.ar=ar; custom.fr=fr;
+    if(ic) custom.ic=okIc(ic, custom.ic);
+    if(c)  custom.c=okColor(c, custom.c);
+  } else {
+    store.subLabels = store.subLabels||{};
+    const prev = store.subLabels[id]||{};
+    store.subLabels[id] = { ar, fr, ic: ic?okIc(ic, prev.ic):prev.ic, c: c?okColor(c, prev.c):prev.c };
+  }
   mergeSubs(); lsSet(); applyI18n(); render();
 }
 /* Suppression : jamais d'orphelin. Les taches de la section supprimee sont
@@ -3938,36 +4011,83 @@ function syncUI(){
 function openModal(id){ document.getElementById(id).classList.add('show'); }
 function closeModal(id){ document.getElementById(id).classList.remove('show'); }
 /* ---- Gestion des sections et categories (interface) ---- */
+/* L'edition n'a pas sa propre boite : elle reutilise l'« ajout », qui a deja
+   les quatre champs (nom AR, nom FR, icone, couleur). Un clic sur ✎ y verse
+   les valeurs actuelles et bascule le bouton en « enregistrer » ; le meme
+   geste qui aurait ajoute une section met alors a jour celle-ci a la place —
+   seul editSecId (ou editSubId) fait la difference entre les deux. */
+let editSecId=null, editSubId=null;
 function renderSecModal(){
   const sl=document.getElementById('secList'); if(!sl) return;
   sl.innerHTML = allSections().map(s=>
-    '<span class="seclab'+(s.builtin?' lock':'')+'" style="border-color:'+(s.c||'var(--line)')+'55">'+
+    '<span class="seclab" style="border-color:'+(s.c||'var(--line)')+'55">'+
       s.ic+' '+esc(secName(s))+
+      '<button class="rm" title="'+esc(t('renEdit'))+'" onclick="uiEditSection(\''+s.id+'\')">✎</button>'+
       (s.builtin? '' : '<button class="rm" onclick="uiDelSection(\''+s.id+'\')">✕</button>')+
     '</span>').join('');
   const cl=document.getElementById('catList');
   cl.innerHTML = Object.keys(SUBS).map(k=>{
     const S=SUBS[k];
-    return '<span class="seclab'+(S.custom?'':' lock')+'" style="border-color:'+S.c+'55">'+
+    return '<span class="seclab" style="border-color:'+S.c+'55">'+
       S.ic+' '+esc(S[state.lang]||S.fr)+
+      '<button class="rm" title="'+esc(t('renEdit'))+'" onclick="uiEditSub(\''+k+'\')">✎</button>'+
       (S.custom? '<button class="rm" onclick="uiDelSub(\''+k+'\')">✕</button>' : '')+
     '</span>';
   }).join('');
+  /* applyI18n() peut s'executer pendant une edition (changement de langue en
+     cours de route) et reecrirait sinon le bouton avec le libelle « ajouter »
+     — on remet le bon libelle a chaque redessin, dans la langue courante. */
+  const gb=id=>document.getElementById(id);
+  if(gb('sAddBtn')) gb('sAddBtn').textContent = editSecId ? t('secSave') : t('secAdd');
+  if(gb('cAddBtn')) gb('cAddBtn').textContent = editSubId ? t('catSave') : t('catAdd');
 }
-function openSec(){ renderSecModal(); openModal('mSec'); }
+function openSec(){ editSecId=null; editSubId=null; renderSecModal(); openModal('mSec'); }
 function uiAddSection(){
   const g=id=>document.getElementById(id);
   if(!g('sNewAr').value.trim()){ g('sNewAr').focus(); return; }
-  addSection(g('sNewAr').value, g('sNewFr').value, g('sNewIc').value, g('sNewC').value);
-  g('sNewAr').value=''; g('sNewFr').value='';
+  if(editSecId){ renSection(editSecId, g('sNewAr').value, g('sNewFr').value, g('sNewIc').value, g('sNewC').value, g('sNewHintAr').value, g('sNewHintFr').value); }
+  else { addSection(g('sNewAr').value, g('sNewFr').value, g('sNewIc').value, g('sNewC').value, g('sNewHintAr').value, g('sNewHintFr').value); }
+  uiCancelEditSection();
+  g('sNewAr').value=''; g('sNewFr').value=''; g('sNewIc').value='📁'; g('sNewC').value='#a855f7';
   renderSecModal(); toast(t('toastSaved'));
 }
 function uiAddSub(){
   const g=id=>document.getElementById(id);
   if(!g('cNewAr').value.trim()){ g('cNewAr').focus(); return; }
-  addSub(g('cNewAr').value, g('cNewFr').value, g('cNewIc').value, g('cNewC').value);
-  g('cNewAr').value=''; g('cNewFr').value='';
+  if(editSubId){ renSub(editSubId, g('cNewAr').value, g('cNewFr').value, g('cNewIc').value, g('cNewC').value); }
+  else { addSub(g('cNewAr').value, g('cNewFr').value, g('cNewIc').value, g('cNewC').value); }
+  uiCancelEditSub();
+  g('cNewAr').value=''; g('cNewFr').value=''; g('cNewIc').value='🏷️'; g('cNewC').value='#64748b';
   renderSecModal(); toast(t('toastSaved'));
+}
+function uiEditSection(id){
+  const s=secById(id), g=k=>document.getElementById(k);
+  editSecId=id;
+  g('sNewAr').value=s.ar||''; g('sNewFr').value=s.fr||''; g('sNewIc').value=s.ic||''; g('sNewC').value=s.c||'#a855f7';
+  g('sNewHintAr').value=s.sAr||''; g('sNewHintFr').value=s.sFr||'';
+  g('sAddBtn').textContent=t('secSave'); g('sCancelBtn').style.display='';
+  g('sNewAr').focus();
+}
+function uiEditSub(id){
+  const S=SUBS[id], g=k=>document.getElementById(k);
+  if(!S) return;
+  editSubId=id;
+  g('cNewAr').value=S.ar||''; g('cNewFr').value=S.fr||''; g('cNewIc').value=S.ic||''; g('cNewC').value=S.c||'#64748b';
+  g('cAddBtn').textContent=t('catSave'); g('cCancelBtn').style.display='';
+  g('cNewAr').focus();
+}
+function uiCancelEditSection(){
+  editSecId=null;
+  const g=id=>document.getElementById(id);
+  g('sAddBtn').textContent=t('secAdd'); g('sCancelBtn').style.display='none';
+  g('sNewAr').value=''; g('sNewFr').value=''; g('sNewIc').value='📁'; g('sNewC').value='#a855f7';
+  g('sNewHintAr').value=''; g('sNewHintFr').value='';
+}
+function uiCancelEditSub(){
+  editSubId=null;
+  const g=id=>document.getElementById(id);
+  g('cAddBtn').textContent=t('catAdd'); g('cCancelBtn').style.display='none';
+  g('cNewAr').value=''; g('cNewFr').value=''; g('cNewIc').value='🏷️'; g('cNewC').value='#64748b';
 }
 function uiDelSection(id){
   if(!confirm(t('secDelAsk').replace('%s', secName(secById(id))))) return;
@@ -5200,7 +5320,23 @@ if (window.AP && window.AP.lock && window.AP.lock.deferBoot) {
      ========================================================================== -->
 <script src="app/google/gauth.js"></script>
 <script src="app/google/gsync.js"></script>
+<script src="app/google/gtasks.js"></script>
 <script src="app/google/gbridge.js"></script>
+
+<!-- ==========================================================================
+     LA SYNCHRONISATION PAR MICROSOFT (Outlook / Microsoft 365 / To Do).
+     Le jumeau du bloc Google ci-dessus, charge APRES lui et pour la meme
+     raison que gbridge vient apres gauth/gsync : mbridge enveloppe a son tour
+     window.buildTasks (qui, a ce point, contient deja les rendez-vous de
+     Google) et applique en dernier le choix « quelles sources afficher »
+     (app/microsoft/mbridge.js, PARTIE 4) — voir ce fichier pour le detail.
+
+     TANT QUE app/config.js NE CONTIENT PAS DE microsoftClientId ET QUE
+     L'ARTISAN NE S'EST PAS CONNECTE, CES TROIS FICHIERS NE FONT RIEN.
+     ========================================================================== -->
+<script src="app/microsoft/mauth.js"></script>
+<script src="app/microsoft/msync.js"></script>
+<script src="app/microsoft/mbridge.js"></script>
 
 <!-- ==========================================================================
      LE PONT VERS LA SYNCHRONISATION (app/INTEGRATION.md, brique 2, point 2).
@@ -5311,6 +5447,32 @@ if (window.AP && AP.gbridge && typeof AP.gbridge.brancher === 'function') {
   } catch (e) {
     /* Le tableau de bord doit demarrer meme si la couche Google echoue. */
     try { console.warn('[pont Google] ' + (e && e.message)); } catch (e2) {}
+  }
+}
+/* Le meme pont, pour Microsoft — apres celui de Google, pour la meme raison
+   que app/microsoft/mbridge.js se charge apres app/google/gbridge.js : quand
+   les deux sont branches, l'enveloppe de Microsoft doit envelopper celle de
+   Google, jamais l'inverse (voir ce fichier, PARTIE 5). */
+if (window.AP && AP.mbridge && typeof AP.mbridge.brancher === 'function') {
+  try {
+    AP.mbridge.brancher({
+      store: store, state: state, lsSet: lsSet,
+      buildTasks: function () { return window.buildTasks(); },
+      render:     function () { return window.render(); },
+      toast: toast,
+      TASKS: function () { return TASKS; },
+      SUBS: SUBS,
+      rebuildBoards: function () {
+        mergeSubs();
+        buildBoardsDOM();
+        applyI18n();
+        applyPanels();
+        render();
+      }
+    });
+  } catch (e) {
+    /* Le tableau de bord doit demarrer meme si la couche Microsoft echoue. */
+    try { console.warn('[pont Microsoft] ' + (e && e.message)); } catch (e2) {}
   }
 }
 </script>

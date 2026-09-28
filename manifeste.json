@@ -1,5 +1,5 @@
 {
- "genere": "2026-09-24T14:47:09.702Z",
+ "genere": "2026-09-28T16:38:19.588Z",
  "fichiers": {
   ".nojekyll": {
    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -26,28 +26,32 @@
    "octets": 12244
   },
   "app/config.js": {
-   "sha256": "657e98f065a50ab3e73c6249f4f6c2c71841f52a1fcd7ec762c203a74c97b327",
-   "octets": 3992
+   "sha256": "d11d450d180ca0f92bbf07998e6a05865ee1d92eff4410fec92d65c123aa141e",
+   "octets": 4752
   },
   "app/google/electron-google.js": {
-   "sha256": "e6b85f0ac76bfda42ccc127ebf738a98d44a5463832e883573de5db82f86608d",
-   "octets": 24108
+   "sha256": "45e9016ce45ac9a8d1d2fcd9a6e6d12b2fff780f605479ec09cfb3f21e32d523",
+   "octets": 25039
   },
   "app/google/gauth.css": {
    "sha256": "77d0d9d79028715aba85aac214854d3b355577e1c7389ec81f2af0d4b316f969",
    "octets": 8597
   },
   "app/google/gauth.js": {
-   "sha256": "2a9cbba1e462ccc42ee31afaa6ae91131ae285ee54a0efb6b61001d17434757f",
-   "octets": 68141
+   "sha256": "e163fcf7b317de2accd2d28f5b0b0fc165be2383e60b536fb5757eac1dba1006",
+   "octets": 70397
   },
   "app/google/gbridge.js": {
-   "sha256": "0a20b51de18c1544f1ddbdc67cc6a4a443eecf2728e5e19c710b896180895338",
-   "octets": 82427
+   "sha256": "ddeed8dd846d8d6a96f92527d62f154a43f378755799bd2349631617f40a5ac1",
+   "octets": 94473
   },
   "app/google/gsync.js": {
-   "sha256": "d4152619424308a8784359c234cbb798c6f685db2b10eac8b3d1ce39cf6274f6",
-   "octets": 120957
+   "sha256": "081ee9a479784a06b6210a5c30c4f158041db924b85334809198540ad5f8043b",
+   "octets": 127889
+  },
+  "app/google/gtasks.js": {
+   "sha256": "ff513df55a9e5f78bae5efdb4549b4c51a9b0a5856c4c0cbf11736ef9c9b6afc",
+   "octets": 22075
   },
   "app/lock/lock.css": {
    "sha256": "e598a810130e12661dc4d71800af146bc16edc0e2ff3cc1c43faecc0d12a9318",
@@ -56,6 +60,26 @@
   "app/lock/lock.js": {
    "sha256": "87f84cae8c7a665f1bdc39765fc86f129c9f022f0d00137a59b66e20a3375081",
    "octets": 65614
+  },
+  "app/microsoft/callback.html": {
+   "sha256": "c44d756380acbda3bd8d1c53c6ca13edca85469c4c735042ec5882f8878e2794",
+   "octets": 2296
+  },
+  "app/microsoft/electron-microsoft.js": {
+   "sha256": "24b066b035bd0d067045bc826455dab7eb9f803a3c31debc33cc7fede3a157ba",
+   "octets": 13797
+  },
+  "app/microsoft/mauth.js": {
+   "sha256": "3cb5289543751352cd3a795dd8486fd22b36af0a45da07e05d3fa7f4114cb287",
+   "octets": 30034
+  },
+  "app/microsoft/mbridge.js": {
+   "sha256": "5bbbad4e3e771aaf0f60b779f3b5113bcbce2f0574fa16dbad3573bbc4120d27",
+   "octets": 41815
+  },
+  "app/microsoft/msync.js": {
+   "sha256": "f890fa6e27c5e7c4b8858cc1e5a6f41db9a286d80c4259991d88c84ea0b6a7d0",
+   "octets": 22602
   },
   "app/pwa/icons/apple-touch-icon.png": {
    "sha256": "245daf7a8959a4e1bdefccfb76c0302cd2ccff07e36b3d01c86480ef8b8a271e",
@@ -114,7 +138,7 @@
    "octets": 1650
   },
   "app/pwa/sw.js": {
-   "sha256": "cd423c1df9a16646fb0e6c65a8d325ed884fdc340979fb1b5297956e4e68ad8e",
+   "sha256": "11595dcc5b7dc11a9e75f19c0620f54b2b9051bba2347b9fa1d6f9a9608940b0",
    "octets": 30781
   },
   "app/setup/setup.css": {
@@ -122,8 +146,8 @@
    "octets": 10903
   },
   "app/setup/setup.js": {
-   "sha256": "6aa7f6a120fb94a71749f908e4309b91e0e1055df9eab880e166b69c23d4eeef",
-   "octets": 62853
+   "sha256": "de521e2ba0eb8deaeaff592683c2a0aa24c9be48f4a0142b5b873e06c0d0ab1a",
+   "octets": 70105
   },
   "app/supabase-client.js": {
    "sha256": "052b16e0fa2dca2ca3a00490ba26c9d1824ff8b5e48202ce9286f2d5a1b921ce",
@@ -146,8 +170,8 @@
    "octets": 17791
   },
   "index.html": {
-   "sha256": "c90605c69afdaec66afd3996af512562f07f13c799028c0fd69b667b1b470c10",
-   "octets": 293771
+   "sha256": "540689f937b0e3de963fc8af138c62189b773d507cfbfedd01e4630e0e9e3cc2",
+   "octets": 302425
   },
   "sw.js": {
    "sha256": "bdca343b03eb8d6eaed1c3eec1de2ab2ac9d94e351beed282ab563ca0635e8c7",

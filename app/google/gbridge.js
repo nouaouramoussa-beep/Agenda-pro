@@ -174,6 +174,20 @@
       listeKo:      'تعذّر جلب قائمة التقاويم. يمكنك متابعة تقويمك الرئيسي فقط في الأثناء.',
       listeKoBtn:   'تابِع التقويم الرئيسي',
 
+      /* --- afficher les details dans la description visible --- */
+      titreDetails: 'إظهار التفاصيل داخل الموعد',
+      aideDetails:  'عند التفعيل، تُكتب الحالة والوثائق المؤشّرة والملاحظة داخل «وصف» الموعد الحقيقي في Google، وتظهر هناك — على هاتفك وفي تطبيق Google Agenda نفسه. تنبيه: تصبح مرئية لأي شخص يرى هذا الموعد، بمن فيهم المدعوّون في اجتماع مشترك. النص الذي كتبته أنت أو غيرك في الوصف لا يُمحى أبداً.',
+      caseDetails:  'إظهار الحالة والوثائق والملاحظة في وصف الموعد داخل Google',
+      detailsActives:  'تم التفعيل — ستظهر التفاصيل في وصف المواعيد التالية.',
+      detailsDesactives: 'تم الإيقاف — التفاصيل السابقة تبقى في الوصف حتى تعديل تالٍ.',
+
+      /* --- Google Tasks (app/google/gtasks.js) --- */
+      titreTaches:  'قوائم مهام Google Tasks',
+      aideTaches:   'اختر القوائم التي تريد رؤيتها في اللوحة، إلى جانب المواعيد.',
+      aucuneTache:  'لم تختر أي قائمة بعد.',
+      chargerTaches:'تحديث قائمة المهام',
+      tachesKo:     'تعذّر جلب قوائم المهام من Google.',
+
       /* --- le retour honnete pendant la synchronisation --- */
       travail:      'جارٍ المزامنة مع Google…',
       lus:          'مواعيد مقروءة',
@@ -251,6 +265,20 @@
       chargerListe: 'Actualiser la liste des agendas',
       listeKo:      'La liste des agendas n\'a pas pu etre lue. Vous pouvez suivre votre agenda principal en attendant.',
       listeKoBtn:   'Suivre l\'agenda principal',
+
+      /* --- afficher les details dans la description visible --- */
+      titreDetails: 'Afficher les details dans le rendez-vous',
+      aideDetails:  'Une fois active, le statut, les documents coches et la note sont ecrits dans la « description » reelle du rendez-vous chez Google, et y apparaissent — sur votre telephone et dans l\'application Google Agenda elle-meme. Attention : ce texte devient visible pour quiconque voit ce rendez-vous, invites compris pour une reunion partagee. Le texte deja ecrit par vous ou par quelqu\'un d\'autre dans la description n\'est jamais efface.',
+      caseDetails:  'Afficher le statut, les documents et la note dans la description Google',
+      detailsActives:  'Active — les details apparaitront dans la description des prochains rendez-vous modifies.',
+      detailsDesactives: 'Desactive — les details deja ecrits restent dans la description jusqu\'a la prochaine modification.',
+
+      /* --- Google Tasks (app/google/gtasks.js) --- */
+      titreTaches:  'Listes Google Tasks',
+      aideTaches:   'Cochez les listes que vous voulez voir dans le tableau de bord, a cote des rendez-vous.',
+      aucuneTache:  'Aucune liste cochee pour l\'instant.',
+      chargerTaches:'Actualiser la liste des taches',
+      tachesKo:     'La liste des taches n\'a pas pu etre lue depuis Google.',
 
       travail:      'Synchronisation avec Google…',
       lus:          'rendez-vous lus',
@@ -383,6 +411,11 @@
        choses, et deux ponts differents seraient deux occasions de diverger. */
     if (AP.gsync && typeof AP.gsync.bind === 'function') {
       try { AP.gsync.bind(P); } catch (e) { avert('bind du moteur : ' + e.message); }
+    }
+    /* Le meme pont, pour les listes Google Tasks (app/google/gtasks.js) :
+       il n'a besoin que de TASKS et toast, pas du reste. */
+    if (AP.gtasks && typeof AP.gtasks.bind === 'function') {
+      try { AP.gtasks.bind({ TASKS: P.TASKS, toast: P.toast, store: P.store }); } catch (e) { avert('bind des taches : ' + e.message); }
     }
 
     /* LE DEMARRAGE DU MOTEUR — SANS LUI, RIEN NE REPART TOUT SEUL.
@@ -599,6 +632,11 @@
           })
           .catch(function (err) { avert('reprise : ' + (err && err.message)); });
       } catch (err) { avert('reprise : ' + err.message); }
+      /* Les listes Google Tasks partagent le meme jeton : meme signal de
+         depart, sans bouton separe — voir app/google/gtasks.js. */
+      try {
+        if (AP.gtasks && typeof AP.gtasks.reveiller === 'function') { AP.gtasks.reveiller(); }
+      } catch (err) { avert('reprise des taches : ' + err.message); }
     });
   }
 
@@ -984,7 +1022,40 @@
       return r;
     };
     neuf.__apPont = true;
-    W.buildTasks = neuf;
+
+    /* MICROSOFT A PU SE BRANCHER EN PREMIER (un artisan qui n'utilisait que
+       lui depuis des semaines, avant de lier Google aujourd'hui). Son
+       enveloppe (app/microsoft/mbridge.js) DOIT rester la plus exterieure —
+       c'est elle qui applique en dernier le choix « quelles sources afficher »,
+       et il doit voir les rendez-vous Google deja injectes. On s'insere donc
+       A L'INTERIEUR de son crochet plutot que de l'envelopper depuis
+       l'exterieur — ce qui inverserait l'ordre sans que rien ne le signale.
+
+       ATTENTION AU PIEGE : `neuf` ci-dessus appelle `orig`, qui est
+       l'enveloppe de Microsoft (puisque `orig = window.buildTasks` valait
+       deja son enveloppe). Si on branchait cette version de `neuf` DANS le
+       crochet de Microsoft, Microsoft appellerait `neuf`, qui rappellerait
+       Microsoft, qui rappellerait `neuf` — une boucle sans fin. On refabrique
+       donc une SECONDE enveloppe, qui appelle directement ce que Microsoft
+       appelait JUSQU'ICI (la fonction brute), et c'est CELLE-LA qu'on branche
+       dans le crochet. */
+    if (orig.__apPontM && orig.__apPontMInterne) {
+      var interieur = orig.__apPontMInterne;
+      var brut = interieur.fn;
+      var neufInterne = function () {
+        var r = brut.apply(this, arguments);
+        try {
+          PAQUET_ENTIER = paquetClassement() || PAQUET_ENTIER;
+          if (AP.gsync && typeof AP.gsync.injecter === 'function') { AP.gsync.injecter(); }
+          dedoublonner();
+        } catch (e) { avert('buildTasks : ' + e.message); }
+        return r;
+      };
+      neufInterne.__apPont = true;
+      interieur.fn = neufInterne;
+    } else {
+      W.buildTasks = neuf;
+    }
     enveloppePosee = true;
     dire('buildTasks enveloppe — les rendez-vous de Google entrent dans la liste, les doublons en sortent.');
   }
@@ -1070,6 +1141,15 @@
        qu'il trouve quelque chose a cocher. */
     var i = infoMoteur();
     if (i && i.connecte && (!i.agendas || !i.agendas.length)) { chargerAgendas(); }
+    /* La meme condition « i.connecte » que dessiner() utilise pour DECIDER
+       D'AFFICHER la section Taches (PARTIE 7.3 bis) — pas celle de gtasks
+       lui-meme (infoTaches().connecte, qui verifie la portee Google Tasks
+       REELLEMENT accordee et peut donc diverger). Sinon, un artisan dont le
+       calendrier reste marque « lie » mais dont la portee Taches manque
+       verrait la section apparaitre vide sans que ce chargement automatique
+       n'ait jamais ete tente. */
+    var it = infoTaches();
+    if (i && i.connecte && it && (!it.listes || !it.listes.length)) { chargerListesTaches(); }
     return true;
   }
   function fermer() { if (elPanneau) { elPanneau.classList.remove('show'); } }
@@ -1104,9 +1184,11 @@
 
     /* --- 2. L'etat de la liaison ---------------------------------------- */
     corps.appendChild(sectionEtat(i, c));
+    if (i.connecte) { corps.appendChild(sectionDetailsVisibles()); }
 
     /* --- 3. Les agendas a suivre ---------------------------------------- */
     if (i.connecte) { corps.appendChild(sectionAgendas(i)); }
+    if (i.connecte && AP.gtasks) { corps.appendChild(sectionListesTaches()); }
 
     /* --- 4. Les rendez-vous ecrits en dur ------------------------------- */
     if (i.connecte) { corps.appendChild(sectionEnDur()); }
@@ -1250,6 +1332,35 @@
     return d;
   }
 
+  /* --- 7.1 bis « إظهار التفاصيل » — la seule case qui touche a un champ
+     visible d'un vrai rendez-vous (voir gsync.js, envoyerEtat()). Fausse par
+     defaut : l'artisan doit cocher lui-meme, en connaissance de cause. */
+  function sectionDetailsVisibles() {
+    var s = document.createElement('div');
+    s.className = 'apg-sec';
+    s.innerHTML = '<p class="apg-h">' + propre(M('titreDetails')) + '</p>' +
+                  '<p class="apg-aide">' + propre(M('aideDetails')) + '</p>';
+
+    var row = document.createElement('div');
+    row.className = 'apg-cal';
+    var cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = !!(AP.gsync && AP.gsync.reglages && AP.gsync.reglages().afficherDetails);
+    cb.id = 'apgDetailsVisibles';
+    cb.addEventListener('change', function () {
+      try { AP.gsync.poserReglages({ afficherDetails: cb.checked }); } catch (e) { avert('afficherDetails : ' + e.message); }
+      toast(cb.checked ? M('detailsActives') : M('detailsDesactives'));
+    });
+    row.appendChild(cb);
+    var lab = document.createElement('label');
+    lab.setAttribute('for', cb.id);
+    var span = document.createElement('span'); span.className = 'apg-nom'; span.textContent = M('caseDetails');
+    lab.appendChild(span);
+    row.appendChild(lab);
+    s.appendChild(row);
+    return s;
+  }
+
   /* LE VRAI MESSAGE DE GOOGLE, PAS UN « erreur » MUET.
      C'est le point 4 du cahier des charges, et il compte : « erreur » ne
      permet a personne de comprendre s'il faut recommencer, attendre, ou
@@ -1353,6 +1464,92 @@
     s = String(s || '');
     for (var i = 0; i < s.length; i++) { h = ((h << 5) - h + s.charCodeAt(i)) | 0; }
     return h;
+  }
+
+  /* --- 7.3 bis Les listes Google Tasks (app/google/gtasks.js) -------------
+     Le meme compte, une API differente : pas de bouton lier/delier ici, les
+     listes apparaissent des que Google est branche. */
+  function infoTaches() {
+    if (!(AP.gtasks && typeof AP.gtasks.info === 'function')) { return null; }
+    try { return AP.gtasks.info(); } catch (e) { return null; }
+  }
+
+  function chargerListesTaches() {
+    if (!(AP.gtasks && typeof AP.gtasks.chargerListes === 'function')) { return Promise.resolve([]); }
+    /* La portee Google Tasks manque encore (artisan connecte avant l'ajout de
+       cette fonction, ou l'ayant decochee sur l'ecran de consentement) : on
+       la demande maintenant, UNE FOIS, par le meme geste que « Actualiser la
+       liste des taches » — exactement comme demanderEcriture() le fait deja
+       pour le droit d'ecriture. Sans cela, cette portee ne serait jamais
+       redemandee pour un compte deja lie. */
+    var it0 = infoTaches();
+    var manque = it0 && !it0.connecte && AP.gauth && typeof AP.gauth.demanderTaches === 'function';
+    var pret = manque ? AP.gauth.demanderTaches() : Promise.resolve(true);
+    return pret
+      .then(function () { return AP.gtasks.chargerListes(); })
+      .then(function (l) { dessiner(); return l; })
+      .catch(function (e) { avert('liste des taches : ' + (e && e.message)); dessiner(); return []; });
+  }
+
+  function sectionListesTaches() {
+    var it = infoTaches();
+    if (!it) { return document.createDocumentFragment(); }
+
+    var s = document.createElement('div');
+    s.className = 'apg-sec';
+    s.innerHTML = '<p class="apg-h">' + propre(M('titreTaches')) + '</p>' +
+                  '<p class="apg-aide">' + propre(M('aideTaches')) + '</p>';
+
+    /* Le vrai message de Google, comme sectionEtat() le fait deja pour le
+       calendrier : sans lui, un scope refuse ou un jeton absent restait un
+       echec muet, indiscernable d'une simple liste vide. */
+    if (it.erreur) { s.appendChild(bloc_erreur(it.erreur)); }
+
+    var liste = it.listes || [];
+    if (!liste.length) {
+      var p = document.createElement('p');
+      p.className = 'apg-aide';
+      p.textContent = M('tachesKo');
+      s.appendChild(p);
+      var bas0 = document.createElement('div');
+      bas0.className = 'apg-bas';
+      bas0.appendChild(bouton(M('chargerTaches'), false, chargerListesTaches));
+      s.appendChild(bas0);
+      return s;
+    }
+
+    var suivis = it.suivis || [];
+    if (!suivis.length) {
+      var av = document.createElement('p'); av.className = 'apg-aide'; av.style.color = 'var(--warn)';
+      av.textContent = M('aucuneTache');
+      s.appendChild(av);
+    }
+
+    liste.forEach(function (l) {
+      var row = document.createElement('div');
+      row.className = 'apg-cal';
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = !!l.suivi;
+      cb.id = 'apgTaches_' + Math.abs(hachage(l.id));
+      cb.addEventListener('change', function () {
+        try { AP.gtasks.suivre(l.id, cb.checked); } catch (e) { avert('suivre (taches) : ' + e.message); }
+        if (cb.checked) { AP.gtasks.pull({ complet: true }).then(function () { rendre(); dessiner(); }); }
+        else { rendre(); dessiner(); }
+      });
+      row.appendChild(cb);
+      var lab = document.createElement('label');
+      lab.setAttribute('for', cb.id);
+      var nom = document.createElement('span'); nom.className = 'apg-nom'; nom.textContent = l.nom || l.id;
+      lab.appendChild(nom);
+      row.appendChild(lab);
+      s.appendChild(row);
+    });
+
+    var bas = document.createElement('div'); bas.className = 'apg-bas';
+    bas.appendChild(bouton(M('chargerTaches'), false, chargerListesTaches));
+    s.appendChild(bas);
+    return s;
   }
 
   /* --- 7.4 Les 765 rendez-vous ecrits en dur ------------------------------ */
@@ -1501,6 +1698,12 @@
     return Promise.resolve()
       .then(function () { return AP.gsync.pull({ complet: !!opts.complet }); })
       .then(function () {
+        /* Les listes Google Tasks suivies : un seul geste de synchronisation
+           rafraichit les deux, comme l'artisan s'y attend. Une erreur ici ne
+           doit pas faire echouer le compte-rendu du calendrier. */
+        try {
+          if (AP.gtasks && typeof AP.gtasks.pull === 'function') { AP.gtasks.pull({ complet: !!opts.complet }); }
+        } catch (e) { }
         var ap = infoMoteur() || {};
         rendre();
 
@@ -1539,7 +1742,18 @@
     /* On demande, et on dit exactement ce qui va se passer — y compris ce qui
        NE va PAS se passer : rien n'est efface chez Google. */
     if (!W.confirm(M('delierTitre') + '\n\n' + M('delierTexte'))) { return; }
+    /* Le choix « quelles sources afficher » (app/microsoft/mbridge.js) ne se
+       desactive jamais tout seul : s'il vaut « google seul », delier Google
+       maintenant ferait disparaitre Microsoft de l'ecran sans explication. On
+       revient a « les deux » avant de vider le moteur. */
+    try {
+      if (AP.mbridge && typeof AP.mbridge.source === 'function' && AP.mbridge.source() === 'google') {
+        AP.mbridge.source('tous');
+      }
+    } catch (e) { }
     try { AP.gsync.deconnecter(); } catch (e) { avert('deconnecter (moteur) : ' + e.message); }
+    try { if (AP.gtasks && typeof AP.gtasks.deconnecter === 'function') { AP.gtasks.deconnecter(); } }
+    catch (e) { avert('deconnecter (taches) : ' + e.message); }
     try { if (AP.gauth && AP.gauth.deconnecter) { AP.gauth.deconnecter(); } }
     catch (e) { avert('deconnecter (compte) : ' + e.message); }
     DERNIER_MASQUE = 0;

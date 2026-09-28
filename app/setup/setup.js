@@ -144,6 +144,8 @@
     nAccount:   { ar: 'الحساب على الإنترنت',       fr: 'Compte en ligne' },
     nMigrate:   { ar: 'بياناتي المحلية',            fr: 'Mes données locales' },
     nGoogle:    { ar: 'أجندة Google',              fr: 'Agenda Google' },
+    nMicrosoft: { ar: 'تقويم Microsoft (Outlook)', fr: 'Agenda Microsoft (Outlook)' },
+    nSources:   { ar: 'المصادر المعروضة',          fr: 'Sources affichees' },
     nGemini:    { ar: 'Gemini (جملة اليوم)',       fr: 'Gemini (phrase du jour)' },
     nLock:      { ar: 'كلمة سر البرنامج',          fr: 'Mot de passe du programme' },
 
@@ -212,6 +214,33 @@
     gdCals:     { ar: 'التقاويم',                  fr: 'Agendas' },
     gdSync:     { ar: 'زامن الآن',                 fr: 'Synchroniser' },
     gdForget:   { ar: 'افصل',                      fr: 'Delier' },
+
+    /* --- agenda Microsoft (Outlook), le jumeau de la ligne Google ci-dessus,
+       par app/microsoft/. Meme principe : lecture directe, sans serveur,
+       sans compte. --- */
+    mdOff:      { ar: 'غير مربوط — اربط Microsoft لرؤية Outlook و To Do هنا',
+                  fr: 'Non lie — liez Microsoft pour voir Outlook et To Do ici' },
+    mdSetup:    { ar: 'يحتاج معرّف Microsoft — اضغط «الإعداد»',
+                  fr: 'Il manque l’identifiant Microsoft — cliquez « Reglage »' },
+    mdNoCal:    { ar: 'مربوط — لكن لم تختر أي تقويم أو قائمة بعد',
+                  fr: 'Lie — mais aucun calendrier ni liste n’est coche pour l’instant' },
+    mdOn:       { ar: 'مربوط بـ <b>{m}</b> — {n} عنصر متابَع، آخر مزامنة {x}',
+                  fr: 'Lie a <b>{m}</b> — {n} element(s) suivi(s), derniere synchro {x}' },
+    mdOnNo:     { ar: 'مربوط — {n} عنصر متابَع، لم تتم أي مزامنة بعد',
+                  fr: 'Lie — {n} element(s) suivi(s), aucune synchronisation pour l’instant' },
+    mdErr:      { ar: 'مربوط — آخر محاولة فشلت: {x}',
+                  fr: 'Lie — la derniere tentative a echoue : {x}' },
+    mdLink:     { ar: 'اربط',                      fr: 'Lier' },
+    mdSetupBtn: { ar: 'الإعداد',                   fr: 'Reglage' },
+    mdCals:     { ar: 'التقاويم والمهام',           fr: 'Agendas et taches' },
+    mdSync:     { ar: 'زامن الآن',                 fr: 'Synchroniser' },
+    mdForget:   { ar: 'افصل',                      fr: 'Delier' },
+
+    /* --- les sources affichees : Google, Microsoft, ou les deux ---------- */
+    srcTous:      { ar: 'كلاهما',       fr: 'Les deux' },
+    srcGoogle:    { ar: 'Google فقط',   fr: 'Google seul' },
+    srcMicrosoft: { ar: 'Microsoft فقط',fr: 'Microsoft seul' },
+    srcSay:       { ar: 'المعروض الآن: {x}', fr: 'Affiche actuellement : {x}' },
 
     /* --- Gemini --- */
     gemOff:     { ar: 'غير مهيّأ — جملة اليوم تعمل بدونه، لكن بدون ذكاء',
@@ -383,22 +412,31 @@
       try { gdir = AP.gbridge.etat(); } catch (e) { gdir = null; }
     }
 
+    /* --- agenda Microsoft (Outlook / To Do), le jumeau de gdir ci-dessus,
+       par app/microsoft/. Meme principe exactement : la brique publie tout
+       ce que cette ligne a besoin de savoir, en lecture seule. */
+    var mdir = null;
+    if (AP.mbridge && typeof AP.mbridge.etat === 'function') {
+      try { mdir = AP.mbridge.etat(); } catch (e) { mdir = null; }
+    }
+
     return {
       pret:   pret,
       mode:   mode,
       mail:   mail,
       google: { lie: !!g.lieLe, derniere: g.derniereSynchro || null },
       gdirect: gdir,
+      mdirect: mdir,
       gemini: !!gem,
       lock:   lock,
       /* La question a laquelle tout le reste repond : y a-t-il, oui ou non,
          de quoi aller chercher quelque chose quelque part ?
-         DEUX REPONSES POSSIBLES DESORMAIS, et c'est tout le changement :
-         soit la liaison Google directe (sans serveur, sans compte — la voie
-         que l'artisan a choisie), soit l'ancienne liaison par le serveur.
-         L'une OU l'autre suffit : le bouton « Actualiser » du haut a quelque
-         chose a aller chercher des que l'une des deux repond. */
+         TROIS REPONSES POSSIBLES DESORMAIS : la liaison Google directe, la
+         liaison Microsoft directe, ou l'ancienne liaison par le serveur.
+         UNE SEULE suffit : le bouton « Actualiser » du haut a quelque chose
+         a aller chercher des qu'une des trois repond. */
       liaison: (!!gdir && gdir.connecte && gdir.suivis > 0) ||
+               (!!mdir && mdir.connecte && mdir.suivis > 0) ||
                (pret && mode === 'in' && !!g.lieLe)
     };
   }
@@ -635,6 +673,69 @@
     };
   }
 
+  /* LA LIGNE « تقويم Microsoft », le jumeau exact de ligneGoogleDirect :
+     memes quatre etats, memes boutons, une seule brique differente. Pas de
+     « voie d'hier » ici — Microsoft n'a jamais eu de liaison par le serveur,
+     donc pas de repli a ecrire. */
+  function ligneMicrosoftDirect(Mi) {
+    if (!Mi.configure) {
+      return { dot: 'warn', say: T('mdSetup'),
+               act: [{ lbl: T('mdSetupBtn'), fn: ouvrirMicrosoft, pri: true }] };
+    }
+    if (!Mi.connecte) {
+      return { dot: '', say: T('mdOff'),
+               act: [{ lbl: T('mdLink'), fn: lierMicrosoftDirect, pri: true }] };
+    }
+    if (!Mi.suivis) {
+      return { dot: 'warn', say: T('mdNoCal'),
+               act: [
+                 { lbl: T('mdCals'),   fn: ouvrirMicrosoft, pri: true },
+                 { lbl: T('mdForget'), fn: delierMicrosoftDirect }
+               ] };
+    }
+    var say;
+    var pastille = 'on';
+    if (Mi.erreur) { pastille = 'bad'; say = T('mdErr', { x: esc(Mi.erreur) }); }
+    else if (!Mi.derniere) { pastille = 'warn'; say = T('mdOnNo', { n: Mi.suivis }); }
+    else { say = T('mdOn', { m: esc(Mi.courriel || '—'), n: Mi.suivis, x: esc(Mi.depuis) }); }
+    return {
+      dot: pastille, say: say,
+      act: [
+        { lbl: Mi.enCours ? T('gSyncing') : T('mdSync'), fn: synchroniserMicrosoft, pri: true, id: 'apsMSyncBtn' },
+        { lbl: T('mdCals'),   fn: ouvrirMicrosoft },
+        { lbl: T('mdForget'), fn: delierMicrosoftDirect }
+      ]
+    };
+  }
+
+  function ligneMicrosoft(E) {
+    if (!(E.mdirect && E.mdirect.disponible)) { return null; }   // brique absente : pas de ligne
+    return ligneMicrosoftDirect(E.mdirect);
+  }
+
+  /* LA LIGNE « المصادر المعروضة » : n'existe que si les DEUX liaisons
+     directes sont a la fois disponibles et suivies d'au moins un agenda —
+     avant cela, choisir entre elles n'a aucun sens, il n'y a rien a choisir. */
+  function ligneSources(E) {
+    var g = E.gdirect, m = E.mdirect;
+    var gOk = !!(g && g.disponible && g.connecte && g.suivis > 0);
+    var mOk = !!(m && m.disponible && m.connecte && m.suivis > 0);
+    if (!gOk || !mOk) { return null; }
+    var b = (AP.mbridge && AP.mbridge.source) ? AP.mbridge : null;
+    var courant = b ? b.source() : 'tous';
+    var nom = courant === 'google' ? T('srcGoogle') : courant === 'microsoft' ? T('srcMicrosoft') : T('srcTous');
+    function choisir(v) { return function () { if (b) { b.source(v); } dessinerLignes(); }; }
+    return {
+      dot: 'on',
+      say: T('srcSay', { x: nom }),
+      act: [
+        { lbl: T('srcTous'),      fn: choisir('tous'),      pri: courant === 'tous' },
+        { lbl: T('srcGoogle'),    fn: choisir('google'),    pri: courant === 'google' },
+        { lbl: T('srcMicrosoft'), fn: choisir('microsoft'), pri: courant === 'microsoft' }
+      ]
+    };
+  }
+
   function ligneGoogle(E) {
     /* LA VOIE D'AUJOURD'HUI D'ABORD : Google en direct, sans serveur. */
     if (E.gdirect && E.gdirect.disponible) { return ligneGoogleDirect(E.gdirect); }
@@ -687,6 +788,8 @@
       { nom: T('nAccount'), l: ligneCompte(E) },
       { nom: T('nMigrate'), l: ligneMigration(E) },
       { nom: T('nGoogle'),  l: ligneGoogle(E) },
+      { nom: T('nMicrosoft'), l: ligneMicrosoft(E) },
+      { nom: T('nSources'), l: ligneSources(E) },
       { nom: T('nGemini'),  l: ligneGemini(E) },
       { nom: T('nLock'),    l: ligneVerrou(E) }
     ].filter(function (x) { return !!x.l; });
@@ -740,7 +843,9 @@
        renseigne sans liaison. Gris : rien n'est configure, et c'est un etat
        parfaitement normal pour qui travaille en local. */
     var aFaire = E.pret || !!(E.gdirect && E.gdirect.configure && !E.gdirect.connecte)
-                        || !!(E.gdirect && E.gdirect.connecte && !E.gdirect.suivis);
+                        || !!(E.gdirect && E.gdirect.connecte && !E.gdirect.suivis)
+                        || !!(E.mdirect && E.mdirect.configure && !E.mdirect.connecte)
+                        || !!(E.mdirect && E.mdirect.connecte && !E.mdirect.suivis);
     d.className = 'aps-dot' + (E.liaison ? ' on' : (aFaire ? ' warn' : ''));
   }
 
@@ -960,6 +1065,39 @@
       .then(function () { dessinerLignes(); });
   }
 
+  /* --- 4.4 ter Microsoft EN DIRECT (app/microsoft/) ------------------------
+     Le jumeau exact du bloc Google ci-dessus, brique differente. */
+
+  function pontM() { return (AP.mbridge && AP.mbridge.etat) ? AP.mbridge : null; }
+
+  function ouvrirMicrosoft() {
+    var b = pontM(); if (!b) { return; }
+    fermer();
+    try { b.ouvrir(); } catch (e) { ouvrir(); }
+  }
+
+  function lierMicrosoftDirect() {
+    var b = pontM(); if (!b) { return; }
+    fermer();
+    try { b.ouvrir(); b.lier(); } catch (e) { }
+  }
+
+  function delierMicrosoftDirect() {
+    var b = pontM(); if (!b) { return; }
+    try { b.delier(); } catch (e) { }
+    dessinerLignes();
+  }
+
+  function synchroniserMicrosoft() {
+    var b = pontM(); if (!b) { return; }
+    var bt = $('apsMSyncBtn');
+    if (bt) { bt.disabled = true; bt.textContent = T('gSyncing'); }
+    Promise.resolve()
+      .then(function () { return b.actualiser({ depuisPanneau: false }); })
+      .catch(function () { return false; })
+      .then(function () { dessinerLignes(); });
+  }
+
   /* La VRAIE synchronisation. AP.sync.runNow() renvoie null en cas d'echec
      ou quand la brique n'est pas en mode « cloud » : on ne marque donc
      l'horodatage que sur un retour non nul. Une pastille verte posee sur un
@@ -1049,14 +1187,22 @@
        en ligne configure doit continuer a voir sa synchronisation d'hier
        quand il appuie sur ce bouton. Tant qu'aucun identifiant Google n'est
        renseigne et qu'aucune liaison n'existe, on ne detourne rien. */
+    /* LES DEUX PEUVENT ETRE LIEES A LA FOIS : un seul clic sur le bouton du
+       haut lance alors les deux, chacune avec son propre panneau si elle a
+       besoin d'un geste. `fait` dit si AU MOINS UNE des deux a quelque chose
+       a faire — c'est ce qui decide si on retombe sur la voie d'hier. */
+    var fait = false;
     var G = E.gdirect;
     if (G && G.disponible && (G.configure || G.connecte)) {
       var b = pont();
-      if (b) {
-        try { b.actualiser({ depuisPanneau: false }); return; }
-        catch (e) { /* on retombe sur la voie d'hier, juste en dessous */ }
-      }
+      if (b) { try { b.actualiser({ depuisPanneau: false }); fait = true; } catch (e) { } }
     }
+    var Mi = E.mdirect;
+    if (Mi && Mi.disponible && (Mi.configure || Mi.connecte)) {
+      var bm = pontM();
+      if (bm) { try { bm.actualiser({ depuisPanneau: false }); fait = true; } catch (e) { } }
+    }
+    if (fait) { return; }
 
     /* LA VOIE D'HIER, intacte : la synchronisation par le serveur Supabase. */
     if (E.liaison) {
