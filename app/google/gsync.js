@@ -221,6 +221,7 @@
     reglagesLocaux:{ ar: 'إذن Drive غير ممنوح: الإعدادات محفوظة على هذا الجهاز فقط.',
                      fr: "Permission Drive non accordée : les réglages restent sur cet appareil seulement." },
     refusEcriture: { ar: 'مُنع تعديل غير مسموح به على الأجندة.', fr: "Une écriture non autorisée dans l'agenda a été bloquée." },
+    serieKo:       { ar: 'تعذّر حفظ هذا التغيير لكل التكرارات في Google — أعد المحاولة.', fr: "Ce changement n'a pas pu être enregistré pour toute la série dans Google — réessayez." },
     reSync:        { ar: 'انتهت صلاحية المؤشّر — جارٍ إعادة القراءة كاملة.', fr: 'Le repère a expiré — relecture complète en cours.' },
     quota:         { ar: 'Google يطلب التمهّل — سنعيد المحاولة بعد قليل.', fr: 'Google demande de ralentir — nouvelle tentative dans un instant.' }
   };
@@ -501,8 +502,12 @@
        et les deux tentatives echouaient de la meme facon. */
     var mort = JETON.refuse; JETON.refuse = null;
 
+    /* attendre:false : un geste de l'artisan (creer, modifier) ne reste pas
+       suspendu jusqu'a une reconnexion — il echoue tout de suite, et l'ecran
+       le dit. Sans ce drapeau, le fournisseur de gauth attend (file). */
     return Promise.resolve(f({
-      interactif: !!opts.interactif, permissions: perms, refuse: mort || undefined
+      interactif: !!opts.interactif, permissions: perms, refuse: mort || undefined,
+      attendre: opts.attendre === false ? false : undefined
     })).then(function (r) {
       if (!r || !r.token) throw new Error('jeton vide');
       JETON.valeur = r.token;
@@ -535,7 +540,19 @@
     (err.errors || []).forEach(function (x) { raisons.push(String(x && x.reason || '')); });
     var t = (raisons.join(' ') + ' ' + (err.status || '') + ' ' + (err.message || '')).toLowerCase();
     if (/ratelimit|quota|backenderror/.test(t)) return false;
-    return /autherror|insufficientpermissions|permission_denied|unauthenticated|invalid.{0,3}credential|access.{0,3}denied|forbidden/.test(t);
+    /* « Pas le droit sur CE rendez-vous » (pas organisateur, agenda en
+       lecture seule) : le jeton est bon, jeter le jeton n'y changerait rien —
+       et bloquerait la file en montrant a tort « reconnectez-vous ». */
+    if (/forbiddenfornonorganizer|requiredaccesslevel|cannotchangeorganizer/.test(t)) return false;
+    return /autherror|insufficientpermissions|insufficient authentication|unauthenticated|invalid.{0,3}credential|access_token_scope/.test(t);
+  }
+
+  function raisonsDe(data) {
+    var err = (data && data.error) || {};
+    var r = [];
+    (err.errors || []).forEach(function (x) { r.push(String(x && x.reason || '')); });
+    (err.details || []).forEach(function (x) { r.push(String(x && x.reason || '')); });
+    return (r.join(' ') + ' ' + (err.status || '') + ' ' + (typeof err.message === 'string' ? err.message : ''));
   }
 
   function connecte() { return !!JETON.valeur || !!reglages().dejaConnecte; }
@@ -562,7 +579,7 @@
     var essaisAuth = 0;
 
     function tour() {
-      return jetonValide({ interactif: false, force: opts.forceJeton && essais > 0 }).then(function (jeton) {
+      return jetonValide({ interactif: false, force: opts.forceJeton && essais > 0, attendre: opts.attendre }).then(function (jeton) {
         var url = (opts.absolu ? chemin : API + chemin);
         if (opts.params) {
           var q = [];
@@ -612,7 +629,14 @@
               noter('auth', 'Google refuse le jeton (HTTP ' + r.status + ') : ' + msg);
               throw eAuth;
             }
-            if ((r.status === 403 || r.status === 429 || r.status >= 500) && essais < maxEssais) {
+            /* Un 403 n'est « ralentis » QUE si Google le dit (rateLimit,
+               quota). Un 403 « pas le droit » (agenda en lecture seule,
+               rendez-vous dont on n'est pas l'organisateur) ne passera pas
+               mieux en insistant : on le rend tout de suite, au lieu de
+               faire patienter l'artisan 37 s sous des messages « quota ». */
+            var limite = r.status === 429 || r.status >= 500 ||
+              (r.status === 403 && /ratelimit|quota|dailylimit|usagelimit/i.test(raisonsDe(data)));
+            if (limite && essais < maxEssais) {
               essais++;
               if (r.status === 403 || r.status === 429) say('quota');
               // attente qui double a chaque fois, avec un grain de hasard pour
@@ -775,7 +799,15 @@
   var ETAT = { enCours: false, derniereLecture: 0, derniereComplete: 0, erreur: null };
 
   function curseurs()          { var c = jget(K.jetons, {}); return (c && typeof c === 'object') ? c : {}; }
-  function poserCurseur(id, t) { var c = curseurs(); if (t) c[id] = { t: t, q: maintenant() }; else delete c[id]; jset(K.jetons, c); }
+  /* q = l'heure de la derniere lecture COMPLETE : une lecture par delta ne la
+     rafraichit pas, sinon la relecture complete « tous les 7 jours » ne
+     venait jamais tant que le programme etait ouvert chaque jour. */
+  function poserCurseur(id, t, complet) {
+    var c = curseurs();
+    if (t) c[id] = { t: t, q: (complet || !c[id] || !c[id].q) ? maintenant() : c[id].q };
+    else delete c[id];
+    jset(K.jetons, c);
+  }
 
   /* --------------------------------------------------------------------------
      LA RESERVE — LES EVENEMENTS LUS, RANGES A COTE DES CURSEURS
@@ -815,9 +847,10 @@
      jamais un tableau vide.
      -------------------------------------------------------------------------- */
 
-  var RESERVE_V = 2;   /* 2 : la reserve garde lieu, rappels, invites, pieces jointes (23/09/2026) — l'ancienne est relue en entier */
+  var RESERVE_V = 3;   /* 3 : organisateur et « lecture seule » gardes (29/09/2026) ; 2 : lieu, rappels, invites, pieces jointes (23/09/2026) — l'ancienne est relue en entier */
   var NOMS = {};        // id d'agenda -> nom, pour l'affichage apres rechargement
   var RAPPELS = {};     // id d'agenda -> rappels par defaut ([{method, minutes}]), idem
+  var RO_RESERVE = {};  // id d'agenda -> 1 s'il est en lecture seule (relu de la reserve, avant la liste)
 
   function evReduit(ev, o) {
     o = o || {};
@@ -834,6 +867,10 @@
     if (ev.reminders) r.reminders = { useDefault: ev.reminders.useDefault !== false,
                                       overrides: (ev.reminders.overrides || []).map(function (x) { return { method: x.method, minutes: x.minutes }; }) };
     if (ev.eventType && ev.eventType !== 'default') r.eventType = ev.eventType;
+    /* Qui peut modifier ce rendez-vous : l'organisateur, ou tout invite si
+       l'organisateur l'a permis (index.html ne propose « تعديل » qu'a eux). */
+    if (ev.organizer) r.organizer = { self: !!ev.organizer.self };
+    if (ev.guestsCanModify) r.guestsCanModify = true;
     if (!o.sansDesc) {
       if (ev.attendees && ev.attendees.length) r.attendees = ev.attendees.map(function (a) { return { email: a.email, displayName: a.displayName, self: !!a.self }; });
       if (ev.attachments && ev.attachments.length) r.attachments = ev.attachments.map(function (a) { return { title: a.title, fileUrl: a.fileUrl }; });
@@ -862,8 +899,8 @@
       lecture: ETAT.derniereLecture || 0,
       complet: ETAT.derniereComplete || 0,
       agendas: AGENDAS.length
-        ? AGENDAS.map(function (a) { return { id: a.id, nom: a.nom, rappels: a.rappels || [], principal: !!a.principal }; })
-        : Object.keys(NOMS).map(function (id) { return { id: id, nom: NOMS[id], rappels: RAPPELS[id] || [] }; }),
+        ? AGENDAS.map(function (a) { return { id: a.id, nom: a.nom, rappels: a.rappels || [], principal: !!a.principal, ro: !!a.enLecture }; })
+        : Object.keys(NOMS).map(function (id) { return { id: id, nom: NOMS[id], rappels: RAPPELS[id] || [], principal: id === PRINCIPAL_RESERVE, ro: !!RO_RESERVE[id] }; }),
       ev: ev
     };
   }
@@ -893,7 +930,16 @@
     if (RESERVE_LUE) return 0;
     RESERVE_LUE = true;
     var p = jget(K.evs, null);
-    if (!p || typeof p !== 'object' || p.v !== RESERVE_V || !p.ev) return 0;
+    /* Reserve absente, ou d'une autre version : les reperes de lecture ne
+       valent plus rien pour elle — chaque agenda sera relu EN ENTIER
+       (doitRelireTout), jusqu'a ce que SA lecture complete reussisse. */
+    var ancienne = !!(p && typeof p === 'object' && p.v === 2);
+    if (!p || typeof p !== 'object' || p.v !== RESERVE_V) { jset(K.jetons, {}); }
+    /* La reserve v2 (sans organisateur) reste montree — hors ligne, sinon,
+       aucun rendez-vous n'apparaitrait — mais l'organisateur y est INCONNU :
+       ni « تعديل » ni description envoyee sur ces rendez-vous avant la
+       relecture complete qui la remplacera. */
+    if (!p || typeof p !== 'object' || !p.ev || (p.v !== RESERVE_V && !ancienne)) return 0;
 
     var r = reglages();
     var t0 = isoJour(plusJours(new Date(), -(r.joursPasses || 90)));
@@ -907,10 +953,11 @@
       if (!e || !e.ev || !e.ev.id || !e.jour) return;
       if (!suivi[e.cal]) return;                     // agenda qu'on ne suit plus
       if (e.jour < t0 || e.jour > t1) return;        // sorti de la fenetre
+      if (ancienne && !e.ev.organizer) e.ev.organizer = { self: false, inconnu: true };
       EVENEMENTS[id] = { cal: e.cal, ev: e.ev, jour: e.jour };
       n++;
     });
-    (p.agendas || []).forEach(function (a) { if (a && a.id) { NOMS[a.id] = a.nom || a.id; RAPPELS[a.id] = a.rappels || []; if (a.principal) PRINCIPAL_RESERVE = a.id; } });
+    (p.agendas || []).forEach(function (a) { if (a && a.id) { NOMS[a.id] = a.nom || a.id; RAPPELS[a.id] = a.rappels || []; if (a.principal) PRINCIPAL_RESERVE = a.id; if (a.ro) RO_RESERVE[a.id] = 1; } });
     if (n) {
       ETAT.derniereLecture  = p.lecture || 0;
       ETAT.derniereComplete = p.complet || 0;
@@ -967,7 +1014,7 @@
       var regl = reglages();
       recus.forEach(function (ev) { absorber(idAgenda, ev, regl); });
       ecrireOmbres();
-      if (nouveauRepere) poserCurseur(idAgenda, nouveauRepere);
+      if (nouveauRepere) poserCurseur(idAgenda, nouveauRepere, complet);
       if (complet) ETAT.derniereComplete = maintenant();
       return recus.length;
     }, function (e) {
@@ -1092,8 +1139,21 @@
       /* Reperes internes, ignores par index.html mais precieux ici. */
       gcal:   e.cal,
       gev:    ev.id,
-      gfin:   dfin
+      gfin:   dfin,
+      /* Pour la modification depuis la carte (index.html) : le texte de
+         l'artisan SANS notre bloc [Agenda Pro], l'agenda en lecture seule
+         (on n'y propose rien), une occurrence de repetition. */
+      gDescH: retirerBloc(String(ev.description || '')),
+      gRO:    agendaEnLecture(e.cal),
+      /* organisateur (ou invite autorise) : lui seul peut changer titre,
+         date, lieu ou description — sinon Google refuse (403). */
+      gOrg:   !ev.organizer || !!ev.organizer.self || !!ev.guestsCanModify,
+      gRec:   !!ev.recurringEventId
     };
+  }
+  function agendaEnLecture(id) {
+    for (var i = 0; i < AGENDAS.length; i++) if (AGENDAS[i].id === id) return !!AGENDAS[i].enLecture;
+    return !!RO_RESERVE[id];
   }
   function rappelsDefaut(id) {
     for (var i = 0; i < AGENDAS.length; i++) if (AGENDAS[i].id === id) return (AGENDAS[i].rappels || []).slice();
@@ -1394,7 +1454,8 @@
   /* L'etat tel que l'appareil le connait : l'ombre (qui porte les heures) plus
      ce que `store` contient reellement, au cas ou l'artisan aurait modifie
      quelque chose pendant que le moteur dormait. */
-  function etatLocalDe(idTache, idAgenda, ev) {
+  function etatLocalDe(idTache, idAgenda, ev, champsGeste) {
+    var geste = Array.isArray(champsGeste) ? champsGeste : [];
     var o = ombreDe(idTache);
     var e = Object.assign({ at: {} }, o.e || {});
     e.at = Object.assign({}, (o.e && o.e.at) || {});
@@ -1404,18 +1465,25 @@
     /* On ne remonte l'horloge de personne : si store contient autre chose que
        l'ombre sans qu'aucune heure ne l'explique, on considere que c'est une
        modification faite a l'instant meme ou le moteur s'est reveille. */
-    var maj = function (champ, valeur) {
+    /* geste : appele par ecrire(), c'est-a-dire pendant un geste de
+       l'artisan qu'index.html a DEJA range dans store. Ce qui differe alors
+       de l'ombre vient de lui, maintenant : on l'horodate maintenant — sinon
+       un decochage ou une liste changee partait avec l'ancienne heure et ne
+       gagnait jamais sur l'autre appareil. Contact et lieu (ranges par serie)
+       gardent l'ancienne regle. */
+    var maj = function (champ, valeur, parSerie) {
       if (valeur === undefined) return;
       var v = (valeur === null || valeur === '') ? undefined : valeur;
       if (egal(e[champ], v)) return;
       e[champ] = v;
-      if (!e.at[champ]) e.at[champ] = maintenant();
+      if ((geste.indexOf(champ) >= 0 && !parSerie) || !e.at[champ]) e.at[champ] = maintenant();
     };
     maj('st', (s.status || {})[idTache]);
     maj('nt', (s.notes  || {})[idTache]);
-    maj('ct', (s.contact|| {})[sk]);
-    maj('pl', (s.place  || {})[sk]);
+    maj('ct', (s.contact|| {})[sk], true);
+    maj('pl', (s.place  || {})[sk], true);
     maj('sc', (s.cat    || {})[idTache]);
+    maj('sb', (s.subOf  || {})[idTache]);
     var c = (s.checks || {})[idTache];
     if (c && (c.list || c.done)) {
       var listeA = (e.ck && e.ck.l) || [], donesA = (e.ck && e.ck.d) || [];
@@ -1423,10 +1491,10 @@
         var heures = Object.assign({}, (e.ck && e.ck.a) || {});
         (c.list || []).forEach(function (lab) {
           var etaitCoche = donesA.indexOf(lab) >= 0, estCoche = (c.done || []).indexOf(lab) >= 0;
-          if (etaitCoche !== estCoche && !heures[h32(lab)]) heures[h32(lab)] = maintenant();
+          if (etaitCoche !== estCoche && (geste.indexOf('ck') >= 0 || !heures[h32(lab)])) heures[h32(lab)] = maintenant();
         });
         e.ck = { l: (c.list || []).slice(), d: (c.done || []).slice(), a: heures };
-        if (!egal(listeA, c.list || []) && !e.at.cl) e.at.cl = maintenant();
+        if (!egal(listeA, c.list || []) && (geste.indexOf('ck') >= 0 || !e.at.cl)) e.at.cl = maintenant();
       }
     }
     return e;
@@ -1445,9 +1513,18 @@
     if (etat.st) s.status[idTache] = etat.st; else delete s.status[idTache];
     if (etat.nt) s.notes[idTache]  = etat.nt; else delete s.notes[idTache];
     if (etat.sc) s.cat[idTache]    = etat.sc; else delete s.cat[idTache];
-    if (etat.ct) s.contact[sk]     = etat.ct;
-    if (etat.pl) s.place[sk]       = etat.pl;
+    /* La categorie choisie sur la carte (index.html, setSub -> store.subOf)
+       suit le casier, comme la section : un choix fait sur le telephone
+       arrive ici, et un choix retire la-bas est retire ici. */
+    s.subOf = s.subOf || {};
+    if (etat.sb) s.subOf[idTache]  = etat.sb; else delete s.subOf[idTache];
+    /* Un champ efface sur un autre appareil (absent, mais horodate) l'est
+       aussi ici : sinon la valeur perimee repartait vers Google au geste
+       suivant (ecrire part de store). */
+    if (etat.ct) s.contact[sk]     = etat.ct; else if (etat.at && etat.at.ct) delete s.contact[sk];
+    if (etat.pl) s.place[sk]       = etat.pl; else if (etat.at && etat.at.pl) delete s.place[sk];
     if (etat.ck && (etat.ck.l || []).length) s.checks[idTache] = { list: etat.ck.l.slice(), done: (etat.ck.d || []).slice() };
+    else if (etat.at && etat.at.cl) delete s.checks[idTache];
     sauverLocal();
   }
 
@@ -1525,6 +1602,15 @@
     return reste.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').replace(/\s+$/, '');
   }
 
+  /* Notre bloc tel qu'il est dans la description (marques comprises), ou ''. */
+  function blocDe(texte) {
+    var i = texte.indexOf(DEBUT_BLOC);
+    if (i < 0) return '';
+    var j = texte.lastIndexOf(FIN_BLOC);
+    if (j < i) return '';
+    return texte.slice(i, j + FIN_BLOC.length);
+  }
+
   function fusionnerDescription(descActuelle, etat) {
     var base = retirerBloc(String(descActuelle || ''));
     var details = texteDetails(etat);
@@ -1539,7 +1625,7 @@
      de la description visible qu'une mise a jour du statut/de la checklist. */
   var MAX_OCTETS_DESCRIPTION = 8000;
 
-  function envoyerEtat(idAgenda, idEvenement, etat, privActuel) {
+  function envoyerEtat(idAgenda, idEvenement, etat, privActuel, evFrais) {
     var p = proprietes(privActuel, etat);
     if (p.trop) {
       noter('trop-long', 'etat trop volumineux pour l\'evenement ' + idEvenement,
@@ -1550,8 +1636,16 @@
       return Promise.reject(Object.assign(new Error('trop long'), { tropLong: true }));
     }
     var brut = { extendedProperties: { private: p.props } };
+    var evCourant = EVENEMENTS[idDe(idAgenda, { id: idEvenement })];
+    evCourant = (evCourant && evCourant.ev) || evFrais || null;
+    /* La description d'une invitation appartient a son organisateur : Google
+       refuserait (403). Un rendez-vous qu'on ne connait pas (pas en memoire),
+       un anniversaire ou un rendez-vous venu de Gmail : pas de description non
+       plus. Le casier prive, lui, reste possible. */
+    var descPermise = !!evCourant && (!evCourant.organizer || !!evCourant.organizer.self || !!evCourant.guestsCanModify) &&
+      evCourant.eventType !== 'birthday' && evCourant.eventType !== 'fromGmail';
 
-    if (!reglages().afficherDetails) {
+    if (!reglages().afficherDetails || !descPermise) {
       var corpsSimple = corpsSur(brut, null);
       return api('/calendars/' + encodeURIComponent(idAgenda) + '/events/' + encodeURIComponent(idEvenement),
         { methode: 'PATCH', corps: corpsSimple, params: { sendUpdates: 'none' } });
@@ -1579,17 +1673,25 @@
         noter('avert', 'description fusionnee trop volumineuse (' + octets(fusionnee) + ' octets) — casier seul envoye pour ' + idEvenement);
       }
       var corps = corpsSur(brut, brut.description !== undefined ? ['description'] : null);
-      return api(chemin, { methode: 'PATCH', corps: corps, params: { sendUpdates: 'none' } });
+      return api(chemin, { methode: 'PATCH', corps: corps, params: { sendUpdates: 'none' } }).then(function (r) {
+        /* La copie en memoire porte desormais ce que Google porte : sinon
+           une correction faite juste apres (modifierTache) reposerait
+           l'ANCIEN bloc [Agenda Pro]. */
+        if (brut.description !== undefined && EVENEMENTS[idTache] && EVENEMENTS[idTache].ev) {
+          EVENEMENTS[idTache].ev.description = (r && typeof r.description === 'string') ? r.description : brut.description;
+        }
+        return r;
+      });
     }
 
     return api(chemin, { params: { fields: 'description' } }).then(function (evFrais) {
       return fusionEtEnvoi((evFrais && evFrais.description) || '');
     }, function () {
-      /* La relecture a echoue (reseau, evenement disparu…) : on retombe sur
-         la copie locale plutot que de bloquer tout l'envoi, y compris le
-         casier prive. */
-      var repli = (EVENEMENTS[idTache] && EVENEMENTS[idTache].ev && EVENEMENTS[idTache].ev.description) || '';
-      return fusionEtEnvoi(repli);
+      /* La relecture a echoue (reseau, evenement disparu…) : on envoie le
+         casier prive SEUL. Fusionner sur la copie locale pouvait effacer la
+         vraie description (copie ancienne, ou reserve rangee sans
+         description) : la description attendra le prochain envoi. */
+      return api(chemin, { methode: 'PATCH', corps: corpsSur(brut, null), params: { sendUpdates: 'none' } });
     });
   }
 
@@ -1684,7 +1786,8 @@
         return {
           etat: f.etat,
           priv: (ev.extendedProperties && ev.extendedProperties.private) || null,
-          fusion: !!f.versLocal
+          fusion: !!f.versLocal,
+          ev: ev
         };
       }, function (err) {
         /* L'evenement n'existe plus chez Google : il n'y a plus de casier ou
@@ -1726,7 +1829,7 @@
       return preparerEnvoi(e).then(function (prep) {
         if (!prep) { retirer(e); return suivante(); }      // evenement disparu
         if (prep.fusion) fusions++;
-        return envoyerEtat(e.cal, e.ev, prep.etat, prep.priv).then(function () {
+        return envoyerEtat(e.cal, e.ev, prep.etat, prep.priv, prep.ev).then(function () {
           var f3 = file();
           /* On retire par numero, pas par position : pendant l'envoi, l'artisan
              a pu cocher autre chose et la file a pu bouger. Et on ne retire que
@@ -1757,6 +1860,19 @@
           noter('auth', 'file en attente d\'une liaison Google valide — ' + f3.length + ' envoi(s) gardes');
           say('horsLigne');
           throw err;
+        }
+        /* UN REFUS DEFINITIF de Google (pas le droit d'ecrire sur ce
+           rendez-vous, requete refusee, rendez-vous disparu) : insister ne
+           changera rien, et l'entree bloquerait tout le reste de la file. On
+           la retire, en le notant au journal. Un « ralentis » (quota) reste,
+           lui, dans la file. */
+        var definitif = err && (err.gone || err.statut === 400 || err.statut === 404 || err.statut === 410 ||
+          (err.statut === 403 && !/ratelimit|quota|dailylimit|usagelimit/i.test(raisonsDe(err.data))));
+        if (definitif) {
+          noter('echec', 'refus definitif de Google (' + err.statut + ') — envoi retire : ' + String(err.message || ''), f3[j] || e);
+          if (j >= 0) f3.splice(j, 1);
+          poserFile(f3);
+          return suivante();
         }
         if (j >= 0) {
           f3[j].essais = (f3[j].essais || 0) + 1;
@@ -1998,12 +2114,22 @@
      d'envoyer. Si le reseau manque, la file garde tout pour plus tard.
      ========================================================================== */
 
-  function ecrire(idTache, modif) {
+  /* champsGeste : les champs que CE geste change (['ck'] pour la liste de
+     documents) — eux seuls sont horodates « maintenant » a partir de store ;
+     une valeur ancienne d'un autre champ (sauvegarde restauree, reprise) ne
+     gagne pas une heure neuve au passage. */
+  function ecrire(idTache, modif, champsGeste) {
     var e = EVENEMENTS[idTache];
     if (!e) return false;                        // pas une tache Google : rien a faire
-    var o = ombreDe(idTache);
-    var etat = Object.assign({ at: {} }, o.e || {});
-    etat.at = Object.assign({}, (o.e && o.e.at) || {});
+    /* Un agenda en lecture seule (jours feries, agenda partage « voir
+       seulement ») : Google refuserait toujours, et l'entree bloquerait la
+       file de tous les autres rendez-vous. Le choix de l'artisan reste dans
+       le programme (store), rien ne part. */
+    if (agendaEnLecture(e.cal)) return false;
+    /* On part de l'ombre ET de ce que store contient (etatLocalDe) : une note
+       restauree d'une sauvegarde, un statut repris d'un rendez-vous ecrit en
+       dur, ne sont plus effaces par le geste suivant — ils partent avec lui. */
+    var etat = etatLocalDe(idTache, e.cal, e.ev, champsGeste || []);
 
     modif(etat, maintenant());
 
@@ -2042,7 +2168,7 @@
       });
       etat.ck = { l: (liste || []).slice(), d: (coches || []).slice(), a: heures };
       if (!egal(listeAvant, liste || [])) etat.at.cl = q;
-    });
+    }, ['ck']);
   }
   function setContact(idTache, v) { return ecrire(idTache, function (e, q) { if (v) e.ct = String(v); else delete e.ct; e.at.ct = q; }); }
   function setLieu(idTache, v)    { return ecrire(idTache, function (e, q) { if (v) e.pl = String(v); else delete e.pl; e.at.pl = q; }); }
@@ -2069,49 +2195,201 @@
      et c'est legitime : cet evenement n'existait pas avant, l'artisan vient de
      le creer. On le marque « ow:1 » dans son casier, ce qui permettra plus
      tard de savoir qu'il vient du programme. */
+  /* L'AGENDA OU ECRIRE UN NOUVEAU RENDEZ-VOUS. Celui des reglages
+     (agendaEcrit, l'agenda principal par defaut), a condition qu'il soit
+     SUIVI — sinon le rendez-vous partirait chez Google et disparaitrait de
+     l'ecran a la lecture suivante (pull() retire ce qui n'est pas suivi) — et
+     qu'on puisse y ecrire. « primary » vaut l'adresse reelle de l'agenda
+     principal quand c'est elle qui est suivie. A defaut : l'agenda principal
+     s'il est suivi, puis le premier agenda suivi ou l'on peut ecrire. Jamais
+     un agenda partage en lecture seule. Rend null s'il n'y en a aucun. */
+  function agendaPourEcrire() {
+    var suivis = agendasSuivis();
+    if (!suivis.length) return null;
+    var reel = idPrincipal();
+    function ok(id) {
+      if (!id || suivis.indexOf(id) < 0) return false;
+      /* « primary » (le bouton de secours) : l'agenda propre du compte,
+         toujours inscriptible. */
+      if (id === 'primary') return !RO_RESERVE.primary;
+      for (var i = 0; i < AGENDAS.length; i++) if (AGENDAS[i].id === id) return !AGENDAS[i].enLecture;
+      /* Liste des agendas pas encore arrivee : seul l'agenda principal (connu
+         par la reserve) est sur — un autre pourrait etre partage en lecture
+         seule, ou partage tout court. */
+      return !AGENDAS.length && id === reel && !RO_RESERVE[id];
+    }
+    var voulu = reglages().agendaEcrit || 'primary';
+    if (voulu === 'primary' && reel && ok(reel)) return reel;
+    if (ok(voulu)) return voulu;
+    if (reel && ok(reel)) return reel;
+    if (ok('primary')) return 'primary';
+    for (var j = 0; j < suivis.length; j++) if (ok(suivis[j])) return suivis[j];
+    return null;
+  }
+
+  /* Debut et fin au format de Google. Journee entiere : des DATES, fin
+     EXCLUSIVE (le lendemain du dernier jour). Avec une heure : l'heure
+     « murale » ET son fuseau — Google l'exige pour une repetition (c'est dans
+     ce fuseau qu'il deplie les occurrences), et c'est ce qui evite qu'un PC
+     regle sur un autre fuseau decale le rendez-vous. */
+  function bornes(t) {
+    var jour = t.date, jourFin = (t.dateFin && t.dateFin >= t.date) ? t.dateFin : t.date;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(jour || ''))) throw new Error('date invalide');
+    if (!t.heure) {
+      var d1 = new Date(jourFin + 'T00:00:00'); d1.setDate(d1.getDate() + 1);
+      return { start: { date: jour }, end: { date: isoJour(d1) } };
+    }
+    var tz = String(t.fuseau || 'Africa/Algiers');
+    var hFin = t.fin || '';
+    var fin;
+    if (hFin) fin = jourFin + 'T' + hFin + ':00';
+    else {
+      /* Sans heure de fin : une heure plus tard, calculee sur l'horloge
+         murale (pas de fuseau du PC), le lendemain si l'on passe minuit. */
+      var p = t.heure.split(':'), h = Number(p[0]) + 1, j2 = jourFin;
+      if (h >= 24) { h -= 24; var dd = new Date(jourFin + 'T00:00:00'); dd.setDate(dd.getDate() + 1); j2 = isoJour(dd); }
+      fin = j2 + 'T' + pad(h) + ':' + p[1] + ':00';
+    }
+    var debut = jour + 'T' + t.heure + ':00';
+    if (fin <= debut) throw new Error('fin avant debut');
+    return { start: { dateTime: debut, timeZone: tz }, end: { dateTime: fin, timeZone: tz } };
+  }
+
+  /* Un identifiant choisi ICI pour le rendez-vous a creer (base32hex, comme
+     Google l'exige : 0-9 et a-v). Si la reponse de Google se perd, ou si le
+     reseau fait rejouer la creation, Google repond 409 (« existe deja ») au
+     lieu d'en creer un deuxieme : la creation devient sans doublon. */
+  function idNeuf() {
+    var abc = '0123456789abcdefghijklmnopqrstuv', out = 'ap';
+    var n = new Uint8Array(24);
+    try { crypto.getRandomValues(n); } catch (e) { for (var k = 0; k < n.length; k++) n[k] = Math.floor(Math.random() * 256); }
+    for (var i = 0; i < n.length; i++) out += abc[n[i] % 32];
+    return out;
+  }
+
+  /* Les bornes de ce que le programme lit (et donc montre) : un rendez-vous
+     cree hors de cette fenetre existe dans Google mais n'apparait pas ici. */
+  function fenetre() {
+    var r = reglages();
+    return { debut: isoJour(plusJours(new Date(), -(r.joursPasses || 90))), fin: isoJour(plusJours(new Date(), (r.joursFuturs || 400))) };
+  }
+
+  /* Le rendez-vous deja chez Google est-il celui qu'on voulait creer ? Meme
+     titre et meme debut (jour, ou instant pour un rendez-vous a l'heure). */
+  function memeRendezVous(ev0, corps) {
+    if (String(ev0.summary || '') !== String(corps.summary || '')) return false;
+    var a = ev0.start || {}, b = corps.start || {};
+    if (b.date || a.date) return (a.date || '') === (b.date || '');
+    var ta = Date.parse(a.dateTime || ''), tb = Date.parse(b.dateTime || '');
+    return !!ta && !!tb && Math.abs(ta - tb) < 60000;
+  }
+
   function creerTache(t) {
     t = t || {};
     var titre = String(t.titre || t.title || '').trim();
-    if (!titre) return Promise.reject(new Error('titre vide'));
-    var cal = t.agenda || reglages().agendaEcrit || 'primary';
-    var debut, fin;
-    if (t.heure) {
-      debut = { dateTime: new Date(t.date + 'T' + t.heure + ':00').toISOString() };
-      var f = new Date(t.date + 'T' + (t.fin || t.heure) + ':00');
-      if (!t.fin) f.setHours(f.getHours() + 1);
-      fin = { dateTime: f.toISOString() };
-    } else {
-      var d1 = new Date(t.date + 'T00:00:00'); d1.setDate(d1.getDate() + 1);
-      debut = { date: t.date };
-      fin   = { date: isoJour(d1) };          // Google veut une fin exclusive
-    }
+    if (!titre) return Promise.reject(Object.assign(new Error('titre vide'), { code: 'titre' }));
+    var cal = t.agenda || agendaPourEcrire();
+    if (!cal) return Promise.reject(Object.assign(new Error('aucun agenda suivi ou l\'on peut ecrire'), { code: 'agenda' }));
+    if (agendaEnLecture(cal)) return Promise.reject(Object.assign(new Error('agenda en lecture seule'), { code: 'ro' }));
+    var b;
+    try { b = bornes(t); } catch (e) { return Promise.reject(Object.assign(e, { code: 'date' })); }
     var etat = { at: {} };
     var q = maintenant();
     if (t.statut) { etat.st = t.statut; etat.at.st = q; }
     if (t.notes)  { etat.nt = t.notes;  etat.at.nt = q; }
     if (t.sub)    { etat.sb = t.sub;    etat.at.sb = q; }
     if (t.sec)    { etat.sc = t.sec;    etat.at.sc = q; }
-    if (t.liste && t.liste.length) { etat.ck = { l: t.liste.slice(), d: [], a: {} }; etat.at.cl = q; }
+    if (t.liste && t.liste.length) {
+      etat.ck = { l: t.liste.slice(), d: (t.coches || []).filter(function (c) { return t.liste.indexOf(c) >= 0; }), a: {} };
+      etat.at.cl = q;
+    }
+    if (t.ct) { etat.ct = String(t.ct); etat.at.ct = q; }
+    if (t.pl) { etat.pl = String(t.pl); etat.at.pl = q; }
     etat.ow = 1;
 
     var p = proprietes(null, etat);
-    if (p.trop) { say('tropLong'); return Promise.reject(new Error('trop long')); }
+    if (p.trop) { say('tropLong'); return Promise.reject(Object.assign(new Error('trop long'), { code: 'trop' })); }
 
-    var corps = corpsSur({
+    /* Tout ce que le formulaire « إضافة » sait dire, et que Google sait
+       garder : lieu, repetition, rappels, occupe/libre, visibilite, invites.
+       Les invites sont ajoutes SANS courriel (sendUpdates:'none') : envoyer
+       une invitation a quelqu'un reste un geste que l'artisan fait lui-meme
+       dans Google. */
+    var brut = {
+      /* t.id : l'appelant garde le MEME identifiant d'un essai a l'autre (le
+         formulaire tant qu'il n'a pas reussi, une tache locale envoyee) —
+         appuyer de nouveau sur « حفظ » apres une reponse perdue ne cree pas
+         de doublon. */
+      id: (t.id && /^[a-v0-9]{5,1024}$/.test(String(t.id))) ? String(t.id) : idNeuf(),
       summary: titre,
       description: String(t.desc || ''),
-      start: debut, end: fin,
+      start: b.start, end: b.end,
       extendedProperties: { private: p.props }
-    }, ['summary', 'description', 'start', 'end']);      // <- l'exception, nommee
+    };
+    var permis = ['id', 'summary', 'description', 'start', 'end'];
+    if (t.lieu) { brut.location = String(t.lieu); permis.push('location'); }
+    if (t.repetition) {
+      var rr = String(t.repetition).replace(/^RRULE:/i, '');
+      if (/^FREQ=(DAILY|WEEKLY|MONTHLY|YEARLY)/.test(rr)) { brut.recurrence = ['RRULE:' + rr]; permis.push('recurrence'); }
+    }
+    if (Array.isArray(t.rappels)) {
+      var ov = t.rappels.filter(function (r) { return r && (r.method === 'popup' || r.method === 'email') && r.minutes >= 0 && r.minutes <= 40320; })
+        .slice(0, 5).map(function (r) { return { method: r.method, minutes: Math.round(r.minutes) }; });
+      brut.reminders = { useDefault: false, overrides: ov }; permis.push('reminders');
+    }
+    if (t.occupe === true || t.occupe === false) { brut.transparency = t.occupe ? 'opaque' : 'transparent'; permis.push('transparency'); }
+    if (/^(default|public|private)$/i.test(String(t.visibilite || ''))) { brut.visibility = String(t.visibilite).toLowerCase(); permis.push('visibility'); }
+    var inv = (t.invites || []).filter(function (x) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(x)); });
+    if (inv.length) { brut.attendees = inv.map(function (x) { return { email: String(x) }; }); permis.push('attendees'); }
+    var corps = corpsSur(brut, permis);                  // <- l'exception, nommee
+    var chemin = '/calendars/' + encodeURIComponent(cal) + '/events';
 
     noter('creation', 'tache creee par l\'artisan : ' + titre, { agenda: cal });
-    return api('/calendars/' + encodeURIComponent(cal) + '/events',
-      { methode: 'POST', corps: corps, params: { sendUpdates: 'none' } })
+    return api(chemin, { methode: 'POST', corps: corps, params: { sendUpdates: 'none' }, attendre: false })
+      .catch(function (err) {
+        /* 409 : ce meme identifiant existe deja — la creation precedente
+           etait bien arrivee (reponse perdue, envoi rejoue). On relit
+           l'evenement au lieu d'en creer un autre. */
+        if (err && err.statut === 409) {
+          /* Cet identifiant existe deja. On ne MODIFIE jamais le rendez-vous
+             existant : si c'est bien le meme (meme titre, meme debut), la
+             creation precedente etait arrivee et on l'accepte ; sinon (autre
+             rendez-vous tape dans le meme formulaire, ou supprime depuis), on
+             en cree un nouveau — un doublon visible vaut mieux qu'un
+             rendez-vous remplace en silence. */
+          return api(chemin + '/' + encodeURIComponent(brut.id), { attendre: false }).then(function (ev0) {
+            if (ev0 && ev0.status !== 'cancelled' && memeRendezVous(ev0, corps)) return ev0;
+            var c2 = Object.assign({}, corps, { id: idNeuf() });
+            return api(chemin, { methode: 'POST', corps: c2, params: { sendUpdates: 'none' }, attendre: false });
+          }).catch(function (e2) {
+            if (e2 && !e2.code && (e2.name === 'TypeError' || e2.statut >= 500 || e2.statut === 408)) e2.code = 'incertainG';
+            throw e2 || Object.assign(new Error('reponse perdue'), { code: 'incertainG' });
+          });
+        }
+        /* Parti, mais sans reponse sure (coupure pendant l'attente, panne de
+           Google) : le rendez-vous a PU etre cree. Le dire tel quel — et un
+           nouvel essai avec le meme identifiant ne fera pas de doublon. */
+        var avantEnvoi = err && (err.jeton || err.auth || err.code);
+        if (!avantEnvoi && err && (err.name === 'TypeError' || err.statut >= 500 || err.statut === 408)) {
+          throw Object.assign(err, { code: 'incertainG' });
+        }
+        throw err;
+      })
       .then(function (ev) {
-        absorber(cal, ev);
+        /* Une repetition revient comme UN evenement « maitre » : on ne le
+           montre pas tel quel (la lecture, en singleEvents, rapporte chaque
+           occurrence — le maitre ferait un doublon du premier jour). */
+        if (!ev.recurrence) absorber(cal, ev);
+        ecrireOmbres(); ranger();
         rendre();
         say('envoye');
-        return tacheDe(idDe(cal, ev));
+        /* On relit : les occurrences d'une repetition arrivent par la. */
+        setTimeout(function () { pull(); }, ev.recurrence ? 300 : 4000);
+        var w = fenetre(), jour = (b.start.date || String(b.start.dateTime).slice(0, 10));
+        var hors = jour < w.debut || jour > w.fin;
+        if (ev.recurrence) return { id: null, repetition: true, cal: cal, horsFenetre: hors };
+        var tache = tacheDe(idDe(cal, ev));
+        return tache ? Object.assign({}, tache, { horsFenetre: false }) : { id: null, horsFenetre: true, cal: cal };
       });
   }
 
@@ -2126,37 +2404,184 @@
   function modifierTache(idTache, champs, opts) {
     opts = opts || {};
     var e = EVENEMENTS[idTache];
-    if (!e) return Promise.reject(new Error('tache inconnue'));
+    if (!e) return Promise.reject(Object.assign(new Error('tache inconnue'), { code: 'disparu' }));
     if (opts.explicite !== true) {
       noter('refus', 'modification sans demande explicite — bloquee : ' + idTache);
       return Promise.reject(new Error('modification non demandee explicitement'));
     }
+    if (agendaEnLecture(e.cal)) return Promise.reject(Object.assign(new Error('agenda en lecture seule'), { code: 'ro' }));
     var casier = lireCasier(e.ev) || {};
     if (!casier.ow && opts.forcer !== true) {
       noter('refus', 'modification d\'un evenement non cree par le programme — bloquee : ' + (e.ev.summary || idTache));
       return Promise.reject(new Error('cet evenement n\'a pas ete cree par le programme'));
     }
     var brut = {}, permis = [];
-    if (champs.titre !== undefined) { brut.summary = String(champs.titre); permis.push('summary'); }
-    if (champs.desc  !== undefined) { brut.description = String(champs.desc); permis.push('description'); }
+    if (champs.titre !== undefined) {
+      var tt = String(champs.titre).trim();
+      if (!tt) return Promise.reject(Object.assign(new Error('titre vide'), { code: 'titre' }));
+      brut.summary = tt; permis.push('summary');
+    }
+    if (champs.lieu !== undefined) { brut.location = String(champs.lieu).trim(); permis.push('location'); }
     if (champs.date) {
-      if (champs.heure) {
-        brut.start = { dateTime: new Date(champs.date + 'T' + champs.heure + ':00').toISOString() };
-        var f = new Date(champs.date + 'T' + (champs.fin || champs.heure) + ':00');
-        if (!champs.fin) f.setHours(f.getHours() + 1);
-        brut.end = { dateTime: f.toISOString() };
+      var b;
+      /* Les heures ont ete saisies (et affichees) dans le fuseau de l'appareil
+         (heureDe) : c'est lui qu'on declare a Google, sinon un rendez-vous
+         pose dans un autre fuseau serait decale d'autant. */
+      var tz0 = champs.fuseau || (e.ev.start && e.ev.start.timeZone) || 'Africa/Algiers';
+      try { b = bornes({ date: champs.date, dateFin: champs.dateFin, heure: champs.heure, fin: champs.fin, fuseau: tz0 }); }
+      catch (er) { return Promise.reject(Object.assign(er, { code: 'date' })); }
+      /* PATCH FUSIONNE les objets : passer d'une heure a « journee entiere »
+         (ou l'inverse) laisserait l'ancienne cle en place. On vide l'autre
+         explicitement (null). */
+      if (b.start.date) {
+        brut.start = { date: b.start.date, dateTime: null, timeZone: null };
+        brut.end = { date: b.end.date, dateTime: null, timeZone: null };
       } else {
-        var d1 = new Date(champs.date + 'T00:00:00'); d1.setDate(d1.getDate() + 1);
-        brut.start = { date: champs.date }; brut.end = { date: isoJour(d1) };
+        brut.start = { dateTime: b.start.dateTime, timeZone: b.start.timeZone, date: null };
+        brut.end = { dateTime: b.end.dateTime, timeZone: b.end.timeZone, date: null };
       }
       permis.push('start', 'end');
     }
-    var corps = corpsSur(brut, permis);
-    noter('modification', 'modification explicite de ' + (e.ev.summary || idTache), { champs: permis, force: !!opts.forcer });
-    return api('/calendars/' + encodeURIComponent(e.cal) + '/events/' + encodeURIComponent(e.ev.id),
-      { methode: 'PATCH', corps: corps, params: { sendUpdates: 'none' } })
-      .then(function (ev) { absorber(e.cal, ev); rendre(); say('envoye'); return true; });
+    var veutDesc = champs.desc !== undefined;
+    if (!permis.length && !veutDesc) return Promise.resolve(false);
+    /* opts.serie : TOUTE la repetition (l'evenement « maitre »), pas cette
+       seule occurrence. Seuls le titre et le lieu s'y appliquent : une date
+       ou une description se corrigent occurrence par occurrence. */
+    var cible = e.ev.id, serie = false;
+    if (opts.serie && e.ev.recurringEventId) {
+      if (veutDesc || permis.some(function (k) { return k !== 'summary' && k !== 'location'; })) {
+        return Promise.reject(Object.assign(new Error('seuls le titre et le lieu valent pour toute la serie'), { code: 'serie' }));
+      }
+      cible = e.ev.recurringEventId; serie = true;
+    }
+    var chemin = '/calendars/' + encodeURIComponent(e.cal) + '/events/' + encodeURIComponent(cible);
+
+    /* LA DESCRIPTION : on ne l'ecrit JAMAIS a partir de la copie gardee ici
+       (elle peut etre ancienne, ou absente si la reserve a du etre rangee sans
+       description). On relit celle de Google juste avant. Si elle n'est plus
+       celle que l'artisan avait sous les yeux (champs.descAvant), on n'ecrit
+       rien : quelqu'un l'a changee entre-temps, ou le programme ne la
+       connaissait pas. Notre bloc [Agenda Pro] est repris de la version
+       FRAICHE et repose a la fin. */
+    var avant = veutDesc
+      ? api(chemin, { params: { fields: 'description' }, attendre: false }).catch(function (er) {
+          /* rien n'est parti : le dire tel quel (pas « peut-etre arrive ») */
+          if (er) er.avantEnvoi = true;
+          throw er;
+        }).then(function (frais) {
+          var d = String((frais && frais.description) || '');
+          /* Le texte voulu est DEJA chez Google (un envoi precedent est arrive
+             malgre une coupure) : ce n'est pas un conflit. */
+          var dejaLa = normDesc(retirerBloc(d)) === normDesc(champs.desc);
+          if (!dejaLa && champs.descAvant !== undefined && normDesc(retirerBloc(d)) !== normDesc(champs.descAvant)) {
+            throw Object.assign(new Error('description changee chez Google'), { code: 'conflit' });
+          }
+          var bloc = blocDe(d);
+          var hum = String(champs.desc).replace(/\r\n?/g, '\n').replace(/\s+$/, '');
+          brut.description = hum + (bloc ? (hum ? '\n\n' : '') + bloc : '');
+          permis.push('description');
+        })
+      : Promise.resolve();
+
+    return avant.then(function () {
+      var corps = corpsSur(brut, permis);
+      noter('modification', 'modification explicite de ' + (e.ev.summary || idTache), { champs: permis, force: !!opts.forcer, serie: serie });
+      return api(chemin, { methode: 'PATCH', corps: corps, params: { sendUpdates: 'none' }, attendre: false });
+    }).then(function (ev) {
+      /* Le maitre d'une serie ne s'affiche pas (voir creerTache) : on
+         relit, et les occurrences reviennent avec le nouveau titre. */
+      if (!serie) absorber(e.cal, ev);
+      ecrireOmbres();
+      rendre(); say('envoye');
+      if (serie) setTimeout(function () { pull(); }, 300);
+      return true;
+    });
   }
+  /* Deux descriptions « pareilles » pour l'artisan : sauts de ligne Windows,
+     saut de ligne de tete (le navigateur le mange dans un <textarea>),
+     espaces de fin. */
+  function normDesc(s) { return String(s || '').replace(/\r\n?/g, '\n').replace(/^\n+/, '').replace(/\s+$/, ''); }
+
+  /* ---- TOUTE UNE REPETITION : ecrire UNE fois, sur l'evenement maitre --------
+     Section, categorie, contact ou lieu choisis « pour toutes les
+     repetitions » d'un rendez-vous Google : on ecrit le casier du MAITRE
+     (recurringEventId), dont toutes les occurrences heritent — chez Google,
+     donc sur le telephone aussi. Pas une ecriture par occurrence (des
+     centaines pour une routine quotidienne, et autant d'exceptions creees
+     dans la serie). Puis on relit les occurrences de la fenetre : celles qui
+     ont leur propre casier (une exception, deja modifiee a part) n'heritent
+     pas, et recoivent la meme valeur une par une — elles sont peu nombreuses.
+     modif(etat, q) change l'etat du casier comme ecrire() le fait. */
+  function ecrireSerie(idTache, champ, v, ancien) {
+    var e = EVENEMENTS[idTache];
+    if (!e) return Promise.reject(Object.assign(new Error('tache inconnue'), { code: 'disparu' }));
+    if (!e.ev.recurringEventId) return Promise.reject(Object.assign(new Error('pas une repetition'), { code: 'serie' }));
+    if (agendaEnLecture(e.cal)) return Promise.reject(Object.assign(new Error('agenda en lecture seule'), { code: 'ro' }));
+    var cal = e.cal, maitre = e.ev.recurringEventId;
+    var chemin = '/calendars/' + encodeURIComponent(cal) + '/events/' + encodeURIComponent(maitre);
+    var q = maintenant();
+    var val = (v === undefined || v === null) ? '' : String(v);
+    function modif(et, q2) { if (val) et[champ] = val; else delete et[champ]; et.at = et.at || {}; et.at[champ] = q2; }
+    /* ancien (facultatif) : n'ecrire QUE la ou la valeur actuelle est celle-la
+       (supprimer une section ou une categorie : seules les occurrences qui y
+       etaient la quittent — pas toute la serie). */
+    function concerne(valeurActuelle) { return ancien === undefined || (valeurActuelle || '') === ancien; }
+    return api(chemin, { params: { fields: 'id,extendedProperties' }, attendre: false }).then(function (m) {
+      var priv = (m && m.extendedProperties && m.extendedProperties.private) || null;
+      var etat = lireCasier(m || {}) || { at: {} };
+      etat.at = etat.at || {};
+      if (!concerne(etat[champ])) return null;          // le maitre n'est pas concerne : on n'y touche pas
+      modif(etat, q);
+      var p = proprietes(priv, etat);
+      if (p.trop) throw Object.assign(new Error('trop long'), { code: 'trop' });
+      noter('modification', 'casier de toute la serie ' + maitre, { champ: champ });
+      return api(chemin, { methode: 'PATCH', corps: corpsSur({ extendedProperties: { private: p.props } }, null),
+        params: { sendUpdates: 'none' }, attendre: false });
+    }).then(function () {
+      var w = fenetre();
+      var params = { timeMin: new Date(w.debut + 'T00:00:00').toISOString(), timeMax: new Date(w.fin + 'T23:59:59').toISOString(), maxResults: 250 };
+      var recus = [];
+      function page(tok) {
+        var pp = Object.assign({}, params); if (tok) pp.pageToken = tok;
+        return api(chemin + '/instances', { params: pp, attendre: false }).then(function (d) {
+          ((d && d.items) || []).forEach(function (x) { recus.push(x); });
+          return (d && d.nextPageToken) ? page(d.nextPageToken) : null;
+        });
+      }
+      return page(null).then(function () {
+        var regl = reglages(), exceptions = 0;
+        recus.forEach(function (x) {
+          /* Le casier que GOOGLE porte pour cette occurrence (herite du maitre,
+             ou le sien propre si c'est une exception) — lu AVANT la fusion
+             locale, qui pourrait deja contenir la nouvelle valeur (l'ecran l'a
+             posee) et masquer une exception restee a l'ancienne. */
+          var dist = lireCasier(x) || {};
+          absorber(cal, x, regl);
+          var id = idDe(cal, x);
+          if (EVENEMENTS[id] && (dist[champ] || '') !== val && concerne(dist[champ])) {
+            exceptions++;
+            ecrire(id, function (et, q2) { modif(et, q2); });
+          }
+        });
+        ecrireOmbres(); ranger(); rendre();
+        return { occurrences: recus.length, exceptions: exceptions };
+      });
+    });
+  }
+  /* Deux ecritures de serie sur le MEME maitre, en meme temps (section puis
+     categorie, contact puis section) : chacune lit le casier, le modifie et
+     le reecrit — la seconde effacerait la premiere. On les enchaine. */
+  var FILE_SERIE = {};
+  function enSerie(idTache, fn) {
+    var e = EVENEMENTS[idTache];
+    var cle = (e && e.ev && (e.cal + '|' + e.ev.recurringEventId)) || idTache;
+    var p = (FILE_SERIE[cle] || Promise.resolve()).then(fn, fn);
+    FILE_SERIE[cle] = p.then(function () { }, function () { });
+    return p;
+  }
+  function sectionSerie(idTache, v, ancien) { return enSerie(idTache, function () { return ecrireSerie(idTache, 'sc', v, ancien); }); }
+  function sousCatSerie(idTache, v, ancien) { return enSerie(idTache, function () { return ecrireSerie(idTache, 'sb', v, ancien); }); }
+  function metaSerie(idTache, champ, v) { return enSerie(idTache, function () { return ecrireSerie(idTache, champ, v); }); }
 
   /* ==========================================================================
      15. L'ADAPTATEUR
@@ -2222,7 +2647,10 @@
     var paires = [
       ['setStatus', function (a) { if (estGoogle(a[0])) setStatus(a[0], a[1]); }],
       ['setNote',   function (a) { if (estGoogle(a[0])) setNote(a[0], a[1]); }],
-      ['moveCat',   function (a) { if (estGoogle(a[0])) setSection(a[0], (P.store && P.store.cat) ? P.store.cat[a[0]] : null); }]
+      ['moveCat',   function (a) { if (estGoogle(a[0])) setSection(a[0], (P.store && P.store.cat) ? P.store.cat[a[0]] : null); }],
+      /* setSub(id, categorie) : la categorie choisie sur la carte part dans
+         le casier, et suit donc sur les autres appareils. */
+      ['setSub',    function (a) { if (estGoogle(a[0])) setSousCat(a[0], a[1] || null); }]
     ];
     paires.forEach(function (p) {
       var nom = p[0], apres = p[1], orig = window[nom];
@@ -2279,12 +2707,17 @@
         var r = oSM.apply(this, arguments);
         try {
           if (String(sk).indexOf('g:') === 0) {
-            Object.keys(EVENEMENTS).forEach(function (id) {
-              var e = EVENEMENTS[id];
-              if (serieDe(e.cal, e.ev) !== sk) return;
-              if (genre === 'contact') setContact(id, v);
-              if (genre === 'place')   setLieu(id, v);
-            });
+            var ids = Object.keys(EVENEMENTS).filter(function (id) { var e = EVENEMENTS[id]; return serieDe(e.cal, e.ev) === sk; });
+            var champ = genre === 'contact' ? 'ct' : (genre === 'place' ? 'pl' : null);
+            if (!champ || !ids.length) return r;
+            /* Une repetition : UNE ecriture, sur le maitre (ecrireSerie), au
+               lieu d'une par occurrence — des centaines pour une routine. */
+            var rep = ids.filter(function (id) { return EVENEMENTS[id].ev.recurringEventId; })[0];
+            if (rep) {
+              metaSerie(rep, champ, v).catch(function (err) { avert('setMeta serie : ' + (err && err.message)); say('serieKo'); });
+            } else {
+              ids.forEach(function (id) { if (genre === 'contact') setContact(id, v); else setLieu(id, v); });
+            }
           }
         } catch (e) { avert('setMeta : ' + e.message); }
         return r;
@@ -2378,7 +2811,9 @@
 
   function pull(opts) {
     opts = opts || {};
-    if (ETAT.enCours) return Promise.resolve(false);
+    /* Une lecture demandee pendant qu'une autre tourne (apres une creation,
+       par exemple) n'est pas perdue : une seule relecture suivra. */
+    if (ETAT.enCours) { ETAT.relire = true; return Promise.resolve(false); }
     var ids = agendasSuivis();
     if (!ids.length) return Promise.resolve(false);
     if (!connecte()) return Promise.resolve(false);
@@ -2433,9 +2868,13 @@
       }, 0);
       /* La file part APRES la lecture : ce qui attendait depuis hors ligne est
          alors compare a l'etat le plus frais, et ne repart pas a l'aveugle. */
-      return vider().then(function () { return true; });
+      return vider().then(function () {
+        if (ETAT.relire) { ETAT.relire = false; setTimeout(function () { pull(); }, 0); }
+        return true;
+      });
     }, function (e) {
       ETAT.enCours = false; ETAT.erreur = String(e && e.message || e);
+      if (ETAT.relire) { ETAT.relire = false; }
       return false;
     });
   }
@@ -2603,7 +3042,25 @@
     setRoutine: setRoutine,
 
     creerTache: creerTache,
+    idNeuf: idNeuf,
+    /* Un identifiant FIXE pour une tache locale envoyee dans Google : la
+       renvoyer (reponse perdue la premiere fois) retrouve le meme rendez-vous
+       au lieu d'en creer un second. */
+    idPour: function (cle) {
+      var abc = '0123456789abcdefghijklmnopqrstuv', s = String(cle || ''), out = 'apl';
+      var a = 2166136261, b = 5381;
+      for (var i = 0; i < s.length; i++) { a ^= s.charCodeAt(i); a = (a * 16777619) >>> 0; b = ((b * 33) ^ s.charCodeAt(i)) >>> 0; }
+      [a, b, (a ^ b) >>> 0].forEach(function (x) { for (var k = 0; k < 7; k++) { out += abc[x % 32]; x = Math.floor(x / 32); } });
+      return out;
+    },
     modifierTache: modifierTache,
+    agendaPourEcrire: agendaPourEcrire,
+    fenetre: fenetre,
+    sectionSerie: sectionSerie,
+    sousCatSerie: sousCatSerie,
+    /* Apres une permission d'ecriture accordee : le jeton garde en memoire
+       ne la porte pas encore ; le suivant, si. */
+    oublierJeton: oublierJeton,
 
     file: file,
     vider: vider,

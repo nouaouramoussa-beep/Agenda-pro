@@ -49,6 +49,7 @@
       err_reseau: 'لا يوجد اتصال بالإنترنت — ستُعاد القراءة عند عودته.',
       err_sansJeton: 'الربط مع Google غير جاهز الآن — إن ظهر شريط «أعد الربط» فاضغطه.',
       err_serveur: 'خوادم Google تواجه عطلاً مؤقتاً — ستُعاد المحاولة تلقائياً.',
+      err_refus403: 'رفض Google الوصول إلى هذه القائمة أو المهمة (403).',
       ecritureKoNote: 'رفض Google هذا التغيير — حُفظ نصّك في «ملاحظات» هذه البطاقة حتى لا يضيع.',
       conflit: 'تغيّرت هذه المهمة في Google بعد تعديلك دون اتصال — لم يُكتب فوقها؛ نصّك محفوظ في «ملاحظات» البطاقة.',
       ecriturePermis: 'خانة «الكتابة في Google Tasks» مفعّلة لكن الإذن لم يعد موجوداً — افتح «التقاويم والمهام» وأعد تفعيلها.',
@@ -56,7 +57,20 @@
       ecritureOff: 'الكتابة في Google Tasks غير مفعّلة — لم يُرسل هذا التغيير.',
       ecritureOffNote: 'الكتابة في Google Tasks غير مفعّلة — حُفظ نصّك في «ملاحظات» هذه البطاقة فقط.',
       enAttente: 'لم يُرسل الآن — سيُرسل تلقائياً إلى Google Tasks عند عودة الاتصال أو بعد إعادة الربط.',
-      nouvelleListe: 'قائمة جديدة في Google Tasks تُعرض الآن: {n}'
+      nouvelleListe: 'قائمة جديدة في Google Tasks تُعرض الآن: {n}',
+      crea_titre: 'اكتب عنوان المهمة أولاً.',
+      crea_trop: 'النص طويل جداً: Google Tasks يقبل 1024 حرفاً للعنوان و8192 للتفاصيل.',
+      crea_date: 'التاريخ غير صحيح.',
+      crea_liste: 'اختر قائمة من قوائم Google Tasks المعروضة في البرنامج.',
+      crea_permission: 'لم يُمنح إذن الكتابة في Google Tasks — لم تُنشأ المهمة.',
+      crea_reseau: 'لا يوجد اتصال بالإنترنت الآن — لم تُنشأ المهمة، ونصّك ما زال في النموذج.',
+      crea_sansJeton: 'الربط مع Google غير جاهز الآن — لم تُنشأ المهمة. إن ظهر شريط «أعد الربط» فاضغطه، ثم أعد المحاولة.',
+      crea_quota: 'Google يطلب التمهّل — لم تُنشأ المهمة، أعد المحاولة بعد دقيقة.',
+      crea_serveur: 'عطل مؤقت عند Google — لم تُنشأ المهمة، أعد المحاولة.',
+      crea_portee: 'إذن الكتابة في Google Tasks غير موجود — لم تُنشأ المهمة.',
+      crea_api: 'خدمة Google Tasks API غير مفعّلة في مشروع Google Cloud.',
+      crea_refus: 'رفض Google إنشاء المهمة.',
+      crea_incertain: 'انقطع الاتصال بعد الإرسال: قد تكون المهمة أُنشئت في Google Tasks. انتظر لحظة حتى تظهر قبل أن تعيد الإرسال، حتى لا تتكرر.'
     },
     fr: {
       pasConfigure: 'Google n\'est pas encore configure.', liste: 'Liste de taches',
@@ -67,6 +81,7 @@
       err_reseau: 'Pas de connexion internet — la lecture reprendra a son retour.',
       err_sansJeton: 'La liaison Google n\'est pas prete — si le bandeau « Reconnecter » apparait, cliquez-le.',
       err_serveur: 'Les serveurs de Google ont une panne passagere — nouvel essai automatique.',
+      err_refus403: 'Google refuse l\'acces a cette liste ou a cette tache (403).',
       ecritureKoNote: 'Google a refuse ce changement — votre texte a ete garde dans les « Notes » de cette carte pour ne pas le perdre.',
       conflit: 'Cette tache a change chez Google apres votre modification hors ligne — rien n\'a ete ecrase ; votre texte est garde dans les « Notes » de la carte.',
       ecriturePermis: 'La case « Ecrire dans Google Tasks » est cochee mais l\'autorisation n\'existe plus — ouvrez « Agendas et taches » et reactivez-la.',
@@ -74,7 +89,20 @@
       ecritureOff: 'L\'ecriture dans Google Tasks est desactivee — ce changement n\'a pas ete envoye.',
       ecritureOffNote: 'L\'ecriture dans Google Tasks est desactivee — votre texte a ete garde dans les « Notes » de cette carte seulement.',
       enAttente: 'Pas envoye pour l\'instant — il partira tout seul vers Google Tasks au retour de la connexion ou apres reconnexion.',
-      nouvelleListe: 'Nouvelle liste Google Tasks, affichee maintenant : {n}'
+      nouvelleListe: 'Nouvelle liste Google Tasks, affichee maintenant : {n}',
+      crea_titre: 'Ecrivez d\'abord le titre de la tache.',
+      crea_trop: 'Texte trop long : Google Tasks accepte 1024 caracteres pour le titre et 8192 pour les details.',
+      crea_date: 'Date invalide.',
+      crea_liste: 'Choisissez une liste Google Tasks affichee dans le programme.',
+      crea_permission: 'L\'ecriture dans Google Tasks n\'est pas autorisee — la tache n\'a pas ete creee.',
+      crea_reseau: 'Pas de connexion internet — la tache n\'a pas ete creee ; votre texte est toujours dans le formulaire.',
+      crea_sansJeton: 'La liaison Google n\'est pas prete — la tache n\'a pas ete creee. Reessayez dans un instant.',
+      crea_quota: 'Google demande de patienter — la tache n\'a pas ete creee, reessayez dans une minute.',
+      crea_serveur: 'Panne passagere chez Google — la tache n\'a pas ete creee, reessayez.',
+      crea_portee: 'Pas d\'autorisation d\'ecriture Google Tasks — la tache n\'a pas ete creee.',
+      crea_api: 'L\'API Google Tasks n\'est pas activee dans le projet Google Cloud.',
+      crea_refus: 'Google a refuse de creer la tache.',
+      crea_incertain: "Connexion coupee apres l'envoi : la tache a peut-etre ete creee dans Google Tasks. Attendez qu'elle apparaisse avant de renvoyer, pour eviter un doublon."
     }
   };
   function langue() {
@@ -216,6 +244,10 @@
     var d = String(e.detail || '') + ' ' + String(e.message || '');
     if (e.statut === 403 && /SCOPE_INSUFFICIENT|insufficient/i.test(d)) { return 'portee'; }
     if (e.statut === 403 && /accessNotConfigured|SERVICE_DISABLED|has not been used|is disabled/i.test(d)) { return 'api'; }
+    /* Un 403 n'est « ralentis » que si Google le dit : un « pas le droit »
+       (politique de l'organisation, tache confiee depuis Docs) ne passera
+       jamais mieux en insistant — il ne doit pas tourner en attente sans fin. */
+    if (e.statut === 403 && !/ratelimit|userratelimit|quotaexceeded|dailylimit|usagelimits|resource_exhausted/i.test(d)) { return 'autre'; }
     if (e.statut === 403 || e.statut === 429 || e.name === 'AP_TROP_VITE') { return 'quota'; }
     if (e.statut >= 500 || e.statut === 408) { return 'serveur'; }
     if (e.name === 'AP_SANS_JETON') { return 'sansJeton'; }
@@ -225,6 +257,14 @@
   function noterErreur(e) {
     ETAT.erreur = classerErreur(e);
     ETAT.brut = e ? String(e.message || e) : null;
+    /* gauth nomme TOUT 403 « Google demande de ralentir » : pour un refus qui
+       n'en est pas un, on garde la raison donnee par Google, sinon un texte
+       traduit. */
+    if (ETAT.erreur === 'autre' && e && e.statut === 403) {
+      var raison = '';
+      try { var j = JSON.parse(e.detail || '{}'); raison = (j && j.error && j.error.message) || ''; } catch (x) { }
+      ETAT.brut = tr('err_refus403') + (raison ? ' (' + raison + ')' : '');
+    }
   }
   function texteErreur() {
     if (!ETAT.erreur) { return null; }
@@ -431,7 +471,7 @@
       /* L'autre onglet a lu et enregistre plus recent que nous : on reprend
          sa copie (taches ET curseurs ensemble), sauf en pleine lecture — ce
          sera fait a la fin de celle-ci. */
-      if (ev.key === K.ev) { if (enCours) { rechargerApres = true; } else { restaurer(); } }
+      if (ev.key === K.ev) { if (enCours) { rechargerApres = true; } else { restaurer(); garderCreees(); } }
       if (ev.key === K.cfg || ev.key === K.ombre || ev.key === K.attente || ev.key === K.ev) { reconstruire(); }
     });
   } catch (e) { }
@@ -519,7 +559,11 @@
         if (t.deleted) {
           if (TACHES[idTache] || ancienne) { changes++; }
           delete TACHES[idTache];
-          if (ATTENTE[idTache]) { retirerAttente(idTache, null); }
+          delete CREEES[idTache];
+          /* ce qui attendait pour elle ne partira plus : le texte tape est
+             garde, visible, avant de retirer l'entree */
+          var aSup = (jget(K.attente, {}) || {})[idTache] || ATTENTE[idTache];
+          if (aSup) { garderOrphelin(idTache, aSup, (ancienne && ancienne.title) || t.title); retirerAttente(idTache, null); }
           return;
         }
         recues[idTache] = 1;
@@ -540,6 +584,16 @@
              ouverte, puis achevee sur le telephone, n'a plus lieu d'etre. */
           oublierStatutLocal(idTache);
         }
+      });
+      /* Une tache creee ICI pendant que cette lecture etait en route : la
+         reponse de Google est partie avant elle, une lecture complete la
+         retirerait de l'ecran jusqu'a la suivante. On la garde (dix minutes
+         au plus : au-dela, c'est Google qui fait foi). */
+      Object.keys(CREEES).forEach(function (id) {
+        var c = CREEES[id];
+        if (!c || c.liste !== idListe) { return; }
+        if (recues[id] || Date.now() - c.t > 600000) { delete CREEES[id]; return; }
+        if (complet && connues[id] && !TACHES[id]) { TACHES[id] = connues[id]; recues[id] = 1; }
       });
       if (complet) { Object.keys(connues).forEach(function (id) { if (!recues[id]) { changes++; } }); }
       /* Taches et curseur dans la MEME sauvegarde : l'un ne peut pas etre en
@@ -566,6 +620,9 @@
 
     enCours = true; ETAT.erreur = null; ETAT.brut = null;
     var echec = false;
+    /* Les listes REELLEMENT relues par cette lecture : ce qui attend d'etre
+       envoye n'est compare (controle de conflit) qu'a un etat frais. */
+    var lues = {};
     /* Quel que soit le chemin qui a lance cette lecture (reveil, bouton du
        bandeau, case cochee), ce qu'elle rapporte doit pouvoir entrer dans
        TASKS : l'enveloppe est posee ici aussi (sans effet si elle l'est deja). */
@@ -585,7 +642,7 @@
     ids.forEach(function (id) {
       chaine = chaine.then(function () {
         if (gen0 !== GEN || listesSuivies().indexOf(id) < 0) { return 0; }
-        return lireListe(id, complet, gen0).then(function (n) { changes += (n || 0); }, function (e) {
+        return lireListe(id, complet, gen0).then(function (n) { changes += (n || 0); lues[id] = 1; }, function (e) {
           noterErreur(e); echec = true;
           dire('pull(' + id + '):', e && e.message);
           /* 404 : cette liste n'existe plus chez Google (supprimee depuis un
@@ -595,6 +652,7 @@
              disparu du panneau, Google ne la listant plus) ne reste pas
              suivie sans que rien ne puisse jamais plus l'arreter. */
           if (e && e.statut === 404) {
+            abandonnerAttenteListe(id);
             Object.keys(TACHES).forEach(function (tid) { if (TACHES[tid].liste === id) { delete TACHES[tid]; changes++; } });
             delete ETAT.curs[id];
             var r = reglages();
@@ -619,9 +677,9 @@
       if (STATUTS_TOUCHES) { STATUTS_TOUCHES = false; changes++; try { if (P.lsSet) { P.lsSet(); } } catch (e) { } }
       /* ENSUITE ce qui attendait d'etre envoye : apres la lecture, donc sur
          l'etat frais de Google (voir viderAttente, le controle de conflit). */
-      return viderAttente().then(function () {
+      return viderAttente(lues, complet).then(function () {
         enCours = false;
-        if (rechargerApres) { rechargerApres = false; restaurer(); changes++; }
+        if (rechargerApres) { rechargerApres = false; restaurer(); garderCreees(); changes++; }
         /* Repeindre seulement si quelque chose a change (ou si le jour a
            tourne : les taches sans date se recalent sur aujourd'hui). Une
            relecture qui ne rapporte rien ne doit pas arracher le champ ou
@@ -701,11 +759,13 @@
     var titre = (att && att.title) ? att.title : titreDe(t, ctx.lg);
     var notes = (att && att.notes !== undefined) ? att.notes : (t.notes || '');
     var fait = t.status === 'completed';
-    var sansDate = !e.jour;
+    /* L'echeance changee ici et pas encore partie : montree telle quelle. */
+    var jour = (att && att.due !== undefined) ? (att.due || null) : e.jour;
+    var sansDate = !jour;
     /* Le jour ou ELLE a ete achevee : chez Google, ou ici (ombre faitLe, pour
        une tache sans date marquee « منجزة » dans ce programme). Sinon, pour
        une tache ouverte sans date, aujourd'hui — un simple repli. */
-    var date = e.jour || (fait && t.completed && jourDeInstant(t.completed)) || etat.faitLe || ctx.aujourdhui;
+    var date = jour || (fait && t.completed && jourDeInstant(t.completed)) || etat.faitLe || ctx.aujourdhui;
     var idMere = t.parent ? ctx.parGoogle[e.liste + '|' + t.parent] : null;
     var filles = (ctx.enfants[idTache] || []).map(function (c) {
       var tc = TACHES[c].tache;
@@ -722,7 +782,10 @@
       gtache: true,
       title: { ar: titre, fr: titre },
       raw: '',
-      cat: etat.sc || parListe.sec || 'perso',
+      /* Leur propre section, « مهام Google Tasks » (index.html, SEC_GTASKS),
+         a cote de l'Entreprise et du Personnel. Un deplacement fait par
+         l'artisan (etat.sc) l'emporte toujours. */
+      cat: etat.sc || parListe.sec || 'gtasks',
       sub: etat.sb || parListe.sub || 'perso',
       date: date,
       start: '', end: '',
@@ -730,7 +793,7 @@
       allDay: true,
       sansDate: sansDate,
       gFait: fait,
-      gDue: e.jour || null,
+      gDue: jour || null,
       gFaitLe: fait ? (t.completed || null) : null,
       gFaitIci: etat.faitLe || null,
       gEnAttente: !!att,
@@ -822,7 +885,7 @@
      section, moveCat() dans index.html) n'ecrit que dans `store.cat`, un
      objet local que ce fichier ne voit jamais. Sans ce raccord, le choix de
      l'artisan sur une tache Google Tasks serait efface au prochain pull() :
-     tacheDe() (PARTIE 8) relit `cat: etat.sc || parListe.sec || 'perso'`, et
+     tacheDe() (PARTIE 8) relit `cat: etat.sc || parListe.sec || 'gtasks'`, et
      `etat.sc` (l'ombre) resterait vide pour toujours. On raccroche donc
      moveCat() ici, exactement comme gsync.js le fait deja pour le
      calendrier — la meme case a cocher doit se comporter pareil, quelle que
@@ -895,8 +958,13 @@
     GEN++;                      /* toute lecture ou ecriture en vol ne remettra plus rien */
     LISTES = []; TACHES = {};
     ETAT = etatVide();
+    /* Ce qui attendait d'etre envoye ne partira plus (compte delie) : les
+       notes sont gardees dans les notes locales des cartes, comme la
+       confirmation de « فك الربط » le promet. */
+    var d0 = jget(K.attente, {}) || {};
+    Object.keys(d0).forEach(function (id) { garderEnNotes(id, d0[id]); });
     ATTENTE = {}; jset(K.attente, {});
-    EN_VOL = {}; A_RENVOYER = {}; FILE = {}; SAUTEES = {};
+    EN_VOL = {}; A_RENVOYER = {}; FILE = {}; SAUTEES = {}; CREEES = {};
     ranger();
     try { if (typeof W.buildTasks === 'function') { W.buildTasks(); } } catch (e) { }
     return true;
@@ -1081,9 +1149,19 @@
            elle reste achevee lundi, meme envoyee mercredi. */
         a.completed = a.fait ? (champs.completed || new Date().toISOString()) : null;
       }
+      /* L'echeance : un jour (YYYY-MM-DD) ou '' pour « sans date ». oDue :
+         celle de Google au moment du changement, meme controle de conflit. */
+      if ('due' in champs && (!seulementManquants || a.due === undefined)) {
+        if (a.due === undefined) { a.oDue = jourDue(t.due); }
+        a.due = jourDue(champs.due);
+      }
       d[idTache] = a;
     });
   }
+  /* Un « due » de Google (minuit UTC) ou d'un champ, ramene a 'YYYY-MM-DD'
+     ou '' : la seule forme qu'on compare et qu'on garde. */
+  function jourDue(v) { v = String(v == null ? '' : v); return /^\d{4}-\d{2}-\d{2}/.test(v) ? v.slice(0, 10) : ''; }
+  function dueDe(jour) { return jour ? (jour + 'T00:00:00.000Z') : null; }
   function retirerAttente(idTache, champs) {
     if (!ATTENTE[idTache] && !(jget(K.attente, {}) || {})[idTache]) { return; }
     ecrireAttente(function (d) {
@@ -1092,7 +1170,8 @@
       if ('title' in champs) { delete a.title; delete a.oTitle; }
       if ('notes' in champs) { delete a.notes; delete a.oNotes; }
       if ('status' in champs) { delete a.fait; delete a.completed; delete a.oFait; }
-      if (a.title === undefined && a.notes === undefined && a.fait === undefined) { delete d[idTache]; }
+      if ('due' in champs) { delete a.due; delete a.oDue; }
+      if (a.title === undefined && a.notes === undefined && a.fait === undefined && a.due === undefined) { delete d[idTache]; }
     });
   }
   /* Le texte d'une note qui n'a pas pu partir va dans les notes LOCALES de la
@@ -1151,6 +1230,7 @@
              fait ailleurs entre temps : meme arbitrage qu'a la lecture. */
           if (!('status' in champs)) { trancherStatut(idTache, c, frais); }
           TACHES[idTache] = entreeDe(cur.liste, frais);
+          if (CREEES[idTache]) { CREEES[idTache].e = TACHES[idTache]; }
           ranger();
           if (STATUTS_TOUCHES) { STATUTS_TOUCHES = false; try { if (P.lsSet) { P.lsSet(); } } catch (er) { } }
         }
@@ -1172,8 +1252,13 @@
       /* Refus definitif : on le dit TOUJOURS (meme pendant l'envoi de la
          file), et le texte d'une note n'est jamais perdu. */
       var noteG = String((TACHES[idTache] && TACHES[idTache].tache.notes) || '').trim();
-      if ('notes' in champs && String(champs.notes || '').trim() && String(champs.notes).trim() !== noteG) {
-        garderNoteLocale(idTache, champs.notes);
+      var tG = String((TACHES[idTache] && TACHES[idTache].tache.title) || '').trim();
+      var aGarder = {};
+      if ('notes' in champs && String(champs.notes || '').trim() && String(champs.notes).trim() !== noteG) { aGarder.notes = champs.notes; }
+      if ('title' in champs && String(champs.title || '').trim() && String(champs.title).trim() !== tG) { aGarder.title = champs.title; }
+      if ('due' in champs) { aGarder.due = jourDue(champs.due); }
+      if (Object.keys(aGarder).length) {
+        garderEnNotes(idTache, aGarder);
         dire2('ecritureKoNote');
       } else {
         dire2('ecritureKo');
@@ -1194,21 +1279,65 @@
      la modification hors ligne (sa valeur n'est plus celle d'alors, oX), on
      n'ecrase rien — une note est gardee dans les notes locales, et on le dit.
      Une tache absente de la liste lue (liste decochee) : l'entree attend. */
-  function viderAttente() {
+  /* Ce qui attendait d'etre envoye et ne partira plus (liste supprimee,
+     tache disparue, compte delie) : le texte tape n'est jamais perdu, il va
+     dans les notes locales de la carte — note, titre et date. */
+  function garderEnNotes(id, a) {
+    if (!a) { return; }
+    if (a.notes !== undefined) { garderNoteLocale(id, a.notes); }
+    if (a.title !== undefined) { garderNoteLocale(id, (langue() === 'fr' ? 'Titre propose : ' : 'العنوان المقترح: ') + a.title); }
+    if (a.due !== undefined) { garderNoteLocale(id, (langue() === 'fr' ? 'Date proposee : ' : 'التاريخ المقترح: ') + (a.due || '—')); }
+  }
+  /* La tache (ou sa liste) n'existe plus : sa carte ne reviendra pas, ecrire
+     dans ses notes serait « garder » la ou personne ne regarde. Le texte va
+     dans une tache du programme, visible, et on le dit. */
+  function garderOrphelin(id, a, titreConnu) {
+    if (!a) { return; }
+    var e = TACHES[id];
+    var titre = titreConnu || (e && e.tache && e.tache.title) || a.oTitle || a.title || '';
+    var lignes = [];
+    if (a.title !== undefined) { lignes.push((langue() === 'fr' ? 'Titre : ' : 'العنوان: ') + a.title); }
+    if (a.due !== undefined) { lignes.push((langue() === 'fr' ? 'Date : ' : 'التاريخ: ') + (a.due || '—')); }
+    if (a.notes !== undefined && String(a.notes).trim()) { lignes.push(String(a.notes)); }
+    if (!lignes.length) { return; }
+    if (typeof W.garderTexteOrphelin === 'function') {
+      try { W.garderTexteOrphelin(titre, lignes.join('\n')); return; } catch (er) { avert('garderTexteOrphelin : ' + er.message); }
+    }
+    garderEnNotes(id, a);
+  }
+  function abandonnerAttenteListe(idListe) {
+    var d = jget(K.attente, {}) || {};
+    Object.keys(d).forEach(function (tid) { if (d[tid] && d[tid].liste === idListe) { garderOrphelin(tid, d[tid]); retirerAttente(tid, null); } });
+  }
+  function viderAttente(lues, complet) {
     var ids = Object.keys(jget(K.attente, {}) || {});
     if (!ids.length || !ecritureCochee() || !envoiPossible()) { return Promise.resolve(); }
     var conflit = false;
     return Promise.all(ids.map(function (id) {
       return enFile(id, function () {
         var e = TACHES[id];
-        if (!e) { return; }
+        if (!e) {
+          /* La tache n'est plus la. Sa liste a ete relue EN ENTIER sans elle
+             (supprimee ou deplacee sur le telephone), ou la liste n'existe
+             plus : l'entree ne partira jamais — on garde le texte et on la
+             retire. Liste simplement decochee : l'entree attend. */
+          var a0 = (jget(K.attente, {}) || {})[id];
+          var existe = a0 && a0.liste && LISTES.some(function (l) { return l.id === a0.liste; });
+          if (a0 && ((complet && lues && lues[a0.liste]) || (a0.liste && !existe && LISTES.length))) {
+            garderOrphelin(id, a0); retirerAttente(id, null);
+          }
+          return;
+        }
+        /* Sa liste n'a pas pu etre relue : Google a peut-etre change cette
+           tache entre-temps, et on ne le verrait pas. L'entree attend. */
+        if (lues && !lues[e.liste]) { return; }
         var a = null;
         ecrireAttente(function (d) { a = d[id] || null; delete d[id]; });
         if (!a) { return; }
         var t = e.tache, champs = {};
         var titreG = String(t.title || ''), noteG = String(t.notes || ''), faitG = t.status === 'completed';
         if (a.title !== undefined && a.title !== titreG) {
-          if (a.oTitle !== undefined && titreG !== a.oTitle) { conflit = true; }
+          if (a.oTitle !== undefined && titreG !== a.oTitle) { conflit = true; garderNoteLocale(id, (langue() === 'fr' ? 'Titre propose : ' : 'العنوان المقترح: ') + a.title); }
           else { champs.title = a.title; }
         }
         if (a.notes !== undefined && String(a.notes).trim() !== noteG.trim()) {
@@ -1221,6 +1350,11 @@
             champs.status = a.fait ? 'completed' : 'needsAction';
             champs.completed = a.fait ? (a.completed || new Date().toISOString()) : null;
           }
+        }
+        var dueG = jourDue(t.due);
+        if (a.due !== undefined && a.due !== dueG) {
+          if (a.oDue !== undefined && dueG !== a.oDue) { conflit = true; garderNoteLocale(id, (langue() === 'fr' ? 'Date proposee : ' : 'التاريخ المقترح: ') + (a.due || '—')); }
+          else { champs.due = dueDe(a.due); }
         }
         if (!Object.keys(champs).length) { return; }
         return ecrireDansGoogle(id, champs, { silencieux: true, deFile: true }).then(function (r) {
@@ -1309,6 +1443,27 @@
     });
   }
 
+  /* L'ECHEANCE (« التاريخ ») d'une tache Google Tasks : un jour, ou vide pour
+     « sans date ». Google ne garde que la DATE — pas d'heure (sa doc : la
+     partie horaire est ignoree a l'ecriture). Meme chemin que le titre : la
+     file de la tache, l'attente hors ligne, le controle de conflit. */
+  function ecrireEcheance(idTache, v) {
+    if (!estGtache(idTache)) { return Promise.resolve(false); }
+    var jour = String(v == null ? '' : v).trim();
+    if (jour && !/^\d{4}-\d{2}-\d{2}$/.test(jour)) { setTimeout(reconstruire, 0); return Promise.resolve(false); }
+    /* Une annee en cours de frappe (0002, 0202…) n'est pas une date voulue. */
+    if (jour && +jour.slice(0, 4) < 1900) { return Promise.resolve(false); }
+    if (!ecritureCochee() || !peutEcrire()) { refuserModif(idTache, 'due', jour); return Promise.resolve(false); }
+    return enFile(idTache, function () {
+      var e = TACHES[idTache];
+      if (!e) { return false; }
+      var att = ATTENTE[idTache];
+      var actuel = (att && att.due !== undefined) ? att.due : jourDue(e.tache.due);
+      if (jour === actuel) { return false; }
+      return ecrireDansGoogle(idTache, { due: dueDe(jour) });
+    });
+  }
+
   function ecrireNote(idTache, v) {
     if (!estGtache(idTache)) { return Promise.resolve(false); }
     var note = String(v == null ? '' : v);
@@ -1325,6 +1480,152 @@
     });
   }
 
+  /* CREER UNE TACHE DANS GOOGLE TASKS — le formulaire « إضافة » d'index.html,
+     section « مهام Google Tasks ». Les regles de Google Tasks, appliquees
+     ICI et non devinees par Google :
+       - un titre obligatoire (1024 caracteres au plus) ;
+       - une note facultative (8192 au plus) ;
+       - une DATE facultative, sans heure : Google Tasks n'en garde pas ;
+       - ni repetition, ni lieu, ni invites, ni rappel : Google Tasks ne les
+         connait pas par son API ;
+       - des sous-taches : chaque ligne devient une VRAIE sous-tache Google
+         (parent), dans l'ordre ecrit (previous).
+     Un geste de l'artisan, donc : la permission « tasks » est demandee s'il
+     le faut, SANS toucher a la case « ecrire les changements » (qui reste son
+     choix pour les modifications). Pas de file hors ligne pour une creation :
+     rejouee plus tard, elle risquerait de creer deux fois la meme tache —
+     on dit plutot que ca n'est pas parti, et le formulaire garde son texte.
+     Rend { id, sous: n, sousKo: n } ; rejette une Error dont .code dit
+     pourquoi (titre, trop, liste, date, permission, reseau, ou le code de
+     classerErreur). */
+  var MAX_TITRE = 1024, MAX_NOTES = 8192;
+  var CREEES = {};
+  function erreurCreation(code, cause) {
+    var e = new Error(tr('crea_' + code) || (cause && cause.message) || code);
+    e.code = code; if (cause) { e.cause = cause; }
+    return e;
+  }
+  /* Une tache creee ici, remise en memoire si une copie venue d'un autre
+     onglet (restaurer) l'a fait disparaitre avant que Google ne la relise. */
+  function garderCreees() {
+    Object.keys(CREEES).forEach(function (id) {
+      var c = CREEES[id];
+      if (!c || !c.e || TACHES[id]) { return; }
+      /* La copie chargee a lu cette liste APRES la creation (son curseur est
+         plus recent) : si la tache n'y est pas, c'est qu'elle a ete supprimee
+         — Google fait foi. Liste plus suivie : pareil. */
+      var lue = Date.parse(ETAT.curs[c.liste] || '') || 0;
+      if (Date.now() - c.t >= 600000 || listesSuivies().indexOf(c.liste) < 0 || (c.tG && lue >= c.tG + 180000)) { delete CREEES[id]; return; }
+      TACHES[id] = c.e;
+    });
+  }
+  function creerTache(o) {
+    o = o || {};
+    var titre = String(o.titre == null ? '' : o.titre).trim();
+    var notes = String(o.notes == null ? '' : o.notes).replace(/\s+$/, '');
+    var jour = String(o.date == null ? '' : o.date).trim();
+    var liste = String(o.liste || '');
+    var sous = (Array.isArray(o.sous) ? o.sous : []).map(function (s) { return String(s == null ? '' : s).trim(); })
+      .filter(Boolean);
+    if (!titre) { return Promise.reject(erreurCreation('titre')); }
+    if (titre.length > MAX_TITRE || notes.length > MAX_NOTES || sous.some(function (s) { return s.length > MAX_TITRE; })) {
+      return Promise.reject(erreurCreation('trop'));
+    }
+    if (jour && !/^\d{4}-\d{2}-\d{2}$/.test(jour)) { return Promise.reject(erreurCreation('date')); }
+    /* Une liste SUIVIE : sinon la tache partirait dans Google et ne
+       reviendrait jamais a l'ecran. */
+    if (!liste || listesSuivies().indexOf(liste) < 0) { return Promise.reject(erreurCreation('liste')); }
+    if (!(AP.gauth && typeof AP.gauth.appel === 'function')) { return Promise.reject(erreurCreation('permission')); }
+    var gen = GEN;
+    var permis = peutEcrire() ? Promise.resolve(true)
+      : (typeof AP.gauth.demanderTachesEcriture === 'function' ? AP.gauth.demanderTachesEcriture() : Promise.resolve(false));
+    return permis.then(function (ok) {
+      if (!ok || !peutEcrire()) { throw erreurCreation('permission'); }
+      if (!envoiPossible()) {
+        var g0 = etatCompte();
+        throw erreurCreation((g0 && g0.besoinReconnexion) ? 'sansJeton' : 'reseau');
+      }
+      if (gen !== GEN) { throw erreurCreation('permission'); }
+      var chemin = TASKS_API + '/lists/' + encodeURIComponent(liste) + '/tasks';
+      function poster(corps, params) {
+        var url = chemin + (params ? '?' + new URLSearchParams(params).toString() : '');
+        /* attendre:false : sans jeton, echec tout de suite (message), jamais
+           une creation suspendue qui partirait des heures plus tard. */
+        return AP.gauth.appel(url, { methode: 'POST', corps: corps, permission: AP.gauth.PERMISSION_EXPLICITE, attendre: false });
+      }
+      function absorber(frais) {
+        if (!frais || !frais.id || gen !== GEN) { return null; }
+        if (frais.updated) { var tf = Date.parse(frais.updated); if (tf) { DECALAGE = tf - Date.now(); } }
+        var id = idDeTache(liste, frais);
+        TACHES[id] = entreeDe(liste, frais);
+        CREEES[id] = { liste: liste, t: Date.now(), tG: Date.parse(frais.updated || '') || maintenantGoogle(), e: TACHES[id] };
+        return id;
+      }
+      var corps = { title: titre };
+      if (notes) { corps.notes = notes; }
+      if (jour) { corps.due = dueDe(jour); }
+      return poster(corps).then(function (frais) {
+        var id = absorber(frais);
+        /* Google a repondu avec la tache, mais le compte a ete delie entre-
+           temps : elle EXISTE — ne pas dire « pas creee ». */
+        /* Pas de tache lisible dans la reponse (corps perdu, ou compte delie
+           entre-temps) : Google l'a PEUT-ETRE creee — jamais « refus ». On
+           relit pour la montrer si elle existe. */
+        if (!id) {
+          if (gen === GEN) { setTimeout(function () { pull({ complet: true }); }, 1500); }
+          throw erreurCreation('incertain');
+        }
+        ranger(); reconstruire();
+        /* Les sous-taches, une par une et dans l'ordre : chacune apres la
+           precedente (previous), sinon Google les empile a l'envers. */
+        var res = { id: id, sous: 0, sousKo: 0, ko: [], incertaines: [] };
+        var prec = null, chaine = Promise.resolve();
+        sous.forEach(function (s) {
+          chaine = chaine.then(function () {
+            if (gen !== GEN) { res.sousKo++; res.ko.push(s); return; }
+            var p = { parent: frais.id }; if (prec) { p.previous = prec; }
+            return poster({ title: s }, p).then(function (f2) {
+              if (absorber(f2)) { prec = f2.id; res.sous++; }
+              else { res.incertaines.push(s); }      // repondu sans tache lisible : peut-etre creee
+            }, function (e) {
+              avert('sous-tache : ' + (e && e.message));
+              var c = classerErreur(e), avant = e && (e.name === 'AP_SANS_JETON' || e.name === 'AP_REGLE_ECRITURE');
+              if (!avant && (c === 'reseau' || c === 'serveur')) { res.incertaines.push(s); }
+              else { res.sousKo++; res.ko.push(s); }
+            });
+          });
+        });
+        return chaine.then(function () {
+          /* Les sous-taches qui n'ont pas pu etre creees ne sont pas perdues :
+             leurs titres vont dans les notes de la carte de la tache mere. */
+          if (res.ko.length) { garderNoteLocale(id, (langue() === 'fr' ? 'Sous-taches non creees :\n' : 'مهام فرعية لم تُنشأ:\n') + res.ko.join('\n')); }
+          /* Parties sans reponse sure : peut-etre creees. On le dit comme tel
+             (pas « non creees », qui pousserait a les recreer) et on relit. */
+          if (res.incertaines.length) {
+            garderNoteLocale(id, (langue() === 'fr' ? 'Sous-taches peut-etre creees (a verifier) :\n' : 'مهام فرعية ربما أُنشئت (تحقّق منها):\n') + res.incertaines.join('\n'));
+            setTimeout(function () { pull({ complet: true }); }, 1500);
+          }
+          ranger(); reconstruire();
+          emettre({ creation: true, id: id });
+          return res;
+        });
+      }, function (e) {
+        var code = classerErreur(e);
+        avert('creation Google Tasks : ' + (e && e.message));
+        /* Parti mais sans reponse sure (coupure pendant l'attente, panne
+           de Google apres l'envoi) : la tache a PU etre creee. On le dit
+           tel quel, et on relit la liste — un nouvel envoi ferait un
+           doublon. Un echec AVANT l'envoi (pas de jeton) reste sur. */
+        var avantEnvoi = e && (e.name === 'AP_SANS_JETON' || e.name === 'AP_REGLE_ECRITURE');
+        if (!avantEnvoi && (code === 'reseau' || code === 'serveur')) {
+          setTimeout(function () { pull({ complet: true }); }, 1500);
+          throw erreurCreation('incertain', e);
+        }
+        throw erreurCreation(code === 'autre' ? 'refus' : code, e);
+      });
+    });
+  }
+
   /* La case « ecrire dans Google Tasks » decochee : ce qui attendait ne
      partira pas (il ne doit jamais partir des semaines plus tard, par-dessus
      des changements faits entre temps sur le telephone). Les notes sont
@@ -1332,7 +1633,7 @@
   function couperEcriture() {
     var d = jget(K.attente, {}) || {};
     var n = Object.keys(d).length;
-    Object.keys(d).forEach(function (id) { if (d[id].notes !== undefined) { garderNoteLocale(id, d[id].notes); } });
+    Object.keys(d).forEach(function (id) { garderEnNotes(id, d[id]); });
     ATTENTE = {}; jset(K.attente, {});
     poserReglages({ ecrireVersGoogle: false });
     if (n) { dire2('attenteCoupee'); }
@@ -1422,6 +1723,9 @@
     ecrireStatut: ecrireStatut,
     ecrireTitre: ecrireTitre,
     ecrireNote: ecrireNote,
+    ecrireEcheance: ecrireEcheance,
+    creerTache: creerTache,
+    listesSuivies: listesSuivies,
     _: { tacheDe: tacheDe, taches: function () { return TACHES; } }
   };
 

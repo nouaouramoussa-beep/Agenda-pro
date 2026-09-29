@@ -399,6 +399,16 @@ select.fsel:focus,input.fdate:focus{outline:none;border-color:var(--brand)}
 .row2c{display:grid;grid-template-columns:1fr 1fr;gap:7px}
 .mini{height:34px;padding:0 11px;border-radius:10px;border:1px solid var(--line);background:var(--surface2);font-size:12.2px;width:100%}
 .mini:focus{outline:none;border-color:var(--brand)}
+/* Le tri et la modification d'une tache existante (carte) : un libelle au-dessus
+   de chaque champ, jamais un champ muet. */
+.rang{display:flex;flex-direction:column;gap:4px;min-width:0;font-size:11.2px;font-weight:700;color:var(--txt2)}
+.rang.wide{margin-top:7px}
+.rang .pair{display:flex;gap:6px}
+.rang .pair .mini{min-width:0}
+.rang .pair .tm{max-width:110px}
+.gedit{border:1px dashed var(--brand);border-radius:12px;padding:10px 11px;background:color-mix(in srgb,var(--brand) 5%,transparent)}
+.gedit .acts{margin-top:9px}
+@media(max-width:560px){ .row2c{grid-template-columns:1fr} .rang .pair{flex-wrap:wrap} .rang .pair .tm{max-width:none} }
 .orgv{text-transform:none;color:var(--txt2);font-weight:600}
 /* Le temoin du jour choisi : assez visible pour qu'on comprenne pourquoi la
    liste a fondu, assez discret pour ne pas encombrer. */
@@ -1262,22 +1272,26 @@ input[type="color"]{height:40px;padding:3px;cursor:pointer}
       <div class="fld"><label data-t="fTitle"></label><input id="aTitle"></div>
 
       <div class="row2">
-        <div class="fld"><label data-t="fCat"></label><select id="aCat"></select></div>
-        <div class="fld"><label data-t="fSub"></label><select id="aSub"></select></div>
+        <div class="fld"><label data-t="fCat"></label><select id="aCat" onchange="syncForm()"></select></div>
+        <div class="fld"><label data-t="fSub"></label><select id="aSub" onchange="this.dataset.touche=1"></select></div>
       </div>
 
-      <label class="chk chk-in"><input type="checkbox" id="aAllDay" onchange="syncForm()"><span data-t="fAllDay"></span></label>
+      <!-- Google Tasks : la liste ou la tache sera creee, et « sans date » -->
+      <div class="fld" id="aGtListeBox" style="display:none"><label data-t="fGtListe"></label><select id="aGtListe" onchange="syncForm()"></select></div>
+      <label class="chk chk-in" id="aNoDateBox" style="display:none"><input type="checkbox" id="aNoDate" onchange="syncForm()"><span data-t="gtSansDateBtn"></span></label>
+
+      <label class="chk chk-in" id="aAllDayBox"><input type="checkbox" id="aAllDay" onchange="syncForm()"><span data-t="fAllDay"></span></label>
 
       <div class="row2">
-        <div class="fld"><label data-t="fStart"></label>
-          <div class="pair"><input type="date" id="aDate"><input type="time" id="aTime" class="tm"></div></div>
-        <div class="fld"><label data-t="fEnd"></label>
-          <div class="pair"><input type="date" id="aDateEnd"><input type="time" id="aTimeEnd" class="tm"></div></div>
+        <div class="fld"><label id="aStartLbl" data-t="fStart"></label>
+          <div class="pair"><input type="date" id="aDate" onchange="finSuitDebut()"><input type="time" id="aTime" class="tm" onchange="finSuitDebut()"></div></div>
+        <div class="fld" id="aEndFld"><label data-t="fEnd"></label>
+          <div class="pair"><input type="date" id="aDateEnd" oninput="this.dataset.touche=1"><input type="time" id="aTimeEnd" class="tm" oninput="this.dataset.touche=1"></div></div>
       </div>
 
-      <div class="fld"><label data-t="fTz"></label><input id="aTz" value="Africa/Algiers"></div>
+      <div class="fld" id="aTzFld"><label data-t="fTz"></label><input id="aTz" value="Africa/Algiers"></div>
 
-      <div class="fld"><label data-t="fRepeat"></label>
+      <div class="fld" id="aFreqFld"><label data-t="fRepeat"></label>
         <select id="aFreq" onchange="syncForm()">
           <option value="">—</option><option value="DAILY"></option><option value="WEEKLY"></option>
           <option value="MONTHLY"></option><option value="YEARLY"></option>
@@ -1292,16 +1306,16 @@ input[type="color"]{height:40px;padding:3px;cursor:pointer}
         <div id="aDaysBox" class="daysbox"></div>
       </div>
 
-      <div class="fld"><label data-t="fPlace"></label><input id="aLoc"></div>
+      <div class="fld" id="aLocFld"><label data-t="fPlace"></label><input id="aLoc"></div>
       <div class="fld"><label data-t="fNotes"></label><textarea id="aNotes"></textarea></div>
-      <div class="fld"><label data-t="fGuests"></label><input id="aGuests" placeholder="a@b.dz, c@d.fr"></div>
+      <div class="fld" id="aGuestsFld"><label data-t="fGuests"></label><input id="aGuests" placeholder="a@b.dz, c@d.fr"></div>
 
-      <div class="fld"><label data-t="fRemind"></label>
+      <div class="fld" id="aRemFld"><label data-t="fRemind"></label>
         <div id="aRemBox" class="rembox"></div>
         <button class="tbtn" style="height:32px;margin-top:6px" onclick="addRemRow()">＋ <span data-t="fAddRemind"></span></button>
       </div>
 
-      <div class="row2">
+      <div class="row2" id="aBusyRow">
         <div class="fld"><label data-t="fBusy"></label>
           <select id="aBusy"><option value="1" data-t-opt="busy"></option><option value="0" data-t-opt="free"></option></select></div>
         <div class="fld"><label data-t="fVis"></label>
@@ -1310,13 +1324,15 @@ input[type="color"]{height:40px;padding:3px;cursor:pointer}
 
       <div class="fld"><label data-t="fSubtasks"></label><textarea id="aSubs" placeholder="—"></textarea></div>
 
-      <div class="note-line" data-t="fLinkNote"></div>
+      <label class="chk chk-in" id="aLocalBox"><input type="checkbox" id="aLocalOnly" onchange="syncForm()"><span data-t="fLocalOnly"></span></label>
+      <div class="note-line" id="aDest"></div>
+      <div class="note-line" id="aLinkNote" data-t="fLinkNote"></div>
     </div>
     <div class="modal-f">
       <button class="mb" onclick="closeModal('mAdd')" data-t="cancel"></button>
-      <button class="mb" onclick="exportOne('ics')">⬇️ <span data-t="dlIcs"></span></button>
-      <button class="mb" onclick="exportOne('google')">📅 <span data-t="openGoogle"></span></button>
-      <button class="mb pri" onclick="saveTask()" data-t="save"></button>
+      <button class="mb" id="aIcsBtn" onclick="exportOne('ics')">⬇️ <span data-t="dlIcs"></span></button>
+      <button class="mb" id="aOpenGBtn" onclick="exportOne('google')">📅 <span data-t="openGoogle"></span></button>
+      <button class="mb pri" id="aSaveBtn" onclick="saveTask()"></button>
     </div>
   </div>
 </div>
@@ -2791,7 +2807,51 @@ ar:{
   delTask:'حذف', delTaskQ:'حذف هذه المهمة نهائياً؟',
   routinesCachees:'👁 إظهار المهام الروتينية المخفية (%1)',
   cachesFiltres:'👁 إظهار العناصر المخفية بالفلاتر (%1)',
-  gemAuto:'اختير النموذج تلقائياً: %1', gemBadKey:'المفتاح مرفوض — تأكّد أنك نسخته كاملاً'
+  gemAuto:'اختير النموذج تلقائياً: %1', gemBadKey:'المفتاح مرفوض — تأكّد أنك نسخته كاملاً',
+  /* ترتيب مهمة موجودة: القسم والتصنيف والاسم */
+  rangTitle:'الترتيب', rangSec:'القسم', rangSub:'التصنيف',
+  rangSerie:'تطبيق على كل تكرارات هذا الموعد (%1)',
+  toastSub:'تم تغيير التصنيف ✓', toastSerie:'طُبّق على كل تكرارات هذا الموعد ✓',
+  nomTitle:'الاسم', nomLocal:'يُحفظ في البرنامج فقط', nomReset:'↺ الاسم الأصلي',
+  gtAllumer:'لتغيير الاسم أو التاريخ أو التفاصيل من هنا، فعّل «الكتابة في Google Tasks» من «التقاويم والمهام».',
+  gtDateEdit:'التاريخ', gtSansDateBtn:'بدون تاريخ',
+  /* تعديل موعد Google Agenda من البطاقة */
+  gEditBtn:'✏️ تعديل في Google Agenda', gEditTitle:'تعديل الموعد', gEditHint:'يُكتب في Google Agenda الحقيقي',
+  gEditSave:'💾 حفظ في Google', gEditRec:'موعد مكرّر: التاريخ والساعة والتفاصيل تتغيّر لهذا الموعد وحده.',
+  gEditSerie:'الاسم والمكان لكل التكرارات', gEditOk:'تم الحفظ في Google Agenda ✓',
+  gEditKo:'لم يُحفظ في Google: %1', gNoWrite:'لم يُمنح إذن الكتابة في Google Agenda — لم يُرسل شيء.',
+  gRO:'هذا التقويم للقراءة فقط في حسابك على Google — لا يمكن تعديله من هنا.',
+  gSerieDate:'لكل التكرارات: الاسم والمكان فقط. ألغِ الخانة لتغيير التاريخ أو التفاصيل لهذا الموعد.',
+  /* نموذج الإضافة: أين يُحفظ */
+  destGcal:'☁️ سيُحفظ في Google Agenda (%1) ويظهر على كل أجهزتك. المدعوّون يُضافون إلى الموعد دون إرسال بريد إليهم.',
+  destGtasks:'✅ سيُحفظ في Google Tasks — قائمة «%1». قواعد Google Tasks: تاريخ بلا ساعة، دون تكرار أو مكان أو مدعوّين أو تذكير. كل سطر من «المهام الفرعية» يصبح مهمة فرعية حقيقية في Google.',
+  destLocal:'💾 سيُحفظ في البرنامج فقط، على هذا الجهاز.',
+  destLocalNoG:'💾 سيُحفظ في البرنامج فقط — اربط Google من «الربط والحساب» ليُحفظ في أجندتك.',
+  fLocalOnly:'في البرنامج فقط (لا يُرسل إلى Google)', fGtListe:'قائمة Google Tasks',
+  saveGcal:'☁️ حفظ في Google Agenda', saveGtasks:'✅ حفظ في Google Tasks', enCours:'جارٍ الحفظ…',
+  toastGcalOk:'حُفظ في Google Agenda ✓', toastGtOk:'حُفظ في Google Tasks ✓',
+  toastGtSousKo:'حُفظت المهمة، لكن %1 من المهام الفرعية لم تُحفظ.',
+  gCreateKo:'لم يُحفظ في Google: %1 — نصّك ما زال في النموذج.',
+  errAgenda:'لا يوجد تقويم متابَع يمكن الكتابة فيه — اختر تقويمك في «التقاويم والمهام».',
+  errDate:'التاريخ أو الساعة غير صحيحة (النهاية قبل البداية؟).', errTrop:'النص طويل جداً.', errTitre:'اكتب الاسم أولاً.',
+  pushG:'☁️ نقل إلى Google Agenda', pushGQ:'نقل هذه المهمة إلى Google Agenda؟ تُحذف نسختها المحلية بعد نجاح الإرسال، وتبقى حالتها وملاحظتها وقائمتها.',
+  pushGOk:'نُقلت إلى Google Agenda ✓', addHere:'إضافة هنا',
+  errLiaison:'الربط مع Google غير جاهز الآن — اضغط «أعد الربط» في الشريط ثم أعد المحاولة. لم يُرسل شيء.',
+  errDroit:'Google لا يسمح بتعديل هذا الموعد من حسابك (أنت لست منظّمه، أو التقويم للقراءة فقط).',
+  errReseau:'لا يوجد اتصال بالإنترنت — لم يُرسل شيء، أعد المحاولة عند عودته.',
+  errGoogle:'رفض Google هذا الطلب — لم يُحفظ شيء. أعد المحاولة بعد قليل.',
+  errDisparu:'لم يعد هذا الموعد موجوداً في Google (حُذف أو نُقل).',
+  errConflitDesc:'تغيّرت تفاصيل هذا الموعد في Google منذ فتحتَه هنا — لم يُكتب فوقها. أغلق التعديل وافتحه من جديد لترى النص الحالي.',
+  errHorsFenetre:'تاريخ هذه المهمة خارج المدة التي يعرضها البرنامج من Google (٩٠ يوماً قبل اليوم إلى ٤٠٠ يوم بعده) — بقيت في البرنامج ولم تُنقل.',
+  gcalHorsFenetre:'حُفظ في Google Agenda ✓ — تاريخه خارج المدة التي يعرضها البرنامج، فستجده في Google وحده.',
+  gEditRien:'لم تغيّر شيئاً بعد.',
+  gtPasPret:'Google Tasks غير جاهز الآن (الربط يتجدد) — انتظر لحظة ثم أعد المحاولة.',
+  errIncertainG:'انقطع الاتصال بعد الإرسال: قد يكون الموعد حُفظ في Google. أعد المحاولة بأمان — لن يتكرر.',
+  errIncertainModif:'انقطع الاتصال بعد الإرسال: قد يكون التعديل وصل إلى Google. اضغط «حفظ في Google» مرة أخرى للتأكد — لن يتضاعف.',
+  serieAttente:'لم يُرسل هذا التغيير إلى Google بعد — سيُعاد إرساله تلقائياً بعد القراءة القادمة من Google.',
+  orphelinTitre:'نص لم يُرسل إلى Google Tasks — %1',
+  orphelinToast:'حُذفت مهمة من Google Tasks وكان لها تعديل لم يُرسل: حُفظ نصّك في مهمة جديدة داخل «القسم الشخصي».',
+  serieEnCours:'جارٍ حفظ التغيير السابق لكل التكرارات — انتظر لحظة ثم اختر من جديد.'
 },
 fr:{
   title:'Tableau de bord des tâches', sub:'Entreprise & personnel — vos rendez-vous et vos échéances au même endroit',
@@ -2875,7 +2935,48 @@ fr:{
   delTask:'Supprimer', delTaskQ:'Supprimer définitivement cette tâche ?',
   routinesCachees:'👁 Afficher les routines masquées (%1)',
   cachesFiltres:'👁 Afficher les éléments masqués par les filtres (%1)',
-  gemAuto:'Modèle choisi automatiquement : %1', gemBadKey:'Clé refusée — vérifiez qu\'elle est copiée en entier'
+  gemAuto:'Modèle choisi automatiquement : %1', gemBadKey:'Clé refusée — vérifiez qu\'elle est copiée en entier',
+  rangTitle:'Classement', rangSec:'Section', rangSub:'Catégorie',
+  rangSerie:'Appliquer à toutes les répétitions de ce rendez-vous (%1)',
+  toastSub:'Catégorie changée ✓', toastSerie:'Appliqué à toutes les répétitions ✓',
+  nomTitle:'Nom', nomLocal:'Gardé dans le programme seulement', nomReset:'↺ Nom d\'origine',
+  gtAllumer:'Pour changer ici le nom, la date ou les détails, activez « Écrire dans Google Tasks » dans « Agendas et tâches ».',
+  gtDateEdit:'Date', gtSansDateBtn:'Sans date',
+  gEditBtn:'✏️ Modifier dans Google Agenda', gEditTitle:'Modifier le rendez-vous', gEditHint:'Écrit dans Google Agenda réel',
+  gEditSave:'💾 Enregistrer dans Google', gEditRec:'Rendez-vous répété : date, heure et détails changent pour celui-ci seulement.',
+  gEditSerie:'Nom et lieu pour toute la série', gEditOk:'Enregistré dans Google Agenda ✓',
+  gEditKo:'Pas enregistré dans Google : %1', gNoWrite:'L\'écriture dans Google Agenda n\'est pas autorisée — rien n\'a été envoyé.',
+  gRO:'Cet agenda est en lecture seule dans votre compte Google — impossible de le modifier d\'ici.',
+  gSerieDate:'Pour toute la série : nom et lieu seulement. Décochez pour changer la date ou les détails de ce rendez-vous.',
+  destGcal:'☁️ Sera enregistré dans Google Agenda (%1) et visible sur tous vos appareils. Les invités sont ajoutés sans leur envoyer de courriel.',
+  destGtasks:'✅ Sera enregistré dans Google Tasks — liste « %1 ». Règles de Google Tasks : une date sans heure, ni répétition, ni lieu, ni invités, ni rappel. Chaque ligne des « sous-tâches » devient une vraie sous-tâche Google.',
+  destLocal:'💾 Sera enregistré dans le programme seulement, sur cet appareil.',
+  destLocalNoG:'💾 Enregistré dans le programme seulement — reliez Google (« Liaison et compte ») pour l\'enregistrer dans votre agenda.',
+  fLocalOnly:'Dans le programme seulement (pas envoyé à Google)', fGtListe:'Liste Google Tasks',
+  saveGcal:'☁️ Enregistrer dans Google Agenda', saveGtasks:'✅ Enregistrer dans Google Tasks', enCours:'Enregistrement…',
+  toastGcalOk:'Enregistré dans Google Agenda ✓', toastGtOk:'Enregistré dans Google Tasks ✓',
+  toastGtSousKo:'Tâche enregistrée, mais %1 sous-tâche(s) n\'ont pas pu l\'être.',
+  gCreateKo:'Pas enregistré dans Google : %1 — votre texte est toujours dans le formulaire.',
+  errAgenda:'Aucun agenda suivi où l\'on peut écrire — choisissez votre agenda dans « Agendas et tâches ».',
+  errDate:'Date ou heure invalide (fin avant le début ?).', errTrop:'Texte trop long.', errTitre:'Écrivez d\'abord le nom.',
+  pushG:'☁️ Envoyer vers Google Agenda', pushGQ:'Envoyer cette tâche vers Google Agenda ? Sa copie locale est supprimée une fois l\'envoi réussi ; statut, note et liste sont gardés.',
+  pushGOk:'Envoyée vers Google Agenda ✓', addHere:'Ajouter ici',
+  errLiaison:'La liaison Google n\'est pas prête — cliquez « Reconnecter » dans le bandeau puis réessayez. Rien n\'a été envoyé.',
+  errDroit:'Google ne permet pas de modifier ce rendez-vous depuis votre compte (vous n\'en êtes pas l\'organisateur, ou l\'agenda est en lecture seule).',
+  errReseau:'Pas de connexion internet — rien n\'a été envoyé, réessayez à son retour.',
+  errGoogle:'Google a refusé la demande — rien n\'a été enregistré. Réessayez dans un instant.',
+  errDisparu:'Ce rendez-vous n\'existe plus dans Google (supprimé ou déplacé).',
+  errConflitDesc:'Les détails de ce rendez-vous ont changé dans Google depuis que vous l\'avez ouvert ici — rien n\'a été écrasé. Fermez et rouvrez la modification pour voir le texte actuel.',
+  errHorsFenetre:'La date de cette tâche est hors de la période que le programme lit dans Google (90 jours avant, 400 jours après) — elle reste dans le programme.',
+  gcalHorsFenetre:'Enregistré dans Google Agenda ✓ — sa date est hors de la période lue par le programme : vous le trouverez dans Google seulement.',
+  gEditRien:'Vous n\'avez encore rien changé.',
+  gtPasPret:'Google Tasks n\'est pas prêt (liaison en cours de renouvellement) — patientez un instant puis réessayez.',
+  errIncertainG:'Connexion coupée après l\'envoi : le rendez-vous a peut-être été enregistré dans Google. Réessayez sans crainte — il ne sera pas créé deux fois.',
+  errIncertainModif:'Connexion coupée après l\'envoi : la modification est peut-être arrivée chez Google. Appuyez de nouveau sur « Enregistrer dans Google » pour vous en assurer — elle ne sera pas appliquée deux fois.',
+  serieAttente:'Ce changement n\'est pas encore parti vers Google — il sera renvoyé tout seul après la prochaine lecture de Google.',
+  orphelinTitre:'Texte non envoyé à Google Tasks — %1',
+  orphelinToast:'Une tâche Google Tasks a été supprimée alors qu\'une modification attendait : votre texte a été gardé dans une nouvelle tâche du « Pôle Personnel ».',
+  serieEnCours:'Le changement précédent est en cours d\'enregistrement pour toute la série — patientez un instant puis choisissez de nouveau.'
 }};
 const t = k => { const o=T[state.lang]; return k.split('.').reduce((a,b)=>a&&a[b],o) ?? k; };
 
@@ -2897,18 +2998,52 @@ const SEC_BUILTIN = [
    ar:'القسم الشخصي', fr:'Pôle Personnel',
    sAr:'وثائق • صحة • عائلة • روتين', sFr:'Documents • santé • famille • routine'}
 ];
+/* La section « مهام Google Tasks » : les taches de Google Tasks s'y rangent
+   d'office (gtasks.js, tacheDe), a cote de l'Entreprise et du Personnel, au
+   lieu de se perdre dans le Personnel. Elle est « auto » : elle n'existe
+   que si elle a quelque chose a montrer (une tache Google Tasks, ou une tache
+   rangee sous 'gtasks'), pour que l'artisan sans Google Tasks ne voie jamais
+   un cadre vide. On ne la supprime pas (builtin), on peut la renommer
+   (store.secLabels, comme les deux autres). Seules les taches Google Tasks y
+   entrent : une tache creee ici n'est pas dans Google Tasks, la mettre la
+   ferait croire le contraire (secsPour). */
+const SEC_GTASKS = {id:'gtasks', ic:'✅', c:'#1a73e8', builtin:1, auto:1,
+   ar:'مهام Google Tasks', fr:'Tâches Google Tasks',
+   sAr:'قوائمك في Google Tasks • بدون تاريخ • متأخرة • منجزة', sFr:'Vos listes Google Tasks • sans date • en retard • faites'};
+let SEC_GT_ON = false;
+/* Recalcule la presence de la section Google Tasks d'apres TASKS. Appelee au
+   debut de chaque render() : si elle apparait ou disparait, les cadres sont
+   reconstruits AVANT d'etre remplis. Rend vrai si la liste a change. */
+function majSecGt(){
+  const on = TASKS.some(it=>it.gtache || (store.cat[it.id]||it.cat)==='gtasks');
+  if(on===SEC_GT_ON) return false;
+  SEC_GT_ON = on;
+  /* PAS applyI18n() entier : il refait aussi le formulaire « إضافة » (jours
+     coches, cle Gemini) pendant que l'artisan le remplit peut-etre. Seuls
+     les cadres et leurs libelles changent. */
+  buildBoardsDOM(); majLibellesSections(); remplirSectionsAjout(); applyPanels();
+  return true;
+}
+function majLibellesSections(){
+  document.querySelectorAll('#boardsWrap [data-t]').forEach(e=>{ e.textContent = t(e.dataset.t); });
+  document.querySelectorAll('[data-sec-name]').forEach(e=>{ e.textContent = secName(secById(e.dataset.secName)); });
+  document.querySelectorAll('[data-sec-sub]').forEach(e=>{ e.textContent = secSub(secById(e.dataset.secSub)); });
+}
 /* store.secLabels{id:{ar,fr,ic,c}} surcharge le NOM (et l'icone/la couleur)
    d'une section EXISTANTE — d'origine ('ent'/'perso') ou ajoutee — sans
    jamais toucher a son identifiant : tout ce qui range une tache sous cet
    id (catOf, EN_DUR, le classement Drive du bureau…) continue de la
    retrouver exactement pareil. Renommer n'est donc jamais une migration. */
 function allSections(){
-  return SEC_BUILTIN.concat(store.sections||[]).map(s=>{
+  return SEC_BUILTIN.concat(SEC_GT_ON ? [SEC_GTASKS] : [], store.sections||[]).map(s=>{
     const r=(store.secLabels||{})[s.id];
     return r ? Object.assign({}, s, {ar:r.ar||s.ar, fr:r.fr||s.fr, ic:r.ic||s.ic, c:r.c||s.c, sAr:r.sAr||s.sAr, sFr:r.sFr||s.sFr}) : s;
   });
 }
 function secById(id){ const s=allSections().filter(x=>x.id===id)[0]; return s||SEC_BUILTIN[1]; }
+/* Les sections ou une tache peut aller : toutes, sauf « مهام Google Tasks »
+   pour ce qui n'est pas une tache Google Tasks. */
+function secsPour(it){ return allSections().filter(s=>s.id!=='gtasks' || (it && it.gtache)); }
 function secName(s){ return (state.lang==='ar'? s.ar : s.fr) || s.id; }
 function secSub(s){ return (state.lang==='ar'? s.sAr : s.sFr) || ''; }
 /* Les categories ajoutees sont fusionnees dans SUBS : tout le code existant
@@ -2942,7 +3077,7 @@ function okColor(v, fb){
 function addSection(ar, fr, ic, c, sAr, sFr){
   ar=(ar||'').trim(); if(!ar) return;
   store.sections = store.sections||[];
-  const id = nextId('sec', allSections().map(s=>s.id));
+  const id = nextId('sec', allSections().map(s=>s.id).concat(store.idsPris||[]));
   store.sections.push({id:id, ar:ar, fr:(fr||'').trim()||ar, ic:okIc(ic,'📁'), c:okColor(c,'#a855f7'),
                         sAr:(sAr||'').trim(), sFr:(sFr||'').trim()});
   state.boards[id]=0; state.group[id]='date';
@@ -2951,7 +3086,7 @@ function addSection(ar, fr, ic, c, sAr, sFr){
 function addSub(ar, fr, ic, c){
   ar=(ar||'').trim(); if(!ar) return;
   store.subs = store.subs||[];
-  const id = nextId('cat', Object.keys(SUBS));
+  const id = nextId('cat', Object.keys(SUBS).concat(store.idsPris||[]));
   store.subs.push({id:id, ar:ar, fr:(fr||'').trim()||ar, ic:okIc(ic,'🏷️'), c:okColor(c,'#64748b')});
   mergeSubs(); lsSet(); applyI18n(); render();
 }
@@ -3000,20 +3135,102 @@ function renSub(id, ar, fr, ic, c){
    « شخصي / Personnel ». */
 function delSection(id){
   const s=secById(id); if(!s || s.builtin) return;
-  TASKS.forEach(it=>{ if(catOf(it)===id) store.cat[it.id]='ent'; });
+  /* Par moveCat (et non store.cat directement) : les briques enveloppent
+     moveCat et mettent a jour leur ombre et le casier Google — sinon le geste
+     suivant remettait la section supprimee. Une repetition Google : une
+     seule ecriture sur son maitre (sectionSerie). */
+  const series={};
+  TASKS.forEach(it=>{
+    if(catOf(it)!==id) return;
+    if(it.src==='google' && !it.gtache && it.gRec && !it.gRO && window.AP && AP.gsync && AP.gsync.sectionSerie){
+      store.cat[it.id]='ent'; series[it.sk]=series[it.sk]||it.id; return;
+    }
+    moveCat(it.id,'ent',true);
+  });
+  /* « ancien » = id : seules les occurrences (et le maitre) qui etaient
+     dans cette section la quittent — jamais toute la serie. */
+  ecrireSeriesApres(Object.keys(series).map(sk=>({sk:sk, id:series[sk], champ:'sc', v:'ent', ancien:id})));
+  store.idsPris=(store.idsPris||[]).concat([id]);
   /* Aussi les choix des taches absentes en ce moment (une tache Google Tasks
      pas encore relue, par exemple) : sinon elles reviendraient vers une
      section qui n'existe plus, invisibles mais comptees partout. */
   Object.keys(store.cat||{}).forEach(k=>{ if(store.cat[k]===id) store.cat[k]='ent'; });
+  Object.keys(store.catSk||{}).forEach(k=>{ if(store.catSk[k]===id) store.catSk[k]='ent'; });
   (store.custom||[]).forEach(c=>{ if(c.cat===id) c.cat='ent'; });
   store.sections=(store.sections||[]).filter(x=>x.id!==id);
   delete state.boards[id];
   const el=document.getElementById('pan_b_'+id); if(el) el.remove();
   lsSet(); prefSet(); buildBoardsDOM(); applyI18n(); applyPanels(); render();
 }
+/* Les ecritures de serie demandees par une suppression : apres la permission
+   (demandee une fois), l'une apres l'autre, et un echec se DIT (au lieu d'une
+   ligne dans la console) — l'ecran montre deja le changement, Google non. */
+function ecrireSeriesApres(entrees){
+  if(!entrees.length) return;
+  /* Gardees dans store AVANT d'essayer : si elles ne partent pas maintenant
+     (liaison, permission, reseau), elles repartiront apres la prochaine
+     lecture Google — au lieu d'etre annulees en silence par le casier. */
+  store.seriesAFaire=(store.seriesAFaire||[]).filter(x=>!entrees.some(y=>y.sk===x.sk && y.champ===x.champ)).concat(entrees);
+  lsSet(); brancherRejeu();
+  (async()=>{
+    await null;   // apres le « تم الحفظ » de l'appelant : un echec reste visible
+    if(!liaisonPrete()){ toast(t('serieAttente')); return; }
+    if(!(await permisAgenda())){ toast(t('serieAttente')); return; }
+    await rejouerSeries(true);
+  })();
+}
+let REJEU_EN_COURS=false;
+async function rejouerSeries(dire){
+  const l=store.seriesAFaire||[];
+  if(!l.length || REJEU_EN_COURS || !(window.AP&&AP.gsync&&AP.gsync.sectionSerie)) return;
+  try{ const g0=AP.gauth&&AP.gauth.etat&&AP.gauth.etat(); if(g0 && (!g0.peutEcrire || g0.besoinReconnexion)) return; }catch(x){}
+  REJEU_EN_COURS=true;
+  try{
+    for(const x of l.slice()){
+      const it = TID(x.id) || TASKS.find(z=>z.sk===x.sk && z.gRec);
+      if(!it) continue;                                  // pas chargee maintenant : plus tard
+      try{
+        await (x.champ==='sc' ? AP.gsync.sectionSerie(it.id, x.v, x.ancien) : AP.gsync.sousCatSerie(it.id, x.v, x.ancien));
+        store.seriesAFaire=(store.seriesAFaire||[]).filter(y=>y!==x); lsSet();
+      }catch(e){ if(dire) toast(t('serieAttente')); break; }
+    }
+  } finally { REJEU_EN_COURS=false; }
+}
+/* Apres chaque lecture Google reussie : ce qui attendait repart. */
+function brancherRejeu(){
+  if(window.__apRejeu || !(window.AP&&AP.gsync&&typeof AP.gsync.on==='function')) return;
+  window.__apRejeu=1;
+  AP.gsync.on('lecture', d=>{ if(d && d.fin && (store.seriesAFaire||[]).length) setTimeout(()=>rejouerSeries(false), 500); });
+}
+/* Un texte tape pour une tache Google Tasks qui n'existe plus (supprimee sur
+   le telephone, liste supprimee) : il devient une tache du programme, dans
+   le Personnel, visible — au lieu d'etre range la ou personne ne regarde. */
+function garderTexteOrphelin(titre, texte){
+  store.custom.push({ id:'m|'+Date.now()+'|'+Math.floor(Math.random()*1e6), title:t('orphelinTitre').replace('%1', titre||'—'),
+    cat:'perso', sub:'perso', date:iso(today()), time:'', notes:String(texte||''), subs:[] });
+  lsSet(); buildTasks();
+  if(typeof renderFond==='function') renderFond(); else render();
+  toast(t('orphelinToast'));
+}
 function delSub(id){
   if(!SUBS[id] || !SUBS[id].custom) return;
   (store.custom||[]).forEach(c=>{ if(c.sub===id) c.sub='perso'; });
+  /* les choix faits sur les cartes (par tache, par serie) aussi — par setSub,
+     que gsync enveloppe : sinon le casier Google remettrait la categorie
+     supprimee au geste suivant. Une repetition Google : une ecriture sur son
+     maitre. */
+  const series={};
+  Object.keys(store.subOf||{}).forEach(k=>{
+    if(store.subOf[k]!==id) return;
+    const it=TID(k);
+    if(it && it.src==='google' && !it.gtache && it.gRec && !it.gRO && window.AP && AP.gsync && AP.gsync.sousCatSerie){
+      delete store.subOf[k]; series[it.sk]=series[it.sk]||k; return;
+    }
+    setSub(k,'',true);
+  });
+  ecrireSeriesApres(Object.keys(series).map(sk=>({sk:sk, id:series[sk], champ:'sb', v:'', ancien:id})));
+  store.idsPris=(store.idsPris||[]).concat([id]);
+  Object.keys(store.subSk||{}).forEach(k=>{ if(store.subSk[k]===id) delete store.subSk[k]; });
   store.subs=(store.subs||[]).filter(x=>x.id!==id);
   delete SUBS[id];
   if(state.sub===id) state.sub='all';
@@ -3021,7 +3238,11 @@ function delSub(id){
 }
 
 const LS_KEY = 'agendapro_v1';
-let store = {status:{}, checks:{}, notes:{}, cat:{}, custom:[], contact:{}, place:{}, sections:[], subs:[]};
+let store = {status:{}, checks:{}, notes:{}, cat:{}, custom:[], contact:{}, place:{}, sections:[], subs:[],
+  /* choix de l'artisan sur les taches EXISTANTES : categorie par tache et par
+     serie, section par serie, nom garde dans le programme (par tache et par
+     serie) — voir catOf/subOf/appliquerNoms */
+  subOf:{}, catSk:{}, subSk:{}, titleOf:{}, titleSk:{}};
 /* Les periodes proposees, dans l'ordre des puces. Calendrier pur : mois
    passe / en cours / prochain, semaines 1 a 4 du mois en cours, date precise. */
 const WINS = ['mp','mc','mn','s1','s2','s3','s4','custom'];
@@ -3059,7 +3280,10 @@ function prefGet(){
     /* seules les sections qui existent encore : une section supprimee
        ailleurs ne doit pas laisser un cadre « ouvert » fantome qui empeche
        l'anneau d'accueil de revenir */
-    if(p.boards){ const ok=new Set(allSections().map(s=>s.id)); Object.keys(p.boards).forEach(k=>{ if(ok.has(k)) state.boards[k]=p.boards[k]?1:0; }); }
+    /* 'gtasks' en plus : au demarrage les taches Google Tasks ne sont pas
+       encore la (SEC_GT_ON faux), mais son cadre ouvert doit etre retrouve.
+       Tant qu'il n'existe pas, syncRing ne le compte pas. */
+    if(p.boards){ const ok=new Set(allSections().map(s=>s.id).concat(['gtasks'])); Object.keys(p.boards).forEach(k=>{ if(ok.has(k)) state.boards[k]=p.boards[k]?1:0; }); }
     if(p.group)  Object.keys(p.group).forEach(k=>{ if(p.group[k]==='cat'||p.group[k]==='date') state.group[k]=p.group[k]; });
     /* Les anciens noms (« 1 semaine », « 6 mois », « tout »…) n'existent
        plus : on les ramene au mois qui leur ressemble le plus. */
@@ -3252,7 +3476,39 @@ function duree(n,u){
 function gcalLink(d){ const [y,m,dd]=d.split('-'); return 'https://calendar.google.com/calendar/u/0/r/day/'+y+'/'+Number(m)+'/'+Number(dd); }
 
 /* --- catégorie effective (avec surcharge utilisateur) -------------------- */
-const catOf = it => store.cat[it.id] || it.cat;
+/* Trois niveaux, du plus precis au plus general : le choix fait sur CETTE
+   tache (store.cat), celui fait pour toute sa serie de repetitions
+   (store.catSk, par it.sk), puis ce que dit la source. Des FONCTIONS et non
+   des constantes : elles existent ainsi sur window, et les briques
+   (gbridge : le classement partage) voient la meme section que l'ecran. */
+function catOf(it){
+  const c = store.cat[it.id] || (it.sk && store.catSk && store.catSk[it.sk]) || it.cat;
+  /* FILET : une section qui n'existe plus (supprimee ici, ou remise par un
+     autre appareil) ne doit jamais rendre une tache invisible — elle serait
+     comptee partout sans apparaitre nulle part. Elle va dans la premiere
+     section, comme delSection() le fait. */
+  if(secOk(c)) return c;
+  return secOk(it.cat) ? it.cat : 'ent';
+}
+/* L'ensemble des sections existantes, garde en memoire (catOf est appele des
+   milliers de fois par dessin) et refait quand la liste change. */
+let SEC_OK_SET=null, SEC_OK_REF=null, SEC_OK_LEN=-1, SEC_OK_GT=null;
+function secOk(id){
+  if(!id) return false;
+  const ss=store.sections||null, n=ss?ss.length:0;
+  if(!SEC_OK_SET || SEC_OK_REF!==ss || SEC_OK_LEN!==n || SEC_OK_GT!==SEC_GT_ON){
+    SEC_OK_SET=new Set(allSections().map(s=>s.id)); SEC_OK_REF=ss; SEC_OK_LEN=n; SEC_OK_GT=SEC_GT_ON;
+  }
+  return SEC_OK_SET.has(id);
+}
+/* La categorie (SUBS) choisie sur la carte : meme logique, store.subOf puis
+   store.subSk. */
+function subOf(it){
+  const v=(store.subOf && store.subOf[it.id]) || (it.sk && store.subSk && store.subSk[it.sk]) || it.sub;
+  /* une categorie inconnue ici (supprimee, ou creee sur un autre appareil)
+     ne doit pas faire afficher la premiere de la liste (ضرائب) */
+  return SUBS[v] ? v : (SUBS[it.sub] ? it.sub : 'perso');
+}
 /* --- statut ------------------------------------------------------------- */
 /* Le statut pose ici par l'artisan passe toujours en premier. Sinon, une
    tache que sa source dit achevee (Google Tasks : it.gFait) est achevee, et
@@ -3366,10 +3622,10 @@ function visible(){
        date precise, ou par le filtre « en retard ». */
     if(!enRecherche && !inWin) return false;
     if(!state.routine && it.routine && st!=='overdue') return false;
-    if(state.sub!=='all' && it.sub!==state.sub) return false;
+    if(state.sub!=='all' && subOf(it)!==state.sub) return false;
     if(state.status!=='all' && st!==state.status) return false;
     if(q){
-      const hay = (it.title.ar+' '+it.title.fr+' '+it.raw+' '+it.desc+' '+(SUBS[it.sub]?SUBS[it.sub].ar+' '+SUBS[it.sub].fr:'')+' '+(it.org?(it.org.ar||'')+' '+(it.org.fr||''):'')+' '+(it.srch||'')).toLowerCase();
+      const hay = (it.title.ar+' '+it.title.fr+' '+it.raw+' '+it.desc+' '+(SUBS[subOf(it)]?SUBS[subOf(it)].ar+' '+SUBS[subOf(it)].fr:'')+' '+(it.org?(it.org.ar||'')+' '+(it.org.fr||''):'')+' '+(it.srch||'')).toLowerCase();
       if(hay.indexOf(q)<0) return false;
     }
     return true;
@@ -3380,6 +3636,9 @@ function visible(){
    7. RENDU
    ============================================================================ */
 function render(){
+  majSecGt();
+  appliquerNoms();
+  brancherRejeu();
   const vis = visible();
   /* Aucune tache du tout : on montre l'ecran d'accueil vide plutot qu'un
      tableau de bord rempli de zeros. Cas normal de la version publiee, tant
@@ -3484,7 +3743,7 @@ function renderBrief(vis){
   const act = vis.filter(i=>{ const s=statusOf(i); return s!=='done' && s!=='passed'; });
 
   /* --- répartition par catégorie (barre + puces cliquables) --- */
-  const by={}; act.forEach(i=>{ by[i.sub]=(by[i.sub]||0)+1; });
+  const by={}; act.forEach(i=>{ const u=subOf(i); by[u]=(by[u]||0)+1; });
   const ord = Object.keys(by).sort((a,b)=>by[b]-by[a]);
   const tot = act.length;
   document.getElementById('loadBar').innerHTML = tot
@@ -3515,7 +3774,7 @@ function renderBrief(vis){
   }).slice(0,4);
   document.getElementById('nextUp').innerHTML = nxt.length ? nxt.map(it=>{
     const dd = diffDays(it.date);
-    const S = SUBS[it.sub]||SUBS.perso;
+    const S = SUBS[subOf(it)]||SUBS.perso;
     return '<button class="nextup-item" onclick="jumpTo(\''+it.id+'\')">'+
       '<span class="when">'+T[state.lang].inDays(dd)+'</span>'+
       '<span class="ttl">'+S.ic+' '+esc(it.title[state.lang])+'</span>'+
@@ -3632,7 +3891,10 @@ let PRINTING = false;
 function buildBoardsDOM(){
   const wrap=document.getElementById('boardsWrap'); if(!wrap) return;
   wrap.innerHTML = allSections().map(s=>{
-    const cl = s.builtin ? '' : ' custom-sec';
+    /* « custom-sec » = porte sa propre couleur (--secC). La section Google
+       Tasks, d'origine mais sans regle CSS dediee, la prend aussi. */
+    const teinte = !s.builtin || s.auto;
+    const cl = teinte ? ' custom-sec' : '';
     /* L'icone d'une section ajoutee par l'utilisateur est du TEXTE LIBRE relu
        depuis localStorage : le maxlength="4" du champ de saisie est une regle
        d'affichage, la page ne l'applique jamais a la relecture. Sans esc(),
@@ -3646,7 +3908,7 @@ function buildBoardsDOM(){
        le FORMAT, et toute valeur douteuse retombe sur la couleur par defaut
        des sections ajoutees. */
     const sc = /^#[0-9a-fA-F]{3,8}$/.test(String(s.c == null ? '' : s.c)) ? s.c : '#a855f7';
-    const st = s.builtin ? '' : ' style="--secC:'+sc+'"';
+    const st = teinte ? ' style="--secC:'+sc+'"' : '';
     return '<div class="board closed main-node'+cl+'" data-cat="'+s.id+'" id="pan_b_'+s.id+'"'+st+'>'+
       '<button class="board-orb" onclick="togBoard(\''+s.id+'\')">'+
         '<span class="bo-ic">'+ic+'</span>'+
@@ -3661,7 +3923,8 @@ function buildBoardsDOM(){
           '<button class="gs on" id="gs_'+s.id+'_date" onclick="setGroup(\''+s.id+'\',\'date\')" data-t="byDate"></button>'+
           '<button class="gs" id="gs_'+s.id+'_cat" onclick="setGroup(\''+s.id+'\',\'cat\')" data-t="byCat"></button>'+
         '</div>'+
-        (s.builtin? '' : '<button class="p-tog" title="—" onclick="delSection(\''+s.id+'\')">🗑</button>')+
+        '<button class="p-tog" onclick="openAdd(\''+s.id+'\')">＋</button>'+
+        (s.builtin? '' : '<button class="p-tog" title="—" onclick="uiDelSection(\''+s.id+'\')">🗑</button>')+
         '<button class="p-tog" onclick="togBoard(\''+s.id+'\')">✕</button>'+
       '</div>'+
       '<div class="board-body" id="board_'+s.id+'"></div>'+
@@ -3719,7 +3982,7 @@ function tranche(list, key){
 }
 function plusDe(key){ state.more[key] = (state.more[key]||0) + 1; render(); }
 function groupByCat(cat, items){
-  const g={}; items.forEach(i=>{ (g[i.sub]=g[i.sub]||[]).push(i); });
+  const g={}; items.forEach(i=>{ const u=subOf(i); (g[u]=g[u]||[]).push(i); });
   const keys = Object.keys(g).sort((a,b)=>g[b].length-g[a].length);
   return keys.map(k=>{
     const S = SUBS[k]||SUBS.perso;
@@ -3752,7 +4015,7 @@ function setGroup(cat,mode){
 /* --- Carte -------------------------------------------------------------- */
 function card(it){
   const st = statusOf(it), dd = diffDays(it.date), d = parse(it.date);
-  const S = SUBS[it.sub] || SUBS.perso;
+  const S = SUBS[subOf(it)] || SUBS.perso;
   const list = clOf(it), done = clDone(it);
   const pct = list.length ? Math.round(done.length/list.length*100) : 0;
   const isOpen = !!state.open[it.id];
@@ -3766,7 +4029,7 @@ function card(it){
     ? '<div class="dchip"><div class="d">—</div><div class="m">'+t('sansDateLbl')+'</div></div>'
     : '<div class="dchip"><div class="d">'+d.getDate()+'</div><div class="m">'+T[state.lang].months[d.getMonth()].slice(0,4)+'</div></div>';
   h += '<div class="c-main"><h4>'+S.ic+' '+esc(it.title[state.lang])+'</h4><div class="c-meta">';
-  h += '<span class="tag" style="background:'+hex(S.c,.14)+';color:color-mix(in srgb,'+S.c+',var(--ink) 42%)">'+S[state.lang]+'</span>';
+  h += '<span class="tag" style="background:'+hex(S.c,.14)+';color:color-mix(in srgb,'+S.c+',var(--ink) 42%)">'+esc(S[state.lang])+'</span>';
   if(!it.gtache) h += '<span class="tag time">'+(it.allDay? t('allDay') : it.start+(it.end?'–'+it.end:''))+'</span>';
   h += '<span class="tag rel '+relCls+'">'+(nd ? t('sansDateLbl') : T[state.lang].inDays(dd))+'</span>';
   if(list.length) h += '<span class="tag time">📎 '+done.length+'/'+list.length+'</span>';
@@ -3784,9 +4047,69 @@ function card(it){
      (it.peutEcrireSource, posee par app/google/gtasks.js) : le titre et la
      note deviennent des champs, et ce qu'on y tape repart vers le VRAI
      Google Tasks — voir setSrcTitle()/setSrcNote() plus haut. */
+  /* --- LE TRI D'UNE TACHE EXISTANTE : section et categorie, choisies
+     directement (et, pour un rendez-vous qui se repete, pour toute la serie
+     d'un coup). La case « toutes les repetitions » vient AVANT les listes :
+     on la coche, puis on choisit. Cochee apres coup, elle applique a la
+     serie ce qui est deja choisi. ---------------------------------------- */
+  const k = cssId(it.id), nSerie = (it.sk && !it.gtache && !it.manual) ? serieDe(it).length : 1;
+  const cCat = catOf(it), cSub = subOf(it);
+  h += '<div class="sec"><div class="sec-t">🗂️ '+t('rangTitle')+'</div>'+
+       (nSerie>1 ? '<label class="chk chk-in"><input type="checkbox" id="ser_'+k+'"'+(serieCochee(it.id)?' checked':'')+' onchange="caseSerie(\''+it.id+'\',this.checked)"><span>'+t('rangSerie').replace('%1',nSerie)+'</span></label>' : '')+
+       '<div class="row2c">'+
+       '<label class="rang"><span>'+t('rangSec')+'</span><select class="mini" id="se_'+k+'" onchange="choisirSection(\''+it.id+'\',this.value)">'+
+         secsPour(it).map(s=>'<option value="'+esc(s.id)+'"'+(s.id===cCat?' selected':'')+'>'+esc(s.ic)+' '+esc(secName(s))+'</option>').join('')+
+       '</select></label>'+
+       '<label class="rang"><span>'+t('rangSub')+'</span><select class="mini" id="su_'+k+'" onchange="choisirCategorie(\''+it.id+'\',this.value)">'+
+         Object.keys(SUBS).map(s=>'<option value="'+esc(s)+'"'+(s===cSub?' selected':'')+'>'+esc(SUBS[s].ic)+' '+esc(SUBS[s][state.lang]||SUBS[s].fr||s)+'</option>').join('')+
+       '</select></label></div>'+
+       '</div>';
+  /* --- LE NOM --------------------------------------------------------------
+     Google Tasks (ecriture activee) : dans Google Tasks. Rendez-vous Google
+     dont l'artisan est l'organisateur : par le bloc « تعديل في Google Agenda »
+     plus bas. Tache ajoutee ici : sa propre donnee. Le reste (agenda en dur,
+     Microsoft, agenda Google en lecture seule, invitation d'un tiers) : garde
+     dans le programme. */
+  const gWritable = it.src==='google' && !it.gtache && it.gev && !it.gRO && it.gOrg!==false && window.AP && AP.gsync && AP.gsync.modifierTache;
   if(it.peutEcrireSource){
     h += '<div class="sec"><div class="sec-t">✏️ '+t('gTitleEdit')+' <span class="orgv">('+t('gWriteHint')+')</span></div>'+
-         '<input class="mini" style="width:100%" value="'+esc(it.title[state.lang])+'" onchange="setSrcTitle(\''+it.id+'\',this.value)"></div>';
+         '<input class="mini" style="width:100%" value="'+esc(it.title[state.lang])+'" onchange="setSrcTitle(\''+it.id+'\',this.value)">'+
+         '<div class="row2c" style="margin-top:7px;align-items:center">'+
+           /* vide pendant la frappe : ignore (seul ✕ retire la date) */
+           '<label class="rang"><span>📅 '+t('gtDateEdit')+'</span><input type="date" class="mini" value="'+esc(it.gDue||'')+'" onchange="if(this.value) setSrcDue(\''+it.id+'\',this.value)"></label>'+
+           (it.gDue ? '<button class="act" onclick="setSrcDue(\''+it.id+'\',\'\')">✕ '+t('gtSansDateBtn')+'</button>' : '')+
+         '</div></div>';
+  } else if(it.gtache){
+    h += '<div class="sec"><div class="note-line">✏️ '+t('gtAllumer')+'</div></div>';
+  } else if(it.manual){
+    h += '<div class="sec"><div class="sec-t">✏️ '+t('nomTitle')+'</div>'+
+         '<input class="mini" style="width:100%" value="'+esc(it.title[state.lang])+'" onchange="renameCustom(\''+it.id+'\',this.value)"></div>';
+  } else if(!gWritable){
+    const aNom = !!((store.titleOf||{})[it.id] || (it.sk && (store.titleSk||{})[it.sk]));
+    h += '<div class="sec"><div class="sec-t">✏️ '+t('nomTitle')+' <span class="orgv">('+t(it.gRO?'gRO':'nomLocal')+')</span></div>'+
+         '<input class="mini" style="width:100%" value="'+esc(it.title[state.lang])+'" onchange="setNomLocal(\''+it.id+'\',this.value)">'+
+         (aNom ? '<button class="act" style="margin-top:6px" onclick="nomOrigine(\''+it.id+'\')">'+t('nomReset')+'</button>' : '')+
+         '</div>';
+  }
+  if(gWritable && state.edit && state.edit[it.id]){
+    /* le brouillon (ce qui a ete tape) passe avant les valeurs de Google */
+    const dr=(state.gDraft&&state.gDraft[it.id])||{};
+    const val=(c,v)=>esc(dr[c]!==undefined?dr[c]:v);
+    const tout = dr.tout!==undefined ? !!dr.tout : !!it.allDay, ht=tout?' style="display:none"':'';
+    const qi='\''+it.id+'\'';
+    h += '<div class="sec gedit"><div class="sec-t">✏️ '+t('gEditTitle')+' <span class="orgv">('+t('gEditHint')+')</span></div>'+
+         '<label class="rang wide"><span>'+t('nomTitle')+'</span><input class="mini" id="get_'+k+'" value="'+val('titre', it.raw||it.title[state.lang])+'" oninput="gDraft('+qi+',\'titre\',this.value)"></label>'+
+         '<label class="chk chk-in"><input type="checkbox" id="gea_'+k+'"'+(tout?' checked':'')+' onchange="gDraft('+qi+',\'tout\',this.checked);geJour(\''+k+'\',this.checked)"><span>'+t('fAllDay')+'</span></label>'+
+         '<div class="row2c">'+
+           '<label class="rang"><span>'+t('fStart')+'</span><span class="pair"><input type="date" class="mini" id="ged_'+k+'" value="'+val('date', it.date)+'" onchange="gDraft('+qi+',\'date\',this.value);geDebut('+qi+',\''+k+'\',this.value)"><input type="time" class="mini tm" id="geh_'+k+'" value="'+val('heure', it.start||'')+'"'+ht+' oninput="gDraft('+qi+',\'heure\',this.value)"></span></label>'+
+           '<label class="rang"><span>'+t('fEnd')+'</span><span class="pair"><input type="date" class="mini" id="gedf_'+k+'" value="'+val('dateFin', it.endDate||it.date)+'" onchange="gDraft('+qi+',\'dateFin\',this.value);gDraft('+qi+',\'finTouchee\',1)"><input type="time" class="mini tm" id="gehf_'+k+'" value="'+val('fin', it.end||'')+'"'+ht+' oninput="gDraft('+qi+',\'fin\',this.value)"></span></label>'+
+         '</div>'+
+         '<label class="rang wide"><span>'+t('fPlace')+'</span><input class="mini" id="gel_'+k+'" value="'+val('lieu', it.loc||'')+'" oninput="gDraft('+qi+',\'lieu\',this.value)"></label>'+
+         '<label class="rang wide"><span>'+t('details')+'</span><textarea class="notes" id="gen_'+k+'" oninput="gDraft('+qi+',\'desc\',this.value)">'+val('desc', it.gDescH||'')+'</textarea></label>'+
+         (it.gRec ? '<div class="note-line">🔁 '+t('gEditRec')+'</div><label class="chk chk-in"><input type="checkbox" id="ges_'+k+'"'+(dr.serie?' checked':'')+' onchange="gDraft('+qi+',\'serie\',this.checked)"><span>'+t('gEditSerie')+'</span></label>' : '')+
+         '<div class="acts"><button class="act a-done" id="gesv_'+k+'"'+(GESV_EN_COURS[it.id]?' disabled':'')+' onclick="saveEditG('+qi+')">'+(GESV_EN_COURS[it.id]?t('enCours'):t('gEditSave'))+'</button>'+
+         '<button class="act" onclick="togEditG('+qi+')">'+t('cancel')+'</button></div>'+
+         '</div>';
   }
   const orgTxt = it.org ? it.org[state.lang] : S[state.lang];
   h += '<div class="sec"><div class="sec-t">🏷️ '+t('orgLbl')+' : <span class="orgv">'+esc(orgTxt)+'</span></div>'+
@@ -3861,8 +4184,10 @@ function card(it){
   h += btn('a-urg',  st==='overdue' && store.status[it.id]==='overdue', t('markUrg'), it.id, 'overdue');
   h += '<button class="act" onclick="setStatus(\''+it.id+'\',null)">'+t('reset')+'</button>';
   if(it.manual) h += '<button class="act" onclick="delCustom(\''+it.id+'\')">🗑 '+t('delTask')+'</button>';
-  const lst=allSections().map(s=>s.id), nxt=lst[(lst.indexOf(catOf(it))+1)%lst.length];
-  h += '<button class="act" onclick="moveCat(\''+it.id+'\')">'+t('moveTo')+' '+secName(secById(nxt))+'</button>';
+  if(it.manual && gcalDispo()) h += '<button class="act" id="pg_'+cssId(it.id)+'"'+(POUSSE_EN_COURS[it.id]?' disabled':'')+' onclick="pousserVersGoogle(\''+it.id+'\')">'+(POUSSE_EN_COURS[it.id]?t('enCours'):t('pushG'))+'</button>';
+  if(gWritable && !(state.edit && state.edit[it.id])) h += '<button class="act" onclick="togEditG(\''+it.id+'\')">'+t('gEditBtn')+'</button>';
+  const lst=secsPour(it).map(s=>s.id), nxt=lst[(lst.indexOf(catOf(it))+1)%lst.length];
+  h += '<button class="act" onclick="moveCat(\''+it.id+'\')">'+t('moveTo')+' '+esc(secName(secById(nxt)))+'</button>';
   if(it.link) h += '<a class="act link" href="'+esc(it.link)+'" target="_blank" rel="noopener">'+(it.gtache ? '✅ '+t('openTasks') : '📅 '+t('openCal'))+'</a>';
   h += '</div></div></article>';
   return h;
@@ -3900,23 +4225,369 @@ function setMeta(kind,sk,v){ store[kind][sk]=v; lsSet(); toast(t('toastSaved'));
    restait a vie. */
 function delCustom(id){
   if(!confirm(t('delTaskQ'))) return;
-  store.custom = store.custom.filter(c=>c.id!==id);
-  ['status','notes','checks','cat'].forEach(k=>{ if(store[k]) delete store[k][id]; });
-  delete state.open[id];
+  oublierCustom(id);
   lsSet(); buildTasks(); render(); toast(t('toastSaved'));
   if(window.AP&&AP.sync&&AP.sync.deleteTask) AP.sync.deleteTask(id);
 }
-/* Fait tourner la tache sur la section suivante, ce qui marche avec deux
-   sections comme avec dix. */
-function moveCat(id){
-  const it=TID(id), list=allSections().map(s=>s.id);
-  const i=list.indexOf(catOf(it));
-  store.cat[id]=list[(i+1)%list.length];
+/* Retire une tache ajoutee a la main ET tout ce qui s'y rattache. */
+function oublierCustom(id){
+  store.custom = store.custom.filter(c=>c.id!==id);
+  ['status','notes','checks','cat','subOf','titleOf'].forEach(k=>{ if(store[k]) delete store[k][id]; });
+  ['contact','place'].forEach(k=>{ if(store[k]) delete store[k]['c:'+id]; });
+  delete state.open[id];
+}
+/* Change la section d'une tache.
+   - cible absente : la section SUIVANTE (l'ancien bouton « ⇄ », qui marche
+     avec deux sections comme avec dix) ;
+   - cible = un id de section : celle-la, choisie dans la liste de la carte ;
+   - cible = '' : on oublie le choix fait sur CETTE tache (elle reprend celui
+     de sa serie, ou celui de sa source).
+   Les briques (gsync, gtasks, mbridge) enveloppent cette fonction et relisent
+   store.cat[id] apres coup : le choix suit sur les autres appareils.
+   silencieux : sans dessin ni message (appel en serie). */
+function moveCat(id, cible, silencieux){
+  const it=TID(id); if(!it) return;
+  const list=secsPour(it).map(s=>s.id);
+  if(cible===''){ delete store.cat[id]; }
+  else if(cible===undefined || cible===null){ const i=list.indexOf(catOf(it)); store.cat[id]=list[(i+1)%list.length]; }
+  else if(list.indexOf(cible)>=0){ store.cat[id]=cible; }
+  else return;
+  lsSet();
+  if(silencieux) return;
   /* on suit la carte : le cadre d'arrivee s'ouvre, la carte reste depliee,
      et l'ecran y va — au lieu de la voir disparaitre sans autre trace */
-  state.boards[store.cat[id]]=1; state.open[id]=true; applyPanels(); prefSet();
-  lsSet(); render(); toast(t('toastMoved')+' — '+secName(secById(store.cat[id])));
+  const ou=catOf(it);
+  state.boards[ou]=1; state.open[id]=true; applyPanels(); prefSet();
+  render(); toast(t('toastMoved')+' — '+secName(secById(ou)));
   setTimeout(()=>{ const e=document.getElementById('c_'+cssId(id)); if(e) e.scrollIntoView({block:'start',behavior:'smooth'}); },60);
+}
+/* La categorie (SUBS) d'une tache existante. v vide : on revient a celle de
+   la source. gsync enveloppe cette fonction (casier : suit sur le
+   telephone). */
+function setSub(id, v, silencieux){
+  store.subOf = store.subOf||{};
+  if(v && SUBS[v]) store.subOf[id]=v; else delete store.subOf[id];
+  lsSet();
+  if(silencieux) return;
+  render(); toast(t('toastSub'));
+}
+/* Les repetitions d'un meme rendez-vous (meme it.sk) presentes en ce moment. */
+function serieDe(it){ return (it && it.sk) ? TASKS.filter(x=>x.sk===it.sk) : (it ? [it] : []); }
+/* Un rendez-vous Google qui se repete : son choix « toutes les repetitions »
+   s'ecrit UNE fois chez Google, sur l'evenement maitre (gsync.sectionSerie),
+   et suit donc sur le telephone. */
+function serieGoogle(it){ return !!(it && it.src==='google' && !it.gtache && it.gRec && !it.gRO && window.AP && AP.gsync && AP.gsync.sectionSerie); }
+/* La liaison Google attend une reconnexion : un geste qui ecrit dans Google
+   ne part pas (il partirait des heures plus tard, par-dessus ce qui a change
+   entre-temps). On le dit. */
+function liaisonPrete(){
+  try{ if(window.AP&&AP.gauth&&typeof AP.gauth.etat==='function'&&AP.gauth.etat().besoinReconnexion){ toast(t('errLiaison')); return false; } }catch(e){}
+  return true;
+}
+/* TOUTE la serie. Rendez-vous Google repete : une ecriture sur le maitre.
+   Autre serie (agenda ecrit dans le programme, Microsoft) : le choix est
+   range par serie (store.catSk / subSk) et vaut aussi pour les occurrences
+   pas encore chargees ; les choix faits occurrence par occurrence s'effacent
+   devant lui. */
+let SERIE_EN_COURS=false;
+async function secSerie(id, v){
+  const it=TID(id); if(!it || !it.sk) return;
+  if(secsPour(it).map(s=>s.id).indexOf(v)<0) return;
+  if(serieGoogle(it)){
+    if(SERIE_EN_COURS){ toast(t('serieEnCours')); render(); return; }
+    if(!liaisonPrete()){ render(); return; }
+    SERIE_EN_COURS=true; toast(t('enCours'));
+    try{
+      if(!(await permisAgenda())){ toast(t('gNoWrite')); return; }
+      await AP.gsync.sectionSerie(id, v);
+      state.boards[v]=1; state.open[id]=true; applyPanels(); prefSet(); render();
+      toast(t('toastSerie')+' — '+secName(secById(v)));
+    }catch(e){ toast(t('gEditKo').replace('%1', errMsg(e))); render(); }
+    finally{ SERIE_EN_COURS=false; }
+    return;
+  }
+  store.catSk = store.catSk||{}; store.catSk[it.sk]=v;
+  serieDe(it).forEach(x=>{ if(store.cat[x.id]!==undefined) moveCat(x.id,'',true); });
+  lsSet(); state.boards[v]=1; state.open[id]=true; applyPanels(); prefSet(); render();
+  toast(t('toastSerie')+' — '+secName(secById(v)));
+}
+async function subSerie(id, v){
+  const it=TID(id); if(!it || !it.sk || !SUBS[v]) return;
+  if(serieGoogle(it)){
+    if(SERIE_EN_COURS){ toast(t('serieEnCours')); render(); return; }
+    if(!liaisonPrete()){ render(); return; }
+    SERIE_EN_COURS=true; toast(t('enCours'));
+    try{
+      if(!(await permisAgenda())){ toast(t('gNoWrite')); return; }
+      await AP.gsync.sousCatSerie(id, v);
+      render(); toast(t('toastSerie'));
+    }catch(e){ toast(t('gEditKo').replace('%1', errMsg(e))); render(); }
+    finally{ SERIE_EN_COURS=false; }
+    return;
+  }
+  store.subSk = store.subSk||{}; store.subSk[it.sk]=v;
+  serieDe(it).forEach(x=>{ if(store.subOf && store.subOf[x.id]!==undefined) setSub(x.id,'',true); });
+  lsSet(); render(); toast(t('toastSerie'));
+}
+function choisirSection(id, v){ if(serieCochee(id)) secSerie(id, v); else moveCat(id, v); }
+function choisirCategorie(id, v){ if(serieCochee(id)) subSerie(id, v); else setSub(id, v); }
+/* La case « toutes les repetitions » : son etat est garde (state.serieCase),
+   il survit aux redessins de la carte, et la cocher N'ECRIT RIEN — c'est le
+   choix suivant (section, categorie, nom) qui s'applique a toute la serie. */
+function caseSerie(id, on){
+  state.serieCase=state.serieCase||{};
+  if(on) state.serieCase[id]=true; else delete state.serieCase[id];
+}
+function serieCochee(id){ return !!(state.serieCase && state.serieCase[id]); }
+/* LE NOM D'UNE TACHE EXISTANTE, garde DANS LE PROGRAMME : pour ce qui ne
+   peut pas etre ecrit a la source (agenda en dur, Microsoft, agenda Google
+   en lecture seule). Par tache, ou par serie. Applique a chaque dessin
+   (appliquerNoms), le nom d'origine garde a cote (__t0). */
+function setNomLocal(id, v){
+  const it=TID(id); if(!it) return;
+  v=String(v||'').trim();
+  const serie=!!(serieCochee(id) && it.sk);
+  const orig=(it.__t0||it.title)[state.lang];
+  store.titleOf=store.titleOf||{}; store.titleSk=store.titleSk||{};
+  if(serie){
+    if(v && v!==orig) store.titleSk[it.sk]=v; else delete store.titleSk[it.sk];
+    serieDe(it).forEach(x=>{ delete store.titleOf[x.id]; });
+  } else {
+    /* v vide ou egal a l'origine : cette occurrence reprend son nom d'origine
+       — meme si la serie porte un autre nom (on le garde alors en propre). */
+    if(v && v!==orig) store.titleOf[id]=v;
+    else if(it.sk && store.titleSk[it.sk]) store.titleOf[id]=orig;
+    else delete store.titleOf[id];
+  }
+  lsSet(); render(); toast(t('toastSaved'));
+}
+/* « ↺ الاسم الأصلي » : cette occurrence seulement, sauf si la case « toutes
+   les repetitions » est cochee (alors toute la serie). */
+function nomOrigine(id){
+  const it=TID(id); if(!it) return;
+  const serie=!!(serieCochee(id) && it.sk);
+  store.titleOf=store.titleOf||{}; store.titleSk=store.titleSk||{};
+  const orig=(it.__t0||it.title)[state.lang];
+  if(serie){
+    delete store.titleSk[it.sk];
+    serieDe(it).forEach(x=>{ delete store.titleOf[x.id]; });
+  } else if(it.sk && store.titleSk[it.sk]){
+    store.titleOf[id]=orig;
+  } else {
+    delete store.titleOf[id];
+  }
+  lsSet(); render();
+}
+function appliquerNoms(){
+  const to=store.titleOf||{}, ts=store.titleSk||{};
+  const rien=!Object.keys(to).length && !Object.keys(ts).length;
+  TASKS.forEach(it=>{
+    if(rien && !it.__t0) return;
+    const v = to[it.id] || (it.sk && ts[it.sk]) || '';
+    const o = (it.__t0||it.title)[state.lang];
+    if(v && v!==o){ if(!it.__t0) it.__t0=it.title; it.title={ar:v, fr:v}; }
+    else if(it.__t0){ it.title=it.__t0; delete it.__t0; }
+  });
+}
+/* Le nom d'une tache ajoutee a la main : c'est sa propre donnee. */
+function renameCustom(id, v){
+  v=String(v||'').trim();
+  const c=store.custom.find(x=>x.id===id);
+  if(!c || !v){ render(); return; }
+  c.title=v; if(c.ev) c.ev.title=v;
+  lsSet(); buildTasks(); render(); toast(t('toastSaved'));
+  if(window.AP&&AP.sync&&AP.sync.setTaskFields) AP.sync.setTaskFields(id,{title:v});
+}
+/* L'echeance d'une tache Google Tasks (gtasks.js : file, attente, conflit).
+   Envoyee a la sortie du champ (pas a chaque chiffre tape). */
+function setSrcDue(id,v){ if(window.AP&&AP.gtasks&&AP.gtasks.ecrireEcheance) return AP.gtasks.ecrireEcheance(id,v); }
+
+/* ---- GOOGLE AGENDA : ecrire depuis le programme ---------------------------
+   La permission d'ecrire est demandee au moment du geste, jamais avant. Le
+   jeton que gsync garde en memoire ne la porte pas encore : on le lui fait
+   oublier, le suivant la portera. */
+async function permisAgenda(){
+  if(!(window.AP&&AP.gauth&&typeof AP.gauth.etat==='function')) return true;
+  if(AP.gauth.etat().peutEcrire) return true;
+  if(typeof AP.gauth.demanderEcriture!=='function') return false;
+  let ok=false; try{ ok=await AP.gauth.demanderEcriture(); }catch(e){ ok=false; }
+  if(ok && AP.gsync && AP.gsync.oublierJeton) AP.gsync.oublierJeton();
+  return !!ok;
+}
+function gcalDispo(){
+  try{ return !!(window.AP&&AP.gsync&&AP.gsync.creerTache&&AP.gsync.agendaPourEcrire&&AP.gsync.info().connecte&&AP.gsync.agendaPourEcrire()); }
+  catch(e){ return false; }
+}
+function nomAgendaG(id){
+  try{ const a=(AP.gsync.agendas()||[]).find(x=>x.id===id); return a ? a.nom : id; }catch(e){ return id; }
+}
+/* Un message lisible, dans la langue de l'ecran — jamais le texte technique
+   (francais ou anglais) d'une brique ou de Google. */
+/* « لم يُحفظ في Google: … » — sauf quand on ne SAIT pas (reponse perdue) :
+   dire « pas enregistre » pousserait a recreer. */
+function msgCreation(e){
+  const c=e&&e.code;
+  if(c==='incertainG' || c==='incertain') return errMsg(e);
+  return t('gCreateKo').replace('%1', errMsg(e));
+}
+function errMsg(e){
+  const c=e&&e.code;
+  const M={agenda:'errAgenda', date:'errDate', trop:'errTrop', titre:'errTitre', serie:'gSerieDate',
+           conflit:'errConflitDesc', ro:'gRO', disparu:'errDisparu', incertainG:'errIncertainG'};
+  if(c && M[c]) return t(M[c]);
+  /* gtasks.js fabrique deja ses messages traduits (crea_*) */
+  if(c && e.message) return e.message;
+  try{ console.warn('[Agenda Pro] erreur Google :', e); }catch(x){}
+  if(e && (e.jeton || e.name==='AP_SANS_JETON' || e.auth)) return t('errLiaison');
+  if(e && e.statut===403 && /ratelimit|quota|dailylimit|usagelimit/i.test(JSON.stringify(e.data||{}))) return t('errGoogle');
+  if(e && e.statut===403) return t('errDroit');
+  if(e && (e.name==='TypeError' || (typeof navigator!=='undefined' && navigator.onLine===false))) return t('errReseau');
+  return t('errGoogle');
+}
+/* LE BLOC « تعديل » : ce qui y est tape est garde a part (brouillon) jusqu'a
+   « حفظ » ou « إلغاء » — un redessin de la carte (relecture Google, geste sur
+   une autre partie de la carte) ne l'efface plus. */
+function togEditG(id){
+  state.edit=state.edit||{}; state.gDraft=state.gDraft||{};
+  state.edit[id]=!state.edit[id];
+  /* A l'ouverture : la description telle que l'artisan la voit MAINTENANT.
+     C'est elle qu'on compare a Google au moment d'enregistrer — une relecture
+     pendant qu'il tape ne doit pas deplacer la reference. */
+  if(state.edit[id]){ const it=TID(id); state.gDraft[id]={descBase:(it&&it.gDescH)||''}; }
+  else delete state.gDraft[id];
+  state.open[id]=true; render();
+}
+const GESV_EN_COURS={};
+function gDraft(id, champ, v){ state.gDraft=state.gDraft||{}; (state.gDraft[id]=state.gDraft[id]||{})[champ]=v; }
+function geJour(k,on){ ['geh_','gehf_'].forEach(p=>{ const e=document.getElementById(p+k); if(e) e.style.display=on?'none':''; }); }
+/* Changer la date de DEBUT fait suivre la date de fin (meme duree), tant que
+   l'artisan n'a pas touche la fin lui-meme. */
+function geDebut(id, k, v){
+  const it=TID(id); if(!it || !v) return;
+  const f=document.getElementById('gedf_'+k); if(!f) return;
+  const d0=state.gDraft&&state.gDraft[id]||{};
+  if(d0.finTouchee) return;
+  const ecart=Math.round((parse(it.endDate||it.date)-parse(it.date))/86400000);
+  f.value=iso(addDays(parse(v), Math.max(0,ecart)));
+  gDraft(id,'dateFin',f.value);
+}
+/* Enregistre dans Google ce qui a CHANGE dans le bloc « تعديل » d'un
+   rendez-vous Google. forcer : c'est l'artisan qui corrige un rendez-vous,
+   meme ecrit a la main dans Google — voir gsync.modifierTache. */
+const normTxt = s => String(s||'').replace(/\r\n?/g,'\n').replace(/^\n+/,'').replace(/\s+$/,'');
+async function saveEditG(id){
+  const it=TID(id); if(!it || !(window.AP&&AP.gsync&&AP.gsync.modifierTache)) return;
+  const k=cssId(id), g=p=>document.getElementById(p+k);
+  const b=g('gesv_'); if(!b || b.disabled || GESV_EN_COURS[id]) return;
+  const titre=g('get_').value.trim();
+  if(!titre){ toast(t('errTitre')); g('get_').focus(); return; }
+  const tout=g('gea_').checked, d1=g('ged_').value, h1=tout?'':g('geh_').value, h2=tout?'':g('gehf_').value;
+  let d2=g('gedf_').value||d1;
+  const lieu=g('gel_').value.trim(), desc=g('gen_').value;
+  const serie=!!(g('ges_') && g('ges_').checked);
+  const champs={};
+  if(titre!==String(it.raw||'').trim()) champs.titre=titre;
+  if(lieu!==String(it.loc||'').trim()) champs.lieu=lieu;
+  const dr0=(state.gDraft&&state.gDraft[id])||{};
+  const base=dr0.descBase!==undefined ? dr0.descBase : (it.gDescH||'');
+  if(dr0.desc!==undefined && normTxt(desc)!==normTxt(base)){ champs.desc=desc; champs.descAvant=base; }
+  /* debut deplace, fin laissee telle quelle : la fin suit (meme duree) —
+     sinon le rendez-vous s'etalerait sur plusieurs jours dans Google */
+  const fin0=it.endDate||it.date;
+  if(d1 && d1!==it.date && d2===fin0 && !dr0.finTouchee){
+    const ecart=Math.round((parse(fin0)-parse(it.date))/86400000);
+    d2=iso(addDays(parse(d1), Math.max(0,ecart)));
+  }
+  if(d2<d1) d2=d1;
+  const dateChangee = (!!tout)!==(!!it.allDay) || d1!==it.date || d2!==fin0 || (!tout && (h1!==(it.start||'') || h2!==(it.end||'')));
+  if(dateChangee){
+    if(!d1 || (!tout && !h1)){ toast(t('errDate')); return; }
+    let fuseau='Africa/Algiers';
+    try{ fuseau=Intl.DateTimeFormat().resolvedOptions().timeZone||fuseau; }catch(e){}
+    /* heure de fin avant l'heure de debut le meme jour : +1 h (comme Google) */
+    const h2b = (!tout && d2===d1 && h2 && h2<=h1) ? '' : h2;
+    Object.assign(champs,{date:d1, dateFin:d2, heure:h1, fin:h2b, fuseau:fuseau});
+  }
+  if(!Object.keys(champs).length){ toast(t('gEditRien')); return; }
+  if(serie && Object.keys(champs).some(c=>c!=='titre' && c!=='lieu')){ toast(t('gSerieDate')); return; }
+  if(!liaisonPrete()) return;
+  b.disabled=true; const lbl=b.textContent; b.textContent=t('enCours'); GESV_EN_COURS[id]=1;
+  try{
+    if(!(await permisAgenda())){ toast(t('gNoWrite')); return; }
+    await AP.gsync.modifierTache(id, champs, {explicite:true, forcer:true, serie:serie});
+    state.edit[id]=false; if(state.gDraft) delete state.gDraft[id];
+    toast(t('gEditOk')); render();
+  }catch(e){
+    /* coupure APRES l'envoi : la modification a pu arriver — ne pas dire
+       « rien n'est parti » */
+    const incertain = e && e.name==='TypeError' && !e.avantEnvoi && !(typeof navigator!=='undefined' && navigator.onLine===false);
+    toast(incertain ? t('errIncertainModif') : t('gEditKo').replace('%1', errMsg(e)));
+  }
+  finally{ delete GESV_EN_COURS[id]; b.disabled=false; b.textContent=lbl; render(); }
+}
+/* Une tache ajoutee a la main AVANT (elle n'existe que sur cet appareil)
+   part dans Google Agenda : UN rendez-vous, tel qu'on le voit ici (sa date,
+   son heure), avec sa section, sa categorie, son statut, sa note et sa
+   liste. Pas sa repetition ni ses invites : en local ce n'etait qu'une seule
+   tache, et ses invites n'ont jamais rien recu — les reactiver en silence
+   ferait apparaitre le rendez-vous chez eux. La copie locale n'est retiree
+   qu'une fois Google d'accord, et seulement si le rendez-vous revient bien a
+   l'ecran. */
+const POUSSE_EN_COURS={};
+async function pousserVersGoogle(id){
+  const c=store.custom.find(x=>x.id===id); if(!c) return;
+  if(POUSSE_EN_COURS[id]) return;
+  if(!gcalDispo()){ toast(t('errAgenda')); return; }
+  if(!liaisonPrete()) return;
+  try{
+    const w=AP.gsync.fenetre ? AP.gsync.fenetre() : null;
+    if(w && (c.date<w.debut || c.date>w.fin)){ toast(t('errHorsFenetre')); return; }
+  }catch(e){}
+  if(!confirm(t('pushGQ'))) return;
+  POUSSE_EN_COURS[id]=1;
+  const bt=document.getElementById('pg_'+cssId(id)); if(bt){ bt.disabled=true; bt.textContent=t('enCours'); }
+  try{
+    if(!(await permisAgenda())){ toast(t('gNoWrite')); return; }
+    const ev=c.ev||{}, it=TID(id)||{};
+    const ch=store.checks[id]||null;
+    const liste=(ch && ch.list) ? ch.list.slice() : (c.subs||[]).slice();
+    /* la date et l'heure telles que la carte les montre (c.date/c.time,
+       tenues a jour), la fin d'origine si elle existe le meme jour */
+    const fin0 = (!!c.time && String(ev.end||'').slice(0,10)===c.date) ? String(ev.end).slice(11,16) : '';
+    const o={
+      titre:c.title, date:c.date, heure:c.time||'', dateFin:c.date, fin:(fin0 && fin0>c.time)?fin0:'',
+      fuseau:ev.timeZone||'Africa/Algiers', desc:c.notes||'', lieu:ev.location||'',
+      rappels:ev.reminders, occupe:ev.busy, visibilite:ev.visibility,
+      sec:catOf(it)||c.cat, sub:subOf(it)||c.sub,
+      statut:store.status[id]||'', notes:store.notes[id]||'', liste:liste, coches:(ch&&ch.done)||[],
+      ct:store.contact['c:'+id]||'', pl:store.place['c:'+id]||''
+    };
+    /* un identifiant FIXE pour cette tache : la renvoyer apres une reponse
+       perdue retrouve le rendez-vous deja cree (pas de doublon) */
+    if(AP.gsync.idPour) o.id=AP.gsync.idPour(id);
+    const r=await AP.gsync.creerTache(o);
+    if(r && (r.id || r.repetition) && !r.horsFenetre){
+      oublierCustom(id); lsSet(); buildTasks(); render(); toast(t('pushGOk'));
+      if(window.AP&&AP.sync&&AP.sync.deleteTask) AP.sync.deleteTask(id);
+    } else {
+      /* cree chez Google mais hors de ce que le programme montre : on garde
+         la copie locale plutot que de la faire disparaitre */
+      toast(t('errHorsFenetre'));
+    }
+  }catch(e){ toast(msgCreation(e)); }
+  finally{ delete POUSSE_EN_COURS[id]; render(); }
+}
+/* L'objet du formulaire (readForm) dans la forme que gsync.creerTache lit. */
+function versGoogle(ev){
+  const all=!!ev.allDay, st=String(ev.start||''), en=String(ev.end||'');
+  return {
+    titre:ev.title, date:st.slice(0,10), heure:all?'':st.slice(11,16),
+    dateFin:en?en.slice(0,10):'', fin:(!all && en.length>10)?en.slice(11,16):'',
+    fuseau:ev.timeZone||'Africa/Algiers', desc:ev.description||'', lieu:ev.location||'',
+    repetition:ev.recurrence||'', rappels:ev.reminders, occupe:ev.busy,
+    visibilite:ev.visibility, invites:ev.guests||[],
+    sec:ev.cat, sub:ev.sub, liste:(ev.subs||[]).slice()
+  };
 }
 function expandDesc(id,e){ e.stopPropagation(); const d=document.getElementById('d_'+cssId(id)); if(d){ d.classList.toggle('collapsed'); } }
 function jumpTo(id){ const it=TID(id); if(it){ state.boards[catOf(it)]=1; applyPanels(); prefSet(); } state.open[id]=true; render(); setTimeout(()=>{const e=document.getElementById('c_'+cssId(id)); if(e) e.scrollIntoView({block:'center',behavior:'smooth'});},80); }
@@ -3966,8 +4637,10 @@ function togBoard(cat){
 function syncRing(){
   /* Générique : parcourt les clés au lieu de les énumérer, pour que des
      sections ajoutées par l'utilisateur soient prises en compte d'office. */
+  /* Seulement les cadres qui EXISTENT : celui de Google Tasks peut etre
+     memorise ouvert alors que sa section n'est pas (encore) la. */
   const allClosed = Object.values(state.pan).every(v=>!v)
-                 && Object.values(state.boards).every(v=>!v);
+                 && allSections().every(s=>!state.boards[s.id]);
   document.querySelector('.wrap').classList.toggle('ring', allClosed);
   const hb = document.getElementById('btnHome');
   if(hb) hb.classList.toggle('hide', allClosed);   /* inutile sur l'accueil */
@@ -4104,13 +4777,13 @@ function applyI18n(){
     .map(k=>'<button class="chip'+(state.win===k?' on':'')+'" onclick="setWin(\''+k+'\')">'+t(k)+'</button>').join('');
   /* filtres */
   const fs=document.getElementById('fSub');
-  fs.innerHTML='<option value="all">'+t('allSubs')+'</option>'+Object.keys(SUBS).map(k=>'<option value="'+k+'"'+(state.sub===k?' selected':'')+'>'+SUBS[k].ic+' '+SUBS[k][state.lang]+'</option>').join('');
+  fs.innerHTML='<option value="all">'+t('allSubs')+'</option>'+Object.keys(SUBS).map(k=>'<option value="'+esc(k)+'"'+(state.sub===k?' selected':'')+'>'+esc(SUBS[k].ic)+' '+esc(SUBS[k][state.lang])+'</option>').join('');
   const st=document.getElementById('fStatus');
   st.innerHTML='<option value="all">'+t('allStatus')+'</option>'+['pending','overdue','done','waiting','postponed','passed'].map(k=>'<option value="'+k+'"'+(state.status===k?' selected':'')+'>'+t('st.'+k)+'</option>').join('');
   /* modale */
-  const ac=document.getElementById('aCat');
-  ac.innerHTML=allSections().map(s=>'<option value="'+s.id+'">'+s.ic+' '+secName(s)+'</option>').join('');
-  const as=document.getElementById('aSub'); as.innerHTML=Object.keys(SUBS).map(k=>'<option value="'+k+'">'+SUBS[k].ic+' '+SUBS[k][state.lang]+'</option>').join('');
+  remplirSectionsAjout();
+  const as=document.getElementById('aSub'), asv=as.value; as.innerHTML=Object.keys(SUBS).map(k=>'<option value="'+esc(k)+'">'+esc(SUBS[k].ic)+' '+esc(SUBS[k][state.lang])+'</option>').join('');
+  if(asv && SUBS[asv]) as.value=asv;
   document.getElementById('totEv').textContent = TASKS.length;
 }
 function syncUI(){
@@ -4233,16 +4906,86 @@ function uiDelSub(id){
   if(!confirm(t('catDelAsk').replace('%s', SUBS[id][state.lang]||id))) return;
   delSub(id); renderSecModal(); toast(t('toastSaved'));
 }
-function openAdd(){
+/* cat : la section ou l'on veut ajouter (le « ＋ » d'un cadre). */
+function openAdd(cat){
+  remplirSectionsAjout();
+  const ac=document.getElementById('aCat');
+  /* « ＋ » du cadre Google Tasks alors que Google Tasks n'est pas encore pret
+     (jeton en route, reconnexion demandee) : on le dit, au lieu d'ouvrir le
+     formulaire sur une autre section — la tache serait partie ailleurs. */
+  if(cat==='gtasks' && ![...ac.options].some(o=>o.value==='gtasks')){ toast(t('gtPasPret')); return; }
   const d=iso(today());
   document.getElementById('aDate').value=d;
   document.getElementById('aDateEnd').value=d;
   if(!document.getElementById('aTime').value) document.getElementById('aTime').value='09:00';
   if(!document.getElementById('aTimeEnd').value) document.getElementById('aTimeEnd').value='10:00';
-  buildDaysBox();
+  ['aDateEnd','aTimeEnd'].forEach(i=>{ delete document.getElementById(i).dataset.touche; });
+  finSuitDebut();
+  buildDaysBox(true);
   if(!document.querySelector('#aRemBox .remrow')) addRemRow('popup',30);
+  /* la categorie de depart : « شخصي », pas la premiere de la liste (ضرائب) */
+  const as=document.getElementById('aSub'); if(as && SUBS.perso && !as.dataset.touche) as.value='perso';
+  if(cat && [...ac.options].some(o=>o.value===cat)) ac.value=cat;
   syncForm();
   openModal('mAdd');
+}
+/* La fin suit le debut (meme jour, une heure plus tard) tant que l'artisan
+   ne l'a pas changee lui-meme : sinon un rendez-vous pose a 14:30 gardait
+   « 10:00 » en fin et Google le refusait, ou un rendez-vous d'hier durait
+   jusqu'a aujourd'hui. */
+function finSuitDebut(){
+  const g=id=>document.getElementById(id);
+  const d1=g('aDate').value, t1=g('aTime').value;
+  if(!g('aDateEnd').dataset.touche || g('aDateEnd').value<d1) g('aDateEnd').value=d1;
+  if(t1 && (!g('aTimeEnd').dataset.touche || (g('aDateEnd').value===d1 && g('aTimeEnd').value<=t1))){
+    const p=t1.split(':'); let h=Number(p[0])+1; if(h>23) h=23;
+    g('aTimeEnd').value=pad(h)+':'+(h===23 && Number(p[0])===23 ? '59' : p[1]);
+  }
+}
+/* Les listes Google Tasks ou l'on peut creer une tache : celles qui sont
+   suivies (une tache creee dans une liste non suivie ne reviendrait jamais a
+   l'ecran). Vide sans Google Tasks. */
+function gtListes(){
+  try{
+    if(!(window.AP&&AP.gtasks&&AP.gtasks.creerTache&&AP.gtasks.info)) return [];
+    const i=AP.gtasks.info(); if(!i.connecte) return [];
+    const s=i.suivis||[]; return (i.listes||[]).filter(l=>s.indexOf(l.id)>=0);
+  }catch(e){ return []; }
+}
+/* Les sections proposees dans « إضافة » : toutes, plus « مهام Google Tasks »
+   des que Google Tasks est lisible (meme si la section n'a pas encore de
+   tache a montrer). Le choix en cours est garde. */
+function remplirSectionsAjout(){
+  const ac=document.getElementById('aCat'); if(!ac) return;
+  const avant=ac.value;
+  const secs=secsPour(null).slice();
+  if(gtListes().length) secs.push(allSections().find(s=>s.id==='gtasks') || SEC_GTASKS);
+  ac.innerHTML=secs.map(s=>'<option value="'+esc(s.id)+'">'+esc(s.ic)+' '+esc(secName(s))+'</option>').join('');
+  if(avant && secs.some(s=>s.id===avant)) ac.value=avant;
+  const gl=document.getElementById('aGtListe');
+  if(gl){
+    const av=gl.value, ls=gtListes();
+    gl.innerHTML=ls.map(l=>'<option value="'+esc(l.id)+'">'+esc(l.nom||l.id)+'</option>').join('');
+    if(av && ls.some(l=>l.id===av)) gl.value=av;
+  }
+  if(document.getElementById('mAdd') && document.getElementById('mAdd').classList.contains('show')) syncForm();
+}
+/* OU PART CE QUI EST ECRIT DANS « إضافة » :
+   - section « مهام Google Tasks » -> Google Tasks ;
+   - une autre section, Google Agenda relie et un agenda ou ecrire -> Google
+     Agenda (sauf « في البرنامج فقط ») ;
+   - sinon -> le programme, sur cet appareil (comme avant). */
+function destinationAjout(){
+  const g=id=>document.getElementById(id);
+  if(g('aCat').value==='gtasks'){
+    const ls=gtListes(), id=g('aGtListe').value || (ls[0]&&ls[0].id) || '';
+    const l=ls.find(x=>x.id===id);
+    return {type:'gtasks', liste:id, nom:l?(l.nom||l.id):''};
+  }
+  const dispo=gcalDispo();
+  if(!dispo || g('aLocalOnly').checked) return {type:'local', noG:!dispo};
+  const cal=AP.gsync.agendaPourEcrire();
+  return {type:'gcal', cal:cal, nom:nomAgendaG(cal)};
 }
 /* ===========================================================================
    FORMULAIRE D'EVENEMENT — memes champs que Google Agenda / Samsung Calendar.
@@ -4275,15 +5018,43 @@ function readReminders(){
 }
 /* Affiche/masque ce qui depend de « journee entiere » et du type de repetition */
 function syncForm(){
-  const all=document.getElementById('aAllDay').checked;
-  document.querySelectorAll('#mAdd .tm.hour, #aTime, #aTimeEnd').forEach(e=>{ e.style.display = all?'none':''; });
-  const f=document.getElementById('aFreq').value;
-  document.getElementById('aRecBox').style.display = f?'block':'none';
-  document.getElementById('aDaysBox').style.display = (f==='WEEKLY')?'flex':'none';
+  const g=id=>document.getElementById(id);
+  const dest=destinationAjout(), gt=dest.type==='gtasks';
+  const vis=(id,on)=>{ const e=g(id); if(e) e.style.display=on?'':'none'; };
+  /* Google Tasks n'a ni heure, ni fin, ni fuseau, ni repetition, ni lieu, ni
+     invites, ni rappel, ni occupe/libre : ces champs disparaissent au lieu
+     de laisser croire qu'ils partiront. */
+  ['aAllDayBox','aEndFld','aTzFld','aFreqFld','aLocFld','aGuestsFld','aRemFld','aBusyRow'].forEach(id=>vis(id,!gt));
+  vis('aGtListeBox', gt); vis('aNoDateBox', gt);
+  const pasDeDate = gt && g('aNoDate').checked;
+  g('aDate').style.display = pasDeDate ? 'none' : '';
+  if(g('aStartLbl')){ g('aStartLbl').textContent = gt ? t('gtDateEdit') : t('fStart'); g('aStartLbl').style.display = pasDeDate ? 'none' : ''; }
+  const all=g('aAllDay').checked;
+  document.querySelectorAll('#mAdd .tm.hour, #aTime, #aTimeEnd').forEach(e=>{ e.style.display = (all||gt)?'none':''; });
+  const f=g('aFreq').value;
+  g('aRecBox').style.display = (f && !gt)?'block':'none';
+  g('aDaysBox').style.display = (f==='WEEKLY' && !gt)?'flex':'none';
+  /* « في البرنامج فقط » n'a de sens que si Google Agenda est la ; le lien
+     « فتح في Google Agenda » ne sert que pour ce qui reste ici (sinon il
+     fabriquerait un doublon de ce qui part deja tout seul). */
+  vis('aLocalBox', !gt && gcalDispo());
+  vis('aOpenGBtn', dest.type==='local');
+  vis('aIcsBtn', !gt);
+  vis('aLinkNote', dest.type==='local');
+  const d=g('aDest');
+  if(d) d.textContent = gt ? t('destGtasks').replace('%1', dest.nom||'—')
+                     : dest.type==='gcal' ? t('destGcal').replace('%1', dest.nom||'')
+                     : t(dest.noG ? 'destLocalNoG' : 'destLocal');
+  const b=g('aSaveBtn');
+  if(b && !b.disabled) b.textContent = gt ? t('saveGtasks') : dest.type==='gcal' ? t('saveGcal') : t('save');
 }
-function buildDaysBox(){
+/* vide : repartir de cases vierges (ouverture du formulaire). Sinon les jours
+   deja coches sont gardes — un changement de langue ou l'arrivee des taches
+   Google Tasks ne doivent pas les effacer pendant que l'artisan remplit. */
+function buildDaysBox(vide){
   const box=document.getElementById('aDaysBox'); if(!box) return;
-  box.innerHTML = WDAYS.map((d,i)=>'<label class="dayck"><input type="checkbox" value="'+d+'"><span>'+T[state.lang].daysS[i]+'</span></label>').join('');
+  const on = vide ? new Set() : new Set([...box.querySelectorAll('input:checked')].map(c=>c.value));
+  box.innerHTML = WDAYS.map((d,i)=>'<label class="dayck"><input type="checkbox" value="'+d+'"'+(on.has(d)?' checked':'')+'><span>'+T[state.lang].daysS[i]+'</span></label>').join('');
 }
 /* Recolte le formulaire dans l'objet commun aux deux generateurs. */
 function readForm(){
@@ -4293,8 +5064,11 @@ function readForm(){
   const all=g('aAllDay').checked;
   const d1=g('aDate').value||iso(today());
   const t1=all?'':(g('aTime').value||'09:00');
-  const d2=g('aDateEnd').value||d1;
-  const t2=all?'':(g('aTimeEnd').value||'');
+  /* une fin avant le debut n'a pas de sens : meme jour, et sans heure de
+     fin (Google, comme l'.ics, compte alors une heure) */
+  let d2=g('aDateEnd').value||d1; if(d2<d1) d2=d1;
+  let t2=all?'':(g('aTimeEnd').value||'');
+  if(!all && d2===d1 && t2 && t2<=t1) t2='';
   const freq=g('aFreq').value;
   let rrule=null;
   if(freq){
@@ -4328,17 +5102,64 @@ function readForm(){
     subs:g('aSubs').value.split('\n').map(s=>s.trim()).filter(Boolean)
   };
 }
-/* Enregistre dans le tableau de bord. */
-function saveTask(){
+/* Enregistre : dans Google Tasks, dans Google Agenda, ou dans le programme
+   (destinationAjout). Un envoi rate laisse le formulaire ouvert et rempli. */
+async function saveTask(){
   const ev=readForm(); if(!ev) return;
-  store.custom.push({
-    id:'m|'+Date.now(), title:ev.title, cat:ev.cat, sub:ev.sub,
-    date:ev.start.slice(0,10), time:ev.allDay?'':ev.start.slice(11,16),
-    notes:ev.description, subs:ev.subs, ev:ev
-  });
-  lsSet(); buildTasks(); render(); closeModal('mAdd'); toast(t('toastSaved'));
+  const dest=destinationAjout();
+  if(dest.type==='local'){
+    store.custom.push({
+      id:'m|'+Date.now(), title:ev.title, cat:ev.cat, sub:ev.sub,
+      date:ev.start.slice(0,10), time:ev.allDay?'':ev.start.slice(11,16),
+      notes:ev.description, subs:ev.subs, ev:ev
+    });
+    lsSet(); buildTasks(); render(); closeModal('mAdd'); toast(t('toastSaved'));
+    viderAjout();
+    return;
+  }
+  const b=document.getElementById('aSaveBtn');
+  if(!b || b.disabled) return;
+  b.disabled=true; b.textContent=t('enCours');
+  try{
+    if(dest.type==='gtasks'){
+      const sansDate=document.getElementById('aNoDate').checked;
+      const r=await AP.gtasks.creerTache({ liste:dest.liste, titre:ev.title, notes:ev.description,
+        date: sansDate ? '' : ev.start.slice(0,10), sous:ev.subs });
+      /* la categorie choisie dans le formulaire, gardee ici (Google Tasks n'en a pas) */
+      if(r && r.id && ev.sub && ev.sub!=='perso') setSub(r.id, ev.sub, true);
+      closeModal('mAdd'); viderAjout();
+      toast(r && r.sousKo ? t('toastGtSousKo').replace('%1', r.sousKo) : t('toastGtOk'));
+      state.boards.gtasks=1; applyPanels(); prefSet(); render();
+    } else {
+      if(!liaisonPrete()) return;
+      if(!(await permisAgenda())){ toast(t('gNoWrite')); return; }
+      /* le MEME identifiant d'un essai a l'autre, tant que ce formulaire n'a
+         pas reussi : un second « حفظ » apres une reponse perdue retrouve le
+         rendez-vous deja cree au lieu d'en faire un second */
+      /* le meme identifiant pour le MEME rendez-vous (titre, debut, fin,
+         section) — un autre rendez-vous tape dans ce formulaire en recoit un
+         nouveau, et ne peut jamais remplacer le premier */
+      const emp=[ev.title, ev.start, ev.end, ev.cat].join('|');
+      if((!ID_AJOUT || EMP_AJOUT!==emp) && AP.gsync.idNeuf){ ID_AJOUT=AP.gsync.idNeuf(); EMP_AJOUT=emp; }
+      const r=await AP.gsync.creerTache(Object.assign(versGoogle(ev), {id:ID_AJOUT||undefined}));
+      ID_AJOUT=null; EMP_AJOUT=null;
+      closeModal('mAdd'); viderAjout(); toast(t(r && r.horsFenetre ? 'gcalHorsFenetre' : 'toastGcalOk'));
+      if(state.boards[ev.cat]!==undefined){ state.boards[ev.cat]=1; applyPanels(); prefSet(); }
+      render();
+    }
+  }catch(e){
+    toast(msgCreation(e));
+  }finally{
+    b.disabled=false; syncForm();
+  }
+}
+let ID_AJOUT=null, EMP_AJOUT=null;
+function viderAjout(){
+  ID_AJOUT=null; EMP_AJOUT=null;
   ['aTitle','aNotes','aSubs','aTime','aTimeEnd','aLoc','aGuests','aUntil','aCount','aFreq'].forEach(i=>{const e=document.getElementById(i); if(e) e.value='';});
-  { const cb=document.getElementById('aAllDay'); if(cb) cb.checked=false; }
+  ['aDateEnd','aTimeEnd','aSub'].forEach(i=>{ const e=document.getElementById(i); if(e) delete e.dataset.touche; });
+  { const as=document.getElementById('aSub'); if(as && SUBS.perso) as.value='perso'; }
+  ['aAllDay','aNoDate','aLocalOnly'].forEach(i=>{ const cb=document.getElementById(i); if(cb) cb.checked=false; });
   document.getElementById('aRemBox').innerHTML='';
 }
 /* Sortie vers les agendas. */
@@ -4370,7 +5191,7 @@ function exportAllICS(){
       end:   it.allDay? it.date : (it.end? it.date+'T'+it.end : ''),
       endInclusive:it.allDay,
       timezone:'Africa/Algiers',
-      categories:[ (SUBS[it.sub]||{}).fr || it.sub ],
+      categories:[ (SUBS[subOf(it)]||{}).fr || subOf(it) ],
       status: statusOf(it)==='done' ? 'CONFIRMED' : 'CONFIRMED'
     };
   });
@@ -4385,21 +5206,31 @@ function exportJSON(){
   const map = it=>({
     id:it.id, title:it.title[state.lang], source_title:it.raw, date:it.sansDate ? '' : it.date, no_date:!!it.sansDate,
     time:(it.allDay?'':it.start+(it.end?'-'+it.end:'')),
-    sub_category:SUBS[it.sub]?SUBS[it.sub][state.lang]:it.sub,
+    sub_category:SUBS[subOf(it)]?SUBS[subOf(it)][state.lang]:subOf(it),
     status:t('st.'+statusOf(it)), sub_tasks:clOf(it), done_tasks:clDone(it),
     notes:store.notes[it.id]||''
   });
   const out={ generated_at:new Date().toISOString(), window:state.win,
     enterprise:vis.filter(i=>catOf(i)==='ent').map(map),
     personal:vis.filter(i=>catOf(i)==='perso').map(map) };
-  allSections().filter(s=>!s.builtin).forEach(s=>{ out[s.id]=vis.filter(i=>catOf(i)===s.id).map(map); });
+  allSections().filter(s=>!s.builtin || s.auto).forEach(s=>{ out[s.id]=vis.filter(i=>catOf(i)===s.id).map(map); });
   dl(JSON.stringify(out,null,2),'agenda-dashboard-'+iso(today())+'.json');
 }
 function backupState(){ dl(JSON.stringify(store,null,2),'agendapro-backup-'+iso(today())+'.json'); }
 function restoreState(inp){
   const f=inp.files[0]; if(!f) return;
   const r=new FileReader();
-  r.onload=e=>{ try{ store=Object.assign(store,JSON.parse(e.target.result)); lsSet(); buildTasks(); render(); toast(t('toastSaved')); }catch(x){ toast(t('restoreBad')); } };
+  r.onload=e=>{ try{
+    const b=JSON.parse(e.target.result);
+    /* une sauvegarde d'avant ces choix n'en porte pas : on les remet a vide,
+       sinon ils survivraient a la restauration qui devait les annuler */
+    ['subOf','catSk','subSk','titleOf','titleSk'].forEach(k=>{ if(!b || typeof b[k]!=='object' || !b[k]) b[k]={}; });
+    store=Object.assign(store,b);
+    const ids=new Set((store.subs||[]).map(x=>x.id));
+    Object.keys(SUBS).forEach(k=>{ if(SUBS[k].custom && !ids.has(k)) delete SUBS[k]; });
+    if(state.sub!=='all' && !SUBS[state.sub]) state.sub='all';
+    mergeSubs(); lsSet(); buildTasks(); buildBoardsDOM(); applyI18n(); applyPanels(); render(); toast(t('toastSaved'));
+  }catch(x){ toast(t('restoreBad')); } };
   r.readAsText(f); inp.value='';
 }
 function dl(txt,name){

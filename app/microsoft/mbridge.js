@@ -404,7 +404,9 @@
 
   function reprendreLeTravail(paires) {
     if (!P.store || !P.lsSet) { return; }
-    var champs = ['status', 'notes', 'cat', 'sub', 'contact', 'place'];
+    /* 'subOf' et 'titleOf' : les cles de store (index.html) — 'sub'
+       n'en etait pas une. */
+    var champs = ['status', 'notes', 'cat', 'subOf', 'titleOf', 'contact', 'place'];
     /* Un instantane PAR CHAMP de ce qui a deja ete recopie, pas un simple
        « fait/pas fait » pour toute la paire. Un rendez-vous en dur peut
        reapparaitre temporairement (calendrier Microsoft decoche puis

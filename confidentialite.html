@@ -75,7 +75,7 @@
   <header>
     <div>
       <h1><span lang="fr">Confidentialité</span><span lang="ar">سياسة الخصوصية</span></h1>
-      <p class="maj"><span lang="fr">Dernière mise à jour : 28 septembre 2026</span><span lang="ar">آخر تحديث: 28 سبتمبر 2026</span></p>
+      <p class="maj"><span lang="fr">Dernière mise à jour : 29 septembre 2026</span><span lang="ar">آخر تحديث: 29 سبتمبر 2026</span></p>
     </div>
     <div class="langues">
       <button type="button" data-set="fr" aria-pressed="true">Français</button>
@@ -111,7 +111,7 @@
         </tr>
         <tr>
           <td><code>calendar.events</code></td>
-          <td><span lang="fr">Enregistrer <span class="fort">uniquement</span> vos annotations (statut, notes, cases cochées) dans un tiroir privé de l'événement, afin de les retrouver sur vos autres appareils.</span><span lang="ar">حفظ <span class="fort">ملاحظاتك وحدها</span> (الحالة، الملاحظات، التأشيرات) في درج خاص داخل الموعد، لتجدها على أجهزتك الأخرى.</span></td>
+          <td><span lang="fr">Enregistrer vos annotations (statut, notes, cases cochées, section, catégorie) dans un tiroir privé de l'événement, afin de les retrouver sur vos autres appareils. Et, <span class="fort">seulement quand vous le demandez</span> : créer le rendez-vous que vous venez d'écrire dans « إضافة », ou modifier le titre, la date, l'heure, le lieu ou la description d'un rendez-vous dont vous êtes l'organisateur (bouton « تعديل في Google Agenda »).</span><span lang="ar">حفظ ملاحظاتك (الحالة، الملاحظات، التأشيرات، القسم، التصنيف) في درج خاص داخل الموعد، لتجدها على أجهزتك الأخرى. و<span class="fort">فقط حين تطلب ذلك</span>: إنشاء الموعد الذي كتبتَه في «إضافة»، أو تعديل عنوان موعد أنت منظّمه أو تاريخه أو ساعته أو مكانه أو وصفه (زر «تعديل في Google Agenda»).</span></td>
         </tr>
         <tr>
           <td><code>userinfo.email</code></td>
@@ -123,7 +123,7 @@
         </tr>
         <tr>
           <td><code>tasks</code></td>
-          <td><span lang="fr">Demandée <span class="fort">uniquement</span> si vous cochez « Écrire les changements dans Google Tasks ». Elle sert à reporter dans Google Tasks ce que vous changez ici : terminée ou non, le titre et la note d'une tâche. L'application ne crée ni ne supprime jamais une tâche ni une liste.</span><span lang="ar">لا تُطلب <span class="fort">إلا</span> إذا فعّلتَ «كتابة التغييرات في Google Tasks الحقيقي». وتُستعمل لنقل ما تغيّره هنا إلى Google Tasks: مُنجزة أم لا، وعنوان المهمة وملاحظتها. ولا يُنشئ البرنامج أي مهمة أو قائمة ولا يحذفها أبداً.</span></td>
+          <td><span lang="fr">Demandée <span class="fort">uniquement</span> si vous cochez « Écrire les changements dans Google Tasks », ou quand vous enregistrez une nouvelle tâche dans la section « مهام Google Tasks ». Elle sert à reporter dans Google Tasks ce que vous changez ici (terminée ou non, titre, note, date d'une tâche) et à créer la tâche que vous venez d'écrire, avec ses sous-tâches. L'application ne supprime jamais une tâche, et ne crée, ne modifie ni ne supprime jamais une liste.</span><span lang="ar">لا تُطلب <span class="fort">إلا</span> إذا فعّلتَ «كتابة التغييرات في Google Tasks الحقيقي»، أو حين تحفظ مهمة جديدة في قسم «مهام Google Tasks». وتُستعمل لنقل ما تغيّره هنا إلى Google Tasks (مُنجزة أم لا، العنوان، الملاحظة، التاريخ) ولإنشاء المهمة التي كتبتَها مع مهامها الفرعية. ولا يحذف البرنامج أي مهمة أبداً، ولا يُنشئ أي قائمة ولا يعدّلها ولا يحذفها.</span></td>
         </tr>
         <tr>
           <td><code>drive.appdata</code></td>
@@ -131,8 +131,8 @@
         </tr>
       </tbody>
     </table>
-    <p lang="fr" style="margin-top:14px"><span class="fort">Règle d'écriture stricte, appliquée dans le code :</span> sur un rendez-vous qui existe déjà, l'application n'a le droit de modifier <span class="fort">qu'un seul champ</span> — le tiroir d'annotations qui lui appartient. Le titre, l'heure, la description, le lieu, les invités et les rappels que vous avez écrits vous-même ne sont jamais touchés. Toute tentative d'écrire ailleurs est refusée par le programme lui-même. Une seule exception, que vous choisissez : si vous cochez « Afficher les détails dans le rendez-vous », un bloc délimité est ajouté à la description, sans jamais toucher au texte qui s'y trouve. Dans Google Tasks, seuls l'état terminé/non terminé, le titre et la note d'une tâche existante peuvent être modifiés, et seulement si vous l'avez activé.</p>
-    <p lang="ar" style="margin-top:14px"><span class="fort">قاعدة كتابة صارمة، مطبَّقة في الشيفرة:</span> على موعد موجود سلفاً، لا يحقّ للبرنامج تعديل <span class="fort">إلا خانة واحدة</span> — درج الملاحظات الذي يخصّه. أمّا العنوان والوقت والوصف والمكان والمدعوّون والتنبيهات التي كتبتَها أنت، فلا تُمسّ أبداً. وأي محاولة للكتابة في غيرها يرفضها البرنامج نفسه. استثناء واحد تختاره أنت: إن فعّلتَ «إظهار التفاصيل داخل الموعد»، يُضاف مقطع محدَّد إلى الوصف دون أن يُمسّ النص الموجود فيه. وفي Google Tasks لا يُعدَّل إلا الإتمام والعنوان والملاحظة لمهمة موجودة، وفقط إن فعّلتَ ذلك.</p>
+    <p lang="fr" style="margin-top:14px"><span class="fort">Règle d'écriture stricte, appliquée dans le code :</span> de lui-même, l'application ne modifie sur un rendez-vous existant <span class="fort">qu'un seul champ</span> — le tiroir d'annotations qui lui appartient. Le titre, l'heure, la description, le lieu, les invités et les rappels ne changent que lorsque <span class="fort">vous</span> les modifiez dans le bloc « تعديل » et appuyez sur « حفظ في Google » ; la description est alors relue juste avant, et rien n'est écrit si elle a changé ailleurs entre-temps. Un rendez-vous n'est créé que lorsque vous l'enregistrez dans « إضافة » (les invités sont ajoutés sans leur envoyer de courriel). Toute autre tentative d'écriture est refusée par le programme lui-même. Si vous cochez « Afficher les détails dans le rendez-vous », un bloc délimité est ajouté à la description, sans toucher au texte qui s'y trouve. Dans Google Tasks, seuls l'état terminé/non terminé, le titre, la note et la date d'une tâche existante peuvent être modifiés (si vous l'avez activé), et une tâche n'est créée que lorsque vous l'enregistrez.</p>
+    <p lang="ar" style="margin-top:14px"><span class="fort">قاعدة كتابة صارمة، مطبَّقة في الشيفرة:</span> من تلقاء نفسه، لا يعدّل البرنامج في موعد موجود <span class="fort">إلا خانة واحدة</span> — درج الملاحظات الذي يخصّه. أمّا العنوان والوقت والوصف والمكان والمدعوّون والتنبيهات، فلا تتغيّر إلا حين <span class="fort">تعدّلها أنت</span> في مقطع «تعديل» وتضغط «حفظ في Google»؛ ويُعاد قراءة الوصف قبلها مباشرة، ولا يُكتب شيء إن تغيّر في مكان آخر في الأثناء. ولا يُنشأ موعد إلا حين تحفظه في «إضافة» (ويُضاف المدعوّون دون إرسال بريد إليهم). وأي محاولة أخرى للكتابة يرفضها البرنامج نفسه. وإن فعّلتَ «إظهار التفاصيل داخل الموعد»، يُضاف مقطع محدَّد إلى الوصف دون أن يُمسّ النص الموجود فيه. وفي Google Tasks لا يُعدَّل إلا الإتمام والعنوان والملاحظة والتاريخ لمهمة موجودة (إن فعّلتَ ذلك)، ولا تُنشأ مهمة إلا حين تحفظها أنت.</p>
   </div>
 
   <div class="carte">

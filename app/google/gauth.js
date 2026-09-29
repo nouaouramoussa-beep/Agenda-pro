@@ -405,7 +405,19 @@
   function estUneTache(url) {
     return /\/tasks\/v1\//.test(url);
   }
-  var CHAMPS_TACHE_AUTORISES = ['title', 'notes', 'status', 'completed'];
+  /* .../tasks/v1/lists/LISTE/tasks — la CREATION d'une tache dans UNE liste
+     precise (l'artisan l'a ecrite dans le formulaire « إضافة » et a choisi
+     « مهام Google Tasks »). Rien apres « tasks » : ni « clear » (effacer les
+     terminees), ni une tache precise, ni « move ». Les seuls parametres admis
+     sont ceux qui placent la tache (parent : sous-tache ; previous : ordre). */
+  function estUneCreationDeTache(url) {
+    var m = /\/tasks\/v1\/lists\/[^\/?#]+\/tasks(\?([^#]*))?$/.exec(url);
+    if (!m) { return false; }
+    if (!m[2]) { return true; }
+    return m[2].split('&').every(function (p) { return /^(parent|previous)=[^&=]+$/.test(p); });
+  }
+  var CHAMPS_TACHE_AUTORISES = ['title', 'notes', 'status', 'completed', 'due'];
+  var CHAMPS_CREATION_TACHE = ['title', 'notes', 'due'];
 
   /* LE GARDIEN. Il recoit la methode, l'adresse, le corps de la requete, et
      ce que l'appelant declare ; il rend le corps a envoyer, ou il jette. */
@@ -423,13 +435,37 @@
        calendrier ci-dessous. Il n'existe pas de tiroir prive equivalent a
        extendedProperties sur une tache Google Tasks : TOUT champ ecrit ici
        est visible par l'artisan, donc AUCUNE ecriture ne passe sans la
-       permission explicite — pas d'exception « c'est notre tache », puisque
-       app/google/gtasks.js ne cree jamais de tache. */
+       permission explicite — pas d'exception « c'est notre tache ».
+       Deux gestes seulement : PATCH sur une tache precise (statut, titre,
+       note, echeance) et POST dans une liste precise (creer une tache que
+       l'artisan vient d'ecrire). Jamais de suppression, jamais rien sur les
+       listes elles-memes. */
     if (estUneTache(url)) {
+      if (methode === 'POST' && estUneCreationDeTache(url)) {
+        if (!permis) {
+          throw refus(
+            'Regle d\'ecriture : creer une tache Google Tasks exige la permission ' +
+            'explicite de l\'artisan. Fournissez permission:"' + PERMISSION_EXPLICITE + '".'
+          );
+        }
+        var clesC = Object.keys(corps || {});
+        var interditsC = clesC.filter(function (c) { return CHAMPS_CREATION_TACHE.indexOf(c) < 0; });
+        if (interditsC.length) {
+          throw refus(
+            'Regle d\'ecriture : une tache Google Tasks creee ici ne porte que ' +
+            CHAMPS_CREATION_TACHE.join(', ') + '. Champs refuses : ' + interditsC.join(', ') + '.'
+          );
+        }
+        if (!String((corps || {}).title || '').trim()) {
+          throw refus('Regle d\'ecriture : une tache Google Tasks sans titre est refusee.');
+        }
+        return corps;
+      }
       if (methode !== 'PATCH' || !estUneTachePrecise(url)) {
         throw refus(
-          'Regle d\'ecriture : sur Google Tasks, seul PATCH sur une tache precise ' +
-          'est autorise (jamais de creation ni de suppression). Methode refusee : ' + methode + '.'
+          'Regle d\'ecriture : sur Google Tasks, seuls PATCH sur une tache precise ' +
+          'et POST dans une liste precise sont autorises (jamais de suppression). ' +
+          'Methode refusee : ' + methode + '.'
         );
       }
       if (!permis) {
@@ -1373,6 +1409,12 @@
         });
       }
 
+      /* Un geste de l'artisan (creer, modifier un rendez-vous) demande de ne
+         PAS attendre : sans jeton, il echoue tout de suite, avec un message,
+         au lieu de partir des heures plus tard par-dessus ce qui a change. */
+      if (opts.attendre === false) {
+        throw nommer(new Error('liaison Google absente'), 'AP_SANS_JETON');
+      }
       /* Ni jeton, ni droit d'ouvrir une fenetre : on ATTEND, exactement comme
          a la PARTIE 12. C'est ce qui fait que la file d'ecriture du moteur ne
          perd rien a l'expiration — elle repart quand l'artisan se reconnecte. */

@@ -189,7 +189,7 @@
       tachesKo:     'تعذّر جلب قوائم المهام من Google.',
       porteeTaches: 'لم يُمنح البرنامج بعدُ إذن قراءة مهامك في Google Tasks. اضغط الزر أدناه ووافق في نافذة Google — مرة واحدة فقط.',
       autoriserTaches: 'السماح بقراءة المهام',
-      resumeTaches: 'وصلت {n}: منها {s} بدون تاريخ و{f} منجزة.',
+      resumeTaches: 'وصلت {n}: منها {s} بدون تاريخ و{f} منجزة. تجدها في قسم «مهام Google Tasks» في الصفحة الرئيسية.',
       tachesLues:   'Google Tasks : {n}',
       bandeauTaches: 'مهامك في Google Tasks لا تظهر بعد: البرنامج يحتاج إذناً بقراءتها.',
       plusTardTaches: 'لاحقاً',
@@ -197,7 +197,7 @@
       /* --- ecrire dans Google Tasks : statut، عنوان، ملاحظة (app/google/gtasks.js) --- */
       titreEcritureTaches: 'كتابة التغييرات في Google Tasks الحقيقي',
       aideEcritureTaches: 'عند التفعيل: الضغط على «✓ مكتملة»، أو تعديل العنوان أو الملاحظة لمهمة مصدرها Google Tasks داخل هذا البرنامج، يُكتب أيضاً في تطبيق Google Tasks الحقيقي (على هاتفك وفي كل مكان). لا يُنشئ البرنامج أي مهمة ولا يحذف أي مهمة. يتطلب موافقة إضافية من Google تظهر مرة واحدة فقط.',
-      tachesArrivees: 'وصلت مهامك من Google Tasks: {n}.',
+      tachesArrivees: 'وصلت مهامك من Google Tasks: {n} — في قسم «مهام Google Tasks».',
       tachesChargement: 'جارٍ جلب مهامك من Google Tasks…',
       resumeZero:   'لم تصل أي مهمة بعد — القوائم المختارة فارغة.',
       tachesEnAttente: 'تغييرات بانتظار الإرسال إلى Google Tasks: {n}',
@@ -303,7 +303,7 @@
       tachesKo:     'La liste des taches n\'a pas pu etre lue depuis Google.',
       porteeTaches: 'Le programme n\'a pas encore le droit de lire vos taches Google Tasks. Cliquez le bouton ci-dessous et acceptez dans la fenetre Google — une seule fois.',
       autoriserTaches: 'Autoriser la lecture des taches',
-      resumeTaches: '{n} tache(s) recue(s) : {s} sans date et {f} terminee(s).',
+      resumeTaches: '{n} tache(s) recue(s) : {s} sans date et {f} terminee(s). Elles sont dans la section « Tâches Google Tasks » de la page d\'accueil.',
       tachesLues:   'Google Tasks : {n}',
       bandeauTaches: 'Vos taches Google Tasks ne s\'affichent pas encore : le programme a besoin du droit de les lire.',
       plusTardTaches: 'Plus tard',
@@ -311,7 +311,7 @@
       /* --- ecrire dans Google Tasks : statut, titre, note (app/google/gtasks.js) --- */
       titreEcritureTaches: 'Ecrire les changements dans Google Tasks',
       aideEcritureTaches: 'Une fois active : cliquer « ✓ Terminée », ou modifier le titre ou la note d\'une tache venue de Google Tasks dans ce programme s\'ecrit aussi dans l\'application Google Tasks reelle (sur votre telephone, partout). Le programme ne cree ni ne supprime jamais une tache. Necessite une autorisation Google supplementaire, demandee une seule fois.',
-      tachesArrivees: 'Vos taches Google Tasks sont arrivees : {n}.',
+      tachesArrivees: 'Vos taches Google Tasks sont arrivees : {n} — section « Tâches Google Tasks ».',
       tachesChargement: 'Lecture de vos taches Google Tasks…',
       resumeZero:   'Aucune tache recue pour l\'instant — les listes choisies sont vides.',
       tachesEnAttente: 'Changements en attente d\'envoi vers Google Tasks : {n}',
@@ -1001,7 +1001,9 @@
     if (!P.store || !P.lsSet) { return; }
     var r = reglagesPont();
     var faites = r.reprises || {};
-    var champs = ['status', 'checks', 'notes', 'cat', 'contact', 'place'];
+    /* subOf : la categorie choisie sur la carte. Pas titleOf : le jumeau
+       Google se renomme dans Google (bloc « تعديل »), pas dans le programme. */
+    var champs = ['status', 'checks', 'notes', 'cat', 'subOf', 'contact', 'place'];
     var n = 0, change = false;
 
     paires.forEach(function (pr) {
@@ -2138,8 +2140,18 @@
       var serie = String(id).replace(/_\d{8}(T\d{6}Z)?$/, ''); if (!serie) { return; }
       if (s[serie]) { return; }
       /* la section telle que l'artisan la voit (deplacements compris) */
-      var cat = (typeof W.catOf === 'function') ? W.catOf(t) : t.cat;
-      s[serie] = [cat || 'perso', t.sub || 'perso', t.routine ? 1 : 0]; n++;
+      /* Le NIVEAU SERIE seulement (choix « toutes les repetitions ») : le
+         choix fait sur UNE occurrence ne doit pas deplacer toute la serie
+         sur le telephone. */
+      var st = P.store || {};
+      /* Un rendez-vous qui ne se repete pas (son id EST la serie) : son
+         choix a lui est le choix de sa « serie ». */
+      var seul = String(id) === serie;
+      /* meme priorite qu'a l'ecran (catOf/subOf) : le choix de la tache, puis
+         celui de sa serie */
+      var cat = (seul && st.cat && st.cat[t.id]) || (st.catSk && t.sk && st.catSk[t.sk]) || t.cat;
+      var sub = (seul && st.subOf && st.subOf[t.id]) || (st.subSk && t.sk && st.subSk[t.sk]) || t.sub;
+      s[serie] = [cat || 'perso', sub || 'perso', t.routine ? 1 : 0]; n++;
     });
     return n ? s : null;
   }

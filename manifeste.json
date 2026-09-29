@@ -1,5 +1,5 @@
 {
- "genere": "2026-09-28T21:39:54.033Z",
+ "genere": "2026-09-29T14:35:10.605Z",
  "fichiers": {
   ".nojekyll": {
    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -38,20 +38,20 @@
    "octets": 9452
   },
   "app/google/gauth.js": {
-   "sha256": "6b84ea480b3ed99ac3ecec23cd93b952022fa3559af3997b8adc2a71bfa3ee2e",
-   "octets": 78907
+   "sha256": "2ed3c748c124d98bf01c70b71f209b0e926e0e4e560c44015c45d0342f9a3a97",
+   "octets": 81152
   },
   "app/google/gbridge.js": {
-   "sha256": "d2bfdd16ad0b0e08f867858e920109e45d8023a6ef5f3f1d24e46f5962de4e96",
-   "octets": 115601
+   "sha256": "55162f47df506b8e05ffcf18a0a076068c593838dbac65b939aad63d039fdeae",
+   "octets": 116634
   },
   "app/google/gsync.js": {
-   "sha256": "f02029d16f1ce3e0d818fe743f338f0efcdbd055176696bf66523163685a06be",
-   "octets": 129581
+   "sha256": "df9f1579d8d82935ff510085c2b8ee9d86bb6e3d78cbc9b6b91035ce5489c89c",
+   "octets": 158533
   },
   "app/google/gtasks.js": {
-   "sha256": "c0e045ffd6f62e1acaee7315ebbe565af5f62912d79eae66f469fd26b807d417",
-   "octets": 72274
+   "sha256": "826c015aebc2170f70e460f3f19a5ee6dafdecf760c16d3ff2e8eccff0284d82",
+   "octets": 92102
   },
   "app/lock/lock.css": {
    "sha256": "e598a810130e12661dc4d71800af146bc16edc0e2ff3cc1c43faecc0d12a9318",
@@ -74,8 +74,8 @@
    "octets": 30265
   },
   "app/microsoft/mbridge.js": {
-   "sha256": "5bbbad4e3e771aaf0f60b779f3b5113bcbce2f0574fa16dbad3573bbc4120d27",
-   "octets": 41815
+   "sha256": "b005f22eebd91805c5f7493d9ea8bae65a0f81931bd84a68351f3eeaf893f217",
+   "octets": 41929
   },
   "app/microsoft/msync.js": {
    "sha256": "f890fa6e27c5e7c4b8858cc1e5a6f41db9a286d80c4259991d88c84ea0b6a7d0",
@@ -138,7 +138,7 @@
    "octets": 1650
   },
   "app/pwa/sw.js": {
-   "sha256": "abc2af791a1d48714e44cc5e8981b85aad48d4e93094698b9c9bbd61de636899",
+   "sha256": "97a5dab848d83e7dd9ce7648a307266c14350a3052be93d4d643d1976f9428d9",
    "octets": 30781
   },
   "app/setup/setup.css": {
@@ -166,12 +166,12 @@
    "octets": 10994
   },
   "confidentialite.html": {
-   "sha256": "1a1b7aa12f4901276649cd1cbd9cd3434d647baa2d01be2fadb366a82e665085",
-   "octets": 20404
+   "sha256": "d68ea9d8bbaa0810b19532d11504a2c9d1b4b58821ba506297ee720f572f9d68",
+   "octets": 22093
   },
   "index.html": {
-   "sha256": "e25a920bcbcd7731f67375ff64b74c394d9d21712f3e11956034dee8c19d7f67",
-   "octets": 313035
+   "sha256": "410dfd06d1f859e8cdd646e3d5d795fe332c450d2d8f9540abd14291370faf5c",
+   "octets": 369084
   },
   "sw.js": {
    "sha256": "bdca343b03eb8d6eaed1c3eec1de2ab2ac9d94e351beed282ab563ca0635e8c7",
