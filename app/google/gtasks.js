@@ -70,6 +70,18 @@
       crea_portee: 'إذن الكتابة في Google Tasks غير موجود — لم تُنشأ المهمة.',
       crea_api: 'خدمة Google Tasks API غير مفعّلة في مشروع Google Cloud.',
       crea_refus: 'رفض Google إنشاء المهمة.',
+      crea_attente: 'لهذه المهمة تعديل لم يُرسل بعد — انتظر حتى يُرسل ثم انقلها.',
+      depl_refus: 'رفض Google نقل هذه المهمة (المهام المتكرّرة أو المُسندة من Docs لا تُنقل بين القوائم).',
+      depl_reseau: 'لا يوجد اتصال بالإنترنت — لم تُنقل المهمة.',
+      depl_sansJeton: 'الربط مع Google غير جاهز — اضغط «أعد الربط» ثم أعد المحاولة. لم تُنقل المهمة.',
+      depl_serveur: 'عطل مؤقت عند Google — لم تُنقل المهمة، أعد المحاولة.',
+      depl_quota: 'Google يطلب التمهّل — أعد المحاولة بعد دقيقة.',
+      depl_incertain: 'انقطع الاتصال أثناء النقل: قد تكون المهمة نُقلت. انتظر لحظة حتى تُعاد القراءة من Google.',
+      depl_attente: 'لهذه المهمة (أو لإحدى مهامها الفرعية) تعديل لم يُرسل بعد — انتظر حتى يُرسل ثم انقلها.',
+      depl_liste: 'هذه القائمة غير معروضة في البرنامج.',
+      depl_disparue: 'هذه المهمة لم تعد موجودة في Google Tasks.',
+      depl_portee: 'إذن الكتابة في Google Tasks غير موجود — لم تُنقل المهمة.',
+      depl_api: 'خدمة Google Tasks API غير مفعّلة في مشروع Google Cloud.',
       crea_incertain: 'انقطع الاتصال بعد الإرسال: قد تكون المهمة أُنشئت في Google Tasks. انتظر لحظة حتى تظهر قبل أن تعيد الإرسال، حتى لا تتكرر.'
     },
     fr: {
@@ -102,6 +114,18 @@
       crea_portee: 'Pas d\'autorisation d\'ecriture Google Tasks — la tache n\'a pas ete creee.',
       crea_api: 'L\'API Google Tasks n\'est pas activee dans le projet Google Cloud.',
       crea_refus: 'Google a refuse de creer la tache.',
+      crea_attente: 'Cette tache a une modification pas encore envoyee — attendez qu\'elle parte, puis deplacez-la.',
+      depl_refus: 'Google refuse de deplacer cette tache (les taches repetees ou confiees depuis Docs ne changent pas de liste).',
+      depl_reseau: 'Pas de connexion internet — la tache n\'a pas ete deplacee.',
+      depl_sansJeton: 'La liaison Google n\'est pas prete — cliquez « Reconnecter » puis reessayez. Tache non deplacee.',
+      depl_serveur: 'Panne passagere chez Google — tache non deplacee, reessayez.',
+      depl_quota: 'Google demande de patienter — reessayez dans une minute.',
+      depl_incertain: 'Connexion coupee pendant le deplacement : la tache a peut-etre ete deplacee. Patientez, la liste va etre relue.',
+      depl_attente: 'Cette tache (ou une de ses sous-taches) a une modification pas encore envoyee — attendez qu\'elle parte, puis deplacez-la.',
+      depl_liste: 'Cette liste n\'est pas affichee dans le programme.',
+      depl_disparue: 'Cette tache n\'existe plus dans Google Tasks.',
+      depl_portee: 'Pas d\'autorisation d\'ecriture Google Tasks — tache non deplacee.',
+      depl_api: 'L\'API Google Tasks n\'est pas activee dans le projet Google Cloud.',
       crea_incertain: "Connexion coupee apres l'envoi : la tache a peut-etre ete creee dans Google Tasks. Attendez qu'elle apparaisse avant de renvoyer, pour eviter un doublon."
     }
   };
@@ -758,7 +782,7 @@
     var att = (ctx.peutEcrire && ctx.attente && ctx.attente[idTache]) || null;
     var titre = (att && att.title) ? att.title : titreDe(t, ctx.lg);
     var notes = (att && att.notes !== undefined) ? att.notes : (t.notes || '');
-    var fait = t.status === 'completed';
+    var fait = (att && att.fait !== undefined) ? !!att.fait : (t.status === 'completed');
     /* L'echeance changee ici et pas encore partie : montree telle quelle. */
     var jour = (att && att.due !== undefined) ? (att.due || null) : e.jour;
     var sansDate = !jour;
@@ -799,6 +823,12 @@
       gEnAttente: !!att,
       gMaj: t.updated || null,
       gParent: idMere ? { id: idMere, titre: titreDe(TACHES[idMere].tache, ctx.lg) } : null,
+      /* Pour la vue « حسب القائمة » (index.html) : la liste Google, la place
+         dans la liste (l'ordre choisi par l'artisan dans Google Tasks), la
+         tache mere — la meme disposition que dans Google Tasks. */
+      gListe: e.liste,
+      gPos: t.position || '',
+      gParentId: idMere || null,
       gEnfants: filles.length ? filles : null,
       gLiens: liens.length ? liens : null,
       gAssign: ai ? { type: ai.surfaceType || '', lien: httpsOuRien(ai.linkToTask) } : null,
@@ -1429,17 +1459,28 @@
     setTimeout(reconstruire, 0);
   }
 
+  /* DEPLACEES[ancien] = nouvel identifiant (tache changee de liste). Un geste
+     fait sur l'ancien (champ ouvert pendant le deplacement, file d'attente)
+     suit la tache au lieu d'etre jete. */
+  var DEPLACEES = {};
+  function idActuel(id) { var n = 0; while (DEPLACEES[id] && n++ < 10) { id = DEPLACEES[id]; } return id; }
+  /* La tache a disparu avant que le geste parte : le texte tape est garde,
+     visible, au lieu d'un abandon muet. */
+  function perdueGarder(id, a) { garderOrphelin(id, a); }
+
   function ecrireTitre(idTache, v) {
+    idTache = idActuel(idTache);
     if (!estGtache(idTache)) { return Promise.resolve(false); }
     var titre = String(v == null ? '' : v).trim();
     if (!titre) { setTimeout(reconstruire, 0); return Promise.resolve(false); }
     if (!ecritureCochee() || !peutEcrire()) { refuserModif(idTache, 'title', titre); return Promise.resolve(false); }
     return enFile(idTache, function () {
-      if (!TACHES[idTache]) { return false; }
-      var att = ATTENTE[idTache];
-      var actuel = (att && att.title !== undefined) ? att.title : String(TACHES[idTache].tache.title || '').trim();
+      var cur = idActuel(idTache);
+      if (!TACHES[cur]) { perdueGarder(idTache, { title: titre }); return false; }
+      var att = ATTENTE[cur];
+      var actuel = (att && att.title !== undefined) ? att.title : String(TACHES[cur].tache.title || '').trim();
       if (titre === actuel) { return false; }
-      return ecrireDansGoogle(idTache, { title: titre });
+      return ecrireDansGoogle(cur, { title: titre });
     });
   }
 
@@ -1448,6 +1489,7 @@
      partie horaire est ignoree a l'ecriture). Meme chemin que le titre : la
      file de la tache, l'attente hors ligne, le controle de conflit. */
   function ecrireEcheance(idTache, v) {
+    idTache = idActuel(idTache);
     if (!estGtache(idTache)) { return Promise.resolve(false); }
     var jour = String(v == null ? '' : v).trim();
     if (jour && !/^\d{4}-\d{2}-\d{2}$/.test(jour)) { setTimeout(reconstruire, 0); return Promise.resolve(false); }
@@ -1455,28 +1497,31 @@
     if (jour && +jour.slice(0, 4) < 1900) { return Promise.resolve(false); }
     if (!ecritureCochee() || !peutEcrire()) { refuserModif(idTache, 'due', jour); return Promise.resolve(false); }
     return enFile(idTache, function () {
-      var e = TACHES[idTache];
-      if (!e) { return false; }
-      var att = ATTENTE[idTache];
+      var cur = idActuel(idTache);
+      var e = TACHES[cur];
+      if (!e) { perdueGarder(idTache, { due: jour }); return false; }
+      var att = ATTENTE[cur];
       var actuel = (att && att.due !== undefined) ? att.due : jourDue(e.tache.due);
       if (jour === actuel) { return false; }
-      return ecrireDansGoogle(idTache, { due: dueDe(jour) });
+      return ecrireDansGoogle(cur, { due: dueDe(jour) });
     });
   }
 
   function ecrireNote(idTache, v) {
+    idTache = idActuel(idTache);
     if (!estGtache(idTache)) { return Promise.resolve(false); }
     var note = String(v == null ? '' : v);
     if (!ecritureCochee() || !peutEcrire()) { refuserModif(idTache, 'notes', note); return Promise.resolve(false); }
     return enFile(idTache, function () {
-      var e = TACHES[idTache];
-      if (!e) { return false; }
+      var cur = idActuel(idTache);
+      var e = TACHES[cur];
+      if (!e) { perdueGarder(idTache, { notes: note }); return false; }
       /* Note inconnue (copie reduite) : on n'ecrase pas l'inconnu. */
-      if (e.sansNotes) { garderNoteLocale(idTache, note); dire2('ecritureKoNote'); return false; }
-      var att = ATTENTE[idTache];
+      if (e.sansNotes) { garderNoteLocale(cur, note); dire2('ecritureKoNote'); return false; }
+      var att = ATTENTE[cur];
       var actuel = (att && att.notes !== undefined) ? att.notes : String(e.tache.notes || '');
       if (note.trim() === String(actuel).trim()) { return false; }
-      return ecrireDansGoogle(idTache, { notes: note });
+      return ecrireDansGoogle(cur, { notes: note });
     });
   }
 
@@ -1562,9 +1607,14 @@
         return id;
       }
       var corps = { title: titre };
+      /* o.parent : l'identifiant GOOGLE de la tache mere (ajouter une
+         sous-tache sous une tache existante) ; o.apres : la sous-tache apres
+         laquelle la placer (sinon Google la met en tete). */
+      var placeMere = null;
+      if (o.parent) { placeMere = { parent: String(o.parent) }; if (o.apres) { placeMere.previous = String(o.apres); } }
       if (notes) { corps.notes = notes; }
       if (jour) { corps.due = dueDe(jour); }
-      return poster(corps).then(function (frais) {
+      return poster(corps, placeMere).then(function (frais) {
         var id = absorber(frais);
         /* Google a repondu avec la tache, mais le compte a ete delie entre-
            temps : elle EXISTE — ne pas dire « pas creee ». */
@@ -1624,6 +1674,145 @@
         throw erreurCreation(code === 'autre' ? 'refus' : code, e);
       });
     });
+  }
+
+  /* LE ROND DE GOOGLE TASKS : cocher = terminee, decocher = rouverte — dans
+     les deux sens, comme dans Google Tasks (ecrireStatut, lui, ne rouvre
+     qu'une tache que ce programme avait terminee : il sert les statuts du
+     programme, pas ce rond). L'ecran suit alors Google : le statut pose ici
+     pour cette tache est retire. */
+  function basculerFait(idTache, fait, sansFilles) {
+    idTache = idActuel(idTache);
+    if (!estGtache(idTache)) { return Promise.resolve(false); }
+    if (!ecritureCochee() || !peutEcrire()) { refuserModif(idTache, 'status'); return Promise.resolve(false); }
+    /* le statut pose ICI (en attente, reportee…) cede la place a celui de
+       Google — mais il est rendu si Google refuse */
+    var ancienStatut = (P.store && P.store.status) ? P.store.status[idTache] : undefined;
+    if (ancienStatut !== undefined) {
+      delete P.store.status[idTache];
+      try { if (P.lsSet) { P.lsSet(); } } catch (e) { }
+    }
+    function rendreStatut() {
+      if (ancienStatut !== undefined && P.store && P.store.status && P.store.status[idTache] === undefined) {
+        P.store.status[idTache] = ancienStatut;
+        try { if (P.lsSet) { P.lsSet(); } } catch (e) { }
+      }
+    }
+    return enFile(idTache, function () {
+      var e = TACHES[idTache]; if (!e) { rendreStatut(); return false; }
+      var att = ATTENTE[idTache];
+      var faitG = (att && att.fait !== undefined) ? att.fait : (e.tache.status === 'completed');
+      if (faitG === !!fait) { reconstruire(); return false; }
+      var champs = fait ? { status: 'completed', completed: new Date().toISOString() } : { status: 'needsAction', completed: null };
+      return ecrireDansGoogle(idTache, champs).then(function (r) {
+        var fr = TACHES[idTache];
+        if (r === true) { poserOmbre(idTache, { faitIci: !!fait, stAt: (fr && Date.parse(fr.tache.updated)) || maintenantGoogle(), faitLe: null }); }
+        else if (r === 'attente') { poserOmbre(idTache, { faitIci: !!fait }); }
+        else if (r === false) { rendreStatut(); }
+        /* Google Tasks : terminer une tache termine ses sous-taches */
+        if (fait && r !== false && !sansFilles) {
+          Object.keys(TACHES).forEach(function (id) {
+            var x = TACHES[id];
+            if (x.liste === e.liste && x.tache.parent === e.tache.id && x.tache.status !== 'completed') { basculerFait(id, true, true); }
+          });
+        }
+        reconstruire();
+        return r;
+      });
+    });
+  }
+
+  /* « Deplacer vers une autre liste » de Google Tasks : la tache (et ses
+     sous-taches, que Google emporte avec elle) change de liste CHEZ GOOGLE.
+     Son identifiant dans ce programme contient la liste : ce que le
+     programme savait d'elle (section, note locale…) suit vers le nouvel
+     identifiant. Une modification encore en attente d'envoi : on la laisse
+     partir d'abord (refus avec message). */
+  function erreurDepl(code, cause) {
+    var e = new Error(tr('depl_' + code) || (cause && cause.message) || code);
+    e.code = 'depl_' + code; if (cause) { e.cause = cause; }
+    return e;
+  }
+  function fillesDe(e) {
+    return Object.keys(TACHES).filter(function (id) { var x = TACHES[id]; return x.liste === e.liste && x.tache.parent === e.tache.id; });
+  }
+  function deplacerVersListe(idTache, cible) {
+    idTache = idActuel(idTache);
+    if (!TACHES[idTache]) { return Promise.reject(erreurDepl('disparue')); }
+    if (!ecritureCochee() || !peutEcrire()) { refuserModif(idTache, 'status'); return Promise.resolve(false); }
+    if (listesSuivies().indexOf(cible) < 0) { return Promise.reject(erreurDepl('liste')); }
+    return enFile(idTache, function () {
+      /* relu ICI, au moment de partir : un deplacement precedent a pu passer */
+      var e = TACHES[idTache];
+      if (!e) { throw erreurDepl('disparue'); }
+      if (e.liste === cible) { return false; }
+      var filles = fillesDe(e);
+      if (ATTENTE[idTache] || filles.some(function (id) { return ATTENTE[id] || EN_VOL[id]; })) { throw erreurDepl('attente'); }
+      if (!envoiPossible()) { var g0 = etatCompte(); throw erreurDepl((g0 && g0.besoinReconnexion) ? 'sansJeton' : 'reseau'); }
+      var gen = GEN, source = e.liste, gid = e.tache.id;
+      var url = TASKS_API + '/lists/' + encodeURIComponent(source) + '/tasks/' + encodeURIComponent(gid) +
+        '/move?' + new URLSearchParams({ destinationTasklist: cible }).toString();
+      /* ce que le programme sait de la mere ET de ses sous-taches passe a leurs
+         nouveaux identifiants (Google garde les memes ids de taches) */
+      function migrerTout() {
+        var neuf = idDeTache(cible, { id: gid });
+        filles.forEach(function (fid) {
+          var fx = TACHES[fid]; var nf = idDeTache(cible, { id: fx ? fx.tache.id : String(fid).split('|').pop() });
+          migrerCles(fid, nf); DEPLACEES[fid] = nf; delete CREEES[fid]; delete TACHES[fid];
+        });
+        migrerCles(idTache, neuf); DEPLACEES[idTache] = neuf; delete CREEES[idTache];
+        return neuf;
+      }
+      EN_VOL[idTache] = (EN_VOL[idTache] || 0) + 1;
+      return AP.gauth.appel(url, { methode: 'POST', permission: AP.gauth.PERMISSION_EXPLICITE, attendre: false }).then(function (frais) {
+        finVol(idTache);
+        delete SAUTEES[idTache];
+        if (gen !== GEN) { return false; }
+        var t2 = (frais && frais.id) ? frais : Object.assign({}, e.tache);
+        var neuf = migrerTout();
+        delete TACHES[idTache];
+        TACHES[neuf] = entreeDe(cible, t2);
+        delete ETAT.curs[source]; delete ETAT.curs[cible];
+        ranger(); reconstruire();
+        setTimeout(function () { pull({ complet: true }); }, 600);
+        return neuf;
+      }, function (err) {
+        finVol(idTache);
+        if (gen === GEN && SAUTEES[idTache]) { delete ETAT.curs[SAUTEES[idTache]]; delete SAUTEES[idTache]; ranger(); }
+        var code = classerErreur(err);
+        avert('deplacement Google Tasks : ' + (err && err.message));
+        var avantEnvoi = err && (err.name === 'AP_SANS_JETON' || err.name === 'AP_REGLE_ECRITURE');
+        if (!avantEnvoi && (code === 'reseau' || code === 'serveur')) {
+          /* parti sans reponse sure : Google l'a PEUT-ETRE deplacee. On relit
+             tout ; si elle est bien dans la liste d'arrivee, ce que le
+             programme savait d'elle la suit. */
+          setTimeout(function () {
+            delete ETAT.curs[source]; delete ETAT.curs[cible];
+            pull({ complet: true }).then(function () {
+              if (gen !== GEN) { return; }
+              var neuf = idDeTache(cible, { id: gid });
+              if (TACHES[neuf] && !TACHES[idTache]) { migrerTout(); ranger(); reconstruire(); }
+            });
+          }, 1500);
+          throw erreurDepl('incertain', err);
+        }
+        throw erreurDepl(code === 'autre' ? 'refus' : code, err);
+      });
+    });
+  }
+  /* Ce que le programme sait d'une tache, range sous son identifiant : suit
+     la tache quand son identifiant change (changement de liste). */
+  function migrerCles(ancien, neuf) {
+    var st = P.store;
+    if (st) {
+      ['status', 'notes', 'checks', 'cat', 'subOf', 'titleOf', 'contact', 'place'].forEach(function (k) {
+        if (st[k] && st[k][ancien] !== undefined) { st[k][neuf] = st[k][ancien]; delete st[k][ancien]; }
+      });
+      try { if (P.lsSet) { P.lsSet(); } } catch (e) { }
+    }
+    var o = ombres();
+    if (o[ancien]) { poserOmbre(neuf, o[ancien]); }
+    if (CREEES[ancien]) { delete CREEES[ancien]; }
   }
 
   /* La case « ecrire dans Google Tasks » decochee : ce qui attendait ne
@@ -1724,6 +1913,9 @@
     ecrireTitre: ecrireTitre,
     ecrireNote: ecrireNote,
     ecrireEcheance: ecrireEcheance,
+    basculerFait: basculerFait,
+    idActuel: idActuel,
+    deplacerVersListe: deplacerVersListe,
     creerTache: creerTache,
     listesSuivies: listesSuivies,
     _: { tacheDe: tacheDe, taches: function () { return TACHES; } }

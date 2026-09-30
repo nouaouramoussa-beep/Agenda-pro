@@ -1,5 +1,5 @@
 {
- "genere": "2026-09-29T14:35:10.605Z",
+ "genere": "2026-09-30T16:46:48.285Z",
  "fichiers": {
   ".nojekyll": {
    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -38,8 +38,8 @@
    "octets": 9452
   },
   "app/google/gauth.js": {
-   "sha256": "2ed3c748c124d98bf01c70b71f209b0e926e0e4e560c44015c45d0342f9a3a97",
-   "octets": 81152
+   "sha256": "06058aaf8acccd647c092b7069166af5c8f804976e1794e2cb49fea13f950b16",
+   "octets": 82176
   },
   "app/google/gbridge.js": {
    "sha256": "55162f47df506b8e05ffcf18a0a076068c593838dbac65b939aad63d039fdeae",
@@ -50,8 +50,8 @@
    "octets": 158533
   },
   "app/google/gtasks.js": {
-   "sha256": "826c015aebc2170f70e460f3f19a5ee6dafdecf760c16d3ff2e8eccff0284d82",
-   "octets": 92102
+   "sha256": "e938fa7a9416095daaaad1cf6b603cdffcc867dddeb27eb940ee4d6eef70a996",
+   "octets": 103953
   },
   "app/lock/lock.css": {
    "sha256": "e598a810130e12661dc4d71800af146bc16edc0e2ff3cc1c43faecc0d12a9318",
@@ -138,7 +138,7 @@
    "octets": 1650
   },
   "app/pwa/sw.js": {
-   "sha256": "97a5dab848d83e7dd9ce7648a307266c14350a3052be93d4d643d1976f9428d9",
+   "sha256": "da96eb79509a0269f28cce6606bd1fa8ef819557baa8e945de4d7ef76f101489",
    "octets": 30781
   },
   "app/setup/setup.css": {
@@ -166,12 +166,12 @@
    "octets": 10994
   },
   "confidentialite.html": {
-   "sha256": "d68ea9d8bbaa0810b19532d11504a2c9d1b4b58821ba506297ee720f572f9d68",
-   "octets": 22093
+   "sha256": "007722b3bdccfe207aed73f2ec3897cb0a3d6b91f4eea8437fe4dc13ed35871f",
+   "octets": 22449
   },
   "index.html": {
-   "sha256": "410dfd06d1f859e8cdd646e3d5d795fe332c450d2d8f9540abd14291370faf5c",
-   "octets": 369084
+   "sha256": "825f0bfae311004a1103918fd30ee0cef3560aab3f09dfffdf4f8921b53001a8",
+   "octets": 394753
   },
   "sw.js": {
    "sha256": "bdca343b03eb8d6eaed1c3eec1de2ab2ac9d94e351beed282ab563ca0635e8c7",

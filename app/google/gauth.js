@@ -416,6 +416,15 @@
     if (!m[2]) { return true; }
     return m[2].split('&').every(function (p) { return /^(parent|previous)=[^&=]+$/.test(p); });
   }
+  /* .../tasks/v1/lists/LISTE/tasks/ID/move?destinationTasklist=… — deplacer
+     UNE tache vers une autre liste (ou dans sa liste), comme « Deplacer vers »
+     dans Google Tasks. Sans corps ; seuls destinationTasklist, parent et
+     previous sont admis. Jamais une liste entiere, jamais une suppression. */
+  function estUnDeplacementDeTache(url) {
+    var m = /\/tasks\/v1\/lists\/[^\/?#]+\/tasks\/[^\/?#]+\/move\?([^#]*)$/.exec(url);
+    if (!m || !m[1]) { return false; }
+    return m[1].split('&').every(function (p) { return /^(destinationTasklist|parent|previous)=[^&=]+$/.test(p); });
+  }
   var CHAMPS_TACHE_AUTORISES = ['title', 'notes', 'status', 'completed', 'due'];
   var CHAMPS_CREATION_TACHE = ['title', 'notes', 'due'];
 
@@ -460,6 +469,15 @@
           throw refus('Regle d\'ecriture : une tache Google Tasks sans titre est refusee.');
         }
         return corps;
+      }
+      if (methode === 'POST' && estUnDeplacementDeTache(url)) {
+        if (!permis) {
+          throw refus('Regle d\'ecriture : deplacer une tache Google Tasks exige la permission explicite de l\'artisan.');
+        }
+        if (corps && Object.keys(corps).length) {
+          throw refus('Regle d\'ecriture : un deplacement de tache Google Tasks ne porte aucun corps.');
+        }
+        return undefined;
       }
       if (methode !== 'PATCH' || !estUneTachePrecise(url)) {
         throw refus(

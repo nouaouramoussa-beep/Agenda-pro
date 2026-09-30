@@ -406,6 +406,50 @@ select.fsel:focus,input.fdate:focus{outline:none;border-color:var(--brand)}
 .rang .pair{display:flex;gap:6px}
 .rang .pair .mini{min-width:0}
 .rang .pair .tm{max-width:110px}
+/* LA VUE GOOGLE TASKS : des listes, des lignes, un rond — comme Google Tasks. */
+.gtl{border:1px solid var(--line);border-radius:var(--r2);background:var(--surface);overflow:hidden}
+.gtl + .gtl{margin-top:10px}
+.gtl-h{width:100%;display:flex;align-items:center;gap:10px;padding:12px 14px;text-align:start;background:var(--surface2);border-bottom:1px solid var(--line)}
+.gtl-ic{font-size:16px}
+.gtl-nom{flex:1;min-width:0;font-weight:800;font-size:14px;unicode-bidi:plaintext;text-align:start}
+.gtl-n{font-size:11.5px;font-weight:700;color:var(--txt3)}
+.gtl:not(.open) .gtl-b{display:none}
+.gtl.open .cg-ch{transform:rotate(180deg)}
+.gtl-b{padding:6px 8px 10px}
+.gtl-add{display:block;width:100%;text-align:start;padding:10px 12px;border-radius:10px;color:#1a73e8;font-weight:700;font-size:13px}
+.gtl-add:hover{background:color-mix(in srgb,#1a73e8 8%,transparent)}
+.gtl-new{display:flex;flex-direction:column;gap:7px;padding:10px;margin:4px 0 8px;border:1px dashed #1a73e8;border-radius:12px}
+.gtl-new-b{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.gtl-new-b .mini{width:auto}
+.gtl-vide{padding:12px;color:var(--txt3);font-size:12.4px}
+.gtr{display:flex;align-items:flex-start;gap:10px;padding:9px 8px;border-radius:10px}
+.gtr:hover{background:var(--bg2)}
+.gtr.sous{margin-inline-start:30px}
+.gtr.ouvert{background:color-mix(in srgb,#1a73e8 6%,transparent)}
+.gtr-c{flex:0 0 auto;width:20px;height:20px;margin-top:1px;border-radius:50%;border:2px solid var(--txt3);display:grid;place-items:center;font-size:12px;font-weight:900;color:#fff;line-height:1}
+.gtr-c:hover{border-color:#1a73e8;background:color-mix(in srgb,#1a73e8 12%,transparent)}
+.gtr.fini .gtr-c{background:#1a73e8;border-color:#1a73e8}
+.gtr-m{flex:1;min-width:0;cursor:pointer}
+.gtr-t{font-size:13.5px;font-weight:600;color:var(--txt);unicode-bidi:plaintext;text-align:start;word-break:break-word}
+.gtr.fini .gtr-t{text-decoration:line-through;color:var(--txt3)}
+.gtr-d{font-size:12px;color:var(--txt2);margin-top:3px;white-space:pre-wrap;unicode-bidi:plaintext;text-align:start;
+       display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.gtr-ps{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px}
+.gtr-p{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--txt2);background:var(--surface)}
+.gtr-p.retard{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 45%,transparent)}
+.gtr-p.attente{color:#b45309}
+.gtr-x{margin:2px 0 10px 0;margin-inline-start:30px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);display:flex;flex-direction:column;gap:8px}
+.gtr-x.sous{margin-inline-start:60px}
+.gtx-t{font-weight:700;font-size:13.5px}
+.gtx-l{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+.gtx-l .rang{flex:1 1 180px}
+.gtx-i{font-size:11.8px;color:var(--txt2);display:flex;flex-direction:column;gap:3px}
+/* Google Tasks par liste : une sous-tache en retrait sous sa tache mere, et
+   les taches terminees repliees en bas de la liste, comme dans Google Tasks. */
+.gt-sous{margin-inline-start:26px;position:relative}
+.gt-sous::before{content:'';position:absolute;inset-inline-start:-14px;top:0;bottom:50%;border-inline-start:2px solid var(--line2);border-bottom:2px solid var(--line2);width:10px;border-end-start-radius:8px}
+.gt-faites{display:block;width:100%;text-align:start;margin:10px 0 6px;padding:8px 10px;border-radius:10px;font-size:12.4px;font-weight:700;color:var(--txt2);background:var(--bg2);border:1px dashed var(--line2)}
+.gt-liste .cg-b{gap:8px}
 .gedit{border:1px dashed var(--brand);border-radius:12px;padding:10px 11px;background:color-mix(in srgb,var(--brand) 5%,transparent)}
 .gedit .acts{margin-top:9px}
 @media(max-width:560px){ .row2c{grid-template-columns:1fr} .rang .pair{flex-wrap:wrap} .rang .pair .tm{max-width:none} }
@@ -443,6 +487,18 @@ select.fsel:focus,input.fdate:focus{outline:none;border-color:var(--brand)}
   padding:10px 12px;font-size:12.4px;line-height:1.7;resize:vertical;
 }
 .notes:focus{outline:none;border-color:var(--brand);background:var(--surface)}
+/* LE SENS DE L'ECRITURE, LIGNE PAR LIGNE. Une note melange souvent l'arabe
+   et le francais : prendre le sens de la page (droite a gauche) pour tout
+   renversait les lignes francaises et melangeait la ponctuation. Chaque
+   paragraphe prend desormais le sens de sa premiere lettre : l'arabe a
+   droite, le francais a gauche. */
+.desc,.notes,.card input.mini:not([type=date]):not([type=time]),.gval{unicode-bidi:plaintext;text-align:start}
+/* La zone de texte s'allonge avec ce qu'elle contient : tout se lit d'un
+   coup, sans ascenseur (Chromium : Electron et Chrome ; ailleurs, rows). */
+.notes{max-height:none;overflow:auto}
+@supports (field-sizing:content){ .notes{field-sizing:content;overflow:hidden} }
+.gtr-mere{font-size:11px;color:var(--txt3);font-weight:700;margin-bottom:2px;unicode-bidi:plaintext;text-align:start}
+.gtr-m:focus-visible,.gtr-c:focus-visible{outline:2px solid #1a73e8;outline-offset:2px}
 .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;padding-top:13px;border-top:1px solid var(--line)}
 .act{padding:8px 13px;border-radius:10px;font-size:11.6px;font-weight:600;border:1px solid var(--line);background:var(--surface2);color:var(--txt2);transition:.15s}
 .act:hover{color:var(--txt);border-color:var(--line2)}
@@ -2766,7 +2822,11 @@ ar:{
   briefNone:'لا توجد التزامات في النطاق المحدد. يمكنك توسيع المدة الزمنية من الأعلى.',
   briefTodayNone:'لا شيء مبرمج اليوم.',
   footTitle:'المصادر والنسخ', briefTitle:'الملخّص', kpiTitle:'المؤشرات السريعة', filtersTitle:'الفلاتر والبحث والأيام', agendaTitle:'شريط الأيام',
-  byDate:'حسب التاريخ', byCat:'حسب التصنيف', openHint:'اضغط للفتح', orbHint:'اضغط لتشغيل المساعد',
+  byDate:'حسب التاريخ', byCat:'حسب التصنيف', byList:'حسب القائمة', gtFaites:'منجزة (%1)', gtOuvertes:'%1 مفتوحة', listeVide:'لا مهام مفتوحة في هذه القائمة.',
+  gtAjouter:'إضافة مهمة', gtAjouterBtn:'إضافة', gtTitrePh:'عنوان المهمة', gtDetailsPh:'التفاصيل', gtSousPh:'إضافة مهمة فرعية…',
+  gtTerminer:'وضع علامة «مكتملة»', gtRouvrir:'إرجاعها غير مكتملة', gtListe:'القائمة', gtSectionProg:'القسم في البرنامج',
+  gtFermer:'إغلاق', gtDeplacee:'نُقلت المهمة إلى القائمة الأخرى في Google Tasks ✓',
+  gtDeplKo:'لم تُنقل المهمة: %1', gtDeplEnCours:'جارٍ نقل المهمة إلى القائمة الأخرى…', openHint:'اضغط للفتح', orbHint:'اضغط لتشغيل المساعد',
   loadTitle:'توزيع الحمل', busiest:'أثقل يوم', freeDay:'أول يوم فارغ', lateLbl:'متأخرة', noneOpen:'لا عناصر مفتوحة في هذا النطاق',
   nextUpT:'القادم', noAlerts:'كل شيء تحت السيطرة — لا يوجد ما يستدعي التدخل العاجل ✅',
   checklist:'قائمة الوثائق والمهام الفرعية', notes:'ملاحظات', details:'التفاصيل',
@@ -2893,7 +2953,11 @@ fr:{
   briefNone:'Aucune échéance dans la période choisie. Élargissez la fenêtre ci-dessus.',
   briefTodayNone:"Rien de programmé aujourd'hui.",
   footTitle:'Sources et sauvegardes', briefTitle:'Le résumé', kpiTitle:'Indicateurs', filtersTitle:'Filtres, recherche, jours', agendaTitle:'Bande des jours',
-  byDate:'Par date', byCat:'Par catégorie', openHint:'Cliquez pour ouvrir', orbHint:"Cliquez pour activer l'assistant",
+  byDate:'Par date', byCat:'Par catégorie', byList:'Par liste', gtFaites:'Terminées (%1)', gtOuvertes:'%1 ouverte(s)', listeVide:'Aucune tâche ouverte dans cette liste.',
+  gtAjouter:'Ajouter une tâche', gtAjouterBtn:'Ajouter', gtTitrePh:'Titre de la tâche', gtDetailsPh:'Détails', gtSousPh:'Ajouter une sous-tâche…',
+  gtTerminer:'Marquer comme terminée', gtRouvrir:'Marquer comme non terminée', gtListe:'Liste', gtSectionProg:'Section dans le programme',
+  gtFermer:'Fermer', gtDeplacee:'Tâche déplacée vers l\'autre liste dans Google Tasks ✓',
+  gtDeplKo:'Tâche non déplacée : %1', gtDeplEnCours:'Déplacement vers l\'autre liste en cours…', openHint:'Cliquez pour ouvrir', orbHint:"Cliquez pour activer l'assistant",
   loadTitle:'Répartition de la charge', busiest:'Jour le plus chargé', freeDay:'Premier jour libre', lateLbl:'en retard', noneOpen:'Aucun élément ouvert dans cette période',
   nextUpT:'À venir', noAlerts:'Tout est sous contrôle — aucune urgence ✅',
   checklist:'Documents et sous-tâches', notes:'Notes', details:'Détails',
@@ -3015,7 +3079,8 @@ let SEC_GT_ON = false;
    debut de chaque render() : si elle apparait ou disparait, les cadres sont
    reconstruits AVANT d'etre remplis. Rend vrai si la liste a change. */
 function majSecGt(){
-  const on = TASKS.some(it=>it.gtache || (store.cat[it.id]||it.cat)==='gtasks');
+  /* aussi quand des listes Google Tasks sont suivies mais toutes vides : on doit pouvoir y ajouter */
+  const on = TASKS.some(it=>it.gtache || (store.cat[it.id]||it.cat)==='gtasks') || gtListes().length>0;
   if(on===SEC_GT_ON) return false;
   SEC_GT_ON = on;
   /* PAS applyI18n() entier : il refait aussi le formulaire « إضافة » (jours
@@ -3284,7 +3349,8 @@ function prefGet(){
        encore la (SEC_GT_ON faux), mais son cadre ouvert doit etre retrouve.
        Tant qu'il n'existe pas, syncRing ne le compte pas. */
     if(p.boards){ const ok=new Set(allSections().map(s=>s.id).concat(['gtasks'])); Object.keys(p.boards).forEach(k=>{ if(ok.has(k)) state.boards[k]=p.boards[k]?1:0; }); }
-    if(p.group)  Object.keys(p.group).forEach(k=>{ if(p.group[k]==='cat'||p.group[k]==='date') state.group[k]=p.group[k]; });
+    /* Le cadre Google Tasks s'ouvre desormais sur ses LISTES : un choix enregistre avant cette version (groupV absent) n'est pas repris pour lui. */
+    if(p.group)  Object.keys(p.group).forEach(k=>{ if(k==='gtasks' && p.groupV!==2) return; if(p.group[k]==='cat'||p.group[k]==='date'||(p.group[k]==='liste' && k==='gtasks')) state.group[k]=p.group[k]; });
     /* Les anciens noms (« 1 semaine », « 6 mois », « tout »…) n'existent
        plus : on les ramene au mois qui leur ressemble le plus. */
     const ANC = { p3:'mp', p1:'mp', w1:'mc', w2:'mc', w3:'mc', m1:'mc', m2:'mn', m6:'mc', a1:'mc', all:'mc' };
@@ -3294,7 +3360,7 @@ function prefGet(){
     if(state.win==='custom' && !(state.from && state.to)) state.win='mc';
   }catch(e){}
 }
-function prefSet(){ try{ localStorage.setItem(LS_KEY+'_pref2',JSON.stringify({lang:state.lang,theme:state.theme,win:state.win,from:state.from,to:state.to,routine:state.routine,routineChoisi:state.routineChoisi,pan:state.pan,boards:state.boards,group:state.group})); }catch(e){} }
+function prefSet(){ try{ localStorage.setItem(LS_KEY+'_pref2',JSON.stringify({lang:state.lang,theme:state.theme,win:state.win,from:state.from,to:state.to,routine:state.routine,routineChoisi:state.routineChoisi,pan:state.pan,boards:state.boards,group:state.group,groupV:2})); }catch(e){} }
 
 /* ============================================================================
    4. OUTILS DATE
@@ -3655,6 +3721,7 @@ function render(){
      requestAnimationFrame attend qu'il l'ait fait. C'est la cause du vide
      blanc et de l'anneau qui chevauchait les cartes. */
   requestAnimationFrame(function(){ syncMains(); syncBarre(); });
+  if(GT_FOCUS){ const r=document.querySelector('#c_'+cssId(GT_FOCUS)+' .gtr-c'); if(r){ r.focus(); GT_FOCUS=null; } }
 }
 
 /* Un redessin demande par l'ARRIERE-PLAN (une relecture Google, un autre
@@ -3670,7 +3737,7 @@ let AP_PTR_BAS=false;
 ['pointerdown','pointerup','pointercancel'].forEach(t=>document.addEventListener(t,e=>{ AP_PTR_BAS=(e.type==='pointerdown'); },true));
 function renderFond(){
   const a=document.activeElement;
-  if(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && a.closest && a.closest('.card')){
+  if(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && a.closest && a.closest('.card, .gtr-x, .gtl-new')){
     if(!a.__apRenduEnAttente){
       a.__apRenduEnAttente=true;
       a.addEventListener('blur', function(){
@@ -3920,8 +3987,10 @@ function buildBoardsDOM(){
         '<div><h3 data-sec-name="'+s.id+'"></h3><div class="bs" data-sec-sub="'+s.id+'"></div></div>'+
         '<div class="cnt" id="cnt_'+s.id+'">0</div>'+
         '<div class="gsw">'+
+          /* Google Tasks : ses LISTES, comme dans Google Tasks (vue par defaut) */
+          (s.id==='gtasks' ? '<button class="gs" id="gs_'+s.id+'_liste" onclick="setGroup(\''+s.id+'\',\'liste\')" data-t="byList"></button>' : '')+
           '<button class="gs on" id="gs_'+s.id+'_date" onclick="setGroup(\''+s.id+'\',\'date\')" data-t="byDate"></button>'+
-          '<button class="gs" id="gs_'+s.id+'_cat" onclick="setGroup(\''+s.id+'\',\'cat\')" data-t="byCat"></button>'+
+          (s.id==='gtasks' ? '' : '<button class="gs" id="gs_'+s.id+'_cat" onclick="setGroup(\''+s.id+'\',\'cat\')" data-t="byCat"></button>')+
         '</div>'+
         '<button class="p-tog" onclick="openAdd(\''+s.id+'\')">＋</button>'+
         (s.builtin? '' : '<button class="p-tog" title="—" onclick="uiDelSection(\''+s.id+'\')">🗑</button>')+
@@ -3936,10 +4005,18 @@ function renderBoard(cat, items){
   const el = document.getElementById('board_'+cat);
   const cn = document.getElementById('cnt_'+cat), on = document.getElementById('orb_'+cat);
   if(!el) return;
-  if(cn) cn.textContent = items.length;
-  if(on) on.textContent = items.length;
+  /* Vue « حسب القائمة » : TOUTES les taches de chaque liste, comme dans
+     Google Tasks — la periode choisie (le mois) ne les cache pas ; la
+     recherche et les filtres d'etat et de categorie, si. */
+  if(modeGroupe(cat)==='liste'){ items = tachesDesListes(cat); }
+  /* vue Google Tasks : on compte ce qui reste a faire, comme Google — pas
+     tout l'historique des taches terminees */
+  const nAff = modeGroupe(cat)==='liste' ? items.filter(i=>!gtFinie(i)).length : items.length;
+  if(cn) cn.textContent = nAff;
+  if(on) on.textContent = nAff;
   if(!state.boards[cat] && !PRINTING){ el.innerHTML=''; return; }
-  if(!items.length){
+  /* vue Google Tasks : les listes restent, meme vides (pour y ajouter) */
+  if(!items.length && modeGroupe(cat)!=='liste'){
     /* Rien a montrer — mais y a-t-il des routines cachees pour ce cadre et
        cette periode ? Si oui, on le dit et on offre de les afficher. */
     let caches = 0;
@@ -3957,7 +4034,8 @@ function renderBoard(cat, items){
       (filtres ? '<br><button class="plus" style="margin-top:12px" onclick="montrerFiltres()">'+t('cachesFiltres').replace('%1',filtres)+'</button>' : '')+'</div>';
     return;
   }
-  if((state.group[cat]||'date')==='cat'){ el.innerHTML = groupByCat(cat, items); return; }
+  if(modeGroupe(cat)==='liste'){ el.innerHTML = groupByListe(cat, items); return; }
+  if(modeGroupe(cat)==='cat'){ el.innerHTML = groupByCat(cat, items); return; }
   const g = {}; items.forEach(i=>{ const b=bucketOf(i); (g[b]=g[b]||[]).push(i); });
   el.innerHTML = BK_ORDER.filter(b=>g[b]).map(b=>
     '<div class="bucket"><div class="bucket-t'+(b==='overdue'?' b-over':b==='today'?' b-today':'')+'">'+
@@ -4003,9 +4081,251 @@ function groupByCat(cat, items){
   }).join('');
 }
 function togGroup(key){ state.gopen[key]=!state.gopen[key]; render(); }
+/* Les taches Google Tasks de ce cadre, sans la limite de la periode. */
+function tachesDesListes(cat){
+  const q = state.q.trim().toLowerCase();
+  return TASKS.filter(it=>{
+    if(!it.gtache || catOf(it)!==cat) return false;
+    if(state.sub!=='all' && subOf(it)!==state.sub) return false;
+    if(state.status!=='all' && statusOf(it)!==state.status) return false;
+    if(q){
+      const hay=(it.title.ar+' '+it.desc+' '+(it.org?(it.org.ar||''):'')+' '+(it.srch||'')).toLowerCase();
+      if(hay.indexOf(q)<0) return false;
+    }
+    return true;
+  });
+}
+/* LA DISPOSITION DE GOOGLE TASKS : une rubrique par liste (son nom, dans
+   l'ordre des listes de Google) ; dedans, les taches ouvertes dans l'ordre
+   que l'artisan leur a donne dans Google (position), chaque sous-tache juste
+   sous sa tache mere, en retrait ; les taches terminees a la fin, repliees
+   (« منجزة »), comme Google. Les rubriques sont ouvertes par defaut. */
+state.lopen = state.lopen || {};
+/* ============================================================================
+   LA SECTION « مهام Google Tasks », COMME GOOGLE TASKS
+   ----------------------------------------------------------------------------
+   Pas les cartes des rendez-vous : Google Tasks travaille autrement, et
+   l'artisan l'a demande « exactement comme Tasks ». Une rubrique par liste
+   (son nom, dans l'ordre de Google) ; « ＋ إضافة مهمة » en tete ; chaque tache
+   sur une ligne : le rond pour la terminer (ou la rouvrir), le titre, les
+   details en dessous, la date ; les sous-taches en retrait sous leur mere ;
+   les terminees repliees en bas (« منجزة »). Un clic sur la ligne l'ouvre :
+   titre, details, date, deplacer vers une autre liste, ajouter une
+   sous-tache — et tout part dans Google Tasks.
+   ========================================================================== */
+state.gtOuv = state.gtOuv || {};     // tache ouverte (editeur)
+state.gtAjout = state.gtAjout || {}; // formulaire « إضافة مهمة » ouvert, par liste
+function gtFinie(it){ return statusOf(it)==='done'; }
+state.gtBr = state.gtBr || {};     // brouillons « ＋ إضافة مهمة » par liste
+state.gtSousBr = state.gtSousBr || {}; // brouillons « مهمة فرعية » par tache
+state.gtDepl = state.gtDepl || {}; // tache en cours de deplacement (editeur verrouille)
+let GT_FOCUS = null;
+function groupByListe(cat, items){
+  let listes=[];
+  try{ listes=(AP.gtasks.info().listes||[]).filter(l=>l.suivi); }catch(e){}
+  const ordre=listes.map(l=>l.id);
+  const g={};
+  items.forEach(i=>{ const l=i.gListe||'?'; (g[l]=g[l]||[]).push(i); });
+  /* toutes les listes suivies, meme vides (pour pouvoir y ajouter), dans
+     l'ordre de Google ; puis celles qu'on ne connait que par leurs taches */
+  const cles=ordre.concat(Object.keys(g).filter(l=>ordre.indexOf(l)<0));
+  const parPos=(a,b)=>String(a.gPos||'').localeCompare(String(b.gPos||'')) || String(a.title.ar).localeCompare(String(b.title.ar));
+  const ecriture = !!(items[0] ? items[0].peutEcrireSource : (window.AP&&AP.gtasks&&AP.gtasks.info&&AP.gtasks.info().ecritureAutorisee&&AP.gtasks.info().ecrireVersGoogle));
+  return (ecriture ? '' : '<div class="note-line">✏️ '+t('gtAllumer')+'</div>')+cles.map(l=>{
+    const list=g[l]||[];
+    const lst=listes.find(x=>x.id===l);
+    const nom=(lst&&lst.nom) || (list[0]&&list[0].org&&list[0].org[state.lang]) || l;
+    const ouvertes=list.filter(i=>!gtFinie(i)), faites=list.filter(gtFinie);
+    const ids=new Set(ouvertes.map(i=>i.id));
+    const racines=ouvertes.filter(i=>!i.gParentId).sort(parPos);
+    const filles={}; ouvertes.forEach(i=>{ if(i.gParentId && ids.has(i.gParentId)) (filles[i.gParentId]=filles[i.gParentId]||[]).push(i); });
+    /* une sous-tache dont la mere n'est pas la (terminee, rangee ailleurs,
+       ecartee par la recherche) : jamais promue en tete de liste — apres les
+       autres, en retrait, avec le nom de sa mere */
+    const orphelines=ouvertes.filter(i=>i.gParentId && !ids.has(i.gParentId))
+      .sort((a,b)=>String((TID(a.gParentId)||{}).gPos||'').localeCompare(String((TID(b.gParentId)||{}).gPos||'')) || parPos(a,b));
+    const k='L:'+cat+':'+l, ouv=state.lopen[k]!==false;
+    const late=ouvertes.filter(i=>statusOf(i)==='overdue').length;
+    let h='';
+    if(ouv){
+      /* ＋ إضافة مهمة, en tete de liste comme dans Google Tasks */
+      if(state.gtAjout[l]){
+        const kl=cssId(l), br=state.gtBr[l]||{};
+        h+='<div class="gtl-new">'+
+             '<input class="mini" dir="auto" id="gtn_'+kl+'" value="'+esc(br.titre||'')+'" oninput="gtBrouillon(\''+esc(l)+'\',\'titre\',this.value)" placeholder="'+esc(t('gtTitrePh'))+'" onkeydown="if(event.key===\'Enter\'){event.preventDefault();gtAjouter(\''+esc(l)+'\')} if(event.key===\'Escape\'){gtAjoutFermer(\''+esc(l)+'\')}">'+
+             '<textarea class="notes" dir="auto" rows="'+lignesPour(br.notes)+'" id="gtnn_'+kl+'" oninput="gtBrouillon(\''+esc(l)+'\',\'notes\',this.value)" placeholder="'+esc(t('gtDetailsPh'))+'">'+esc(br.notes||'')+'</textarea>'+
+             '<div class="gtl-new-b"><input type="date" class="mini" id="gtnd_'+kl+'" value="'+esc(br.date||'')+'" oninput="gtBrouillon(\''+esc(l)+'\',\'date\',this.value)">'+
+             '<button class="act a-done" id="gtnb_'+kl+'" onclick="gtAjouter(\''+esc(l)+'\')">'+t('gtAjouterBtn')+'</button>'+
+             '<button class="act" onclick="gtAjoutFermer(\''+esc(l)+'\')">'+t('cancel')+'</button></div></div>';
+      } else {
+        h+='<button class="gtl-add" onclick="gtAjoutOuvrir(\''+esc(l)+'\')">＋ '+t('gtAjouter')+'</button>';
+      }
+      racines.forEach(r=>{
+        h+=ligneTache(r, false);
+        (filles[r.id]||[]).sort(parPos).forEach(c=>{ h+=ligneTache(c, true); });
+      });
+      orphelines.forEach(c=>{ h+=ligneTache(c, true, true); });
+      if(!ouvertes.length && !state.gtAjout[l]) h+='<div class="gtl-vide">'+t('listeVide')+'</div>';
+      const kf='LF:'+cat+':'+l;
+      if(faites.length){
+        const ouvF=!!state.lopen[kf];
+        h+='<button class="gt-faites" onclick="togListe(\''+esc(kf)+'\',false)">'+(ouvF?'▾':'▸')+' '+t('gtFaites').replace('%1',faites.length)+'</button>';
+        if(ouvF){
+          /* par tranches, comme le reste : un historique de mille taches
+             terminees ne doit pas figer le telephone a chaque dessin */
+          const tri=faites.slice().sort((a,b)=>String(b.gFaitLe||b.date).localeCompare(String(a.gFaitLe||a.date)));
+          const n=Math.min(tri.length, PAGE*(1+(state.more[kf]||0)));
+          h+=tri.slice(0,n).map(x=>ligneTache(x, false)).join('');
+          if(n<tri.length) h+='<button class="plus" onclick="plusDe(\''+esc(kf)+'\')">'+t('plusDe').replace('%1', tri.length-n)+'</button>';
+        }
+      }
+    }
+    return '<div class="gtl'+(ouv?' open':'')+'">'+
+      '<button class="gtl-h" onclick="togListe(\''+esc(k)+'\',true)">'+
+        '<span class="gtl-ic">☑️</span><span class="gtl-nom" dir="auto">'+esc(nom)+'</span>'+
+        '<span class="gtl-n">'+t('gtOuvertes').replace('%1',ouvertes.length)+(late?' · ⚠️ '+late:'')+'</span><span class="cg-ch">▼</span>'+
+      '</button>'+
+      '<div class="gtl-b">'+h+'</div></div>';
+  }).join('');
+}
+/* Une tache, sur une ligne, comme dans Google Tasks. */
+function ligneTache(it, sous, orpheline){
+  const fini=gtFinie(it), k=cssId(it.id), ouvert=!!state.gtOuv[it.id], qi='\''+it.id+'\'';
+  const retard = !fini && it.gDue && statusOf(it)==='overdue';
+  let h='<div class="gtr'+(fini?' fini':'')+(sous?' sous':'')+(ouvert?' ouvert':'')+'" id="c_'+k+'">';
+  h+='<button class="gtr-c" title="'+esc(t(fini?'gtRouvrir':'gtTerminer'))+'" aria-label="'+esc(t(fini?'gtRouvrir':'gtTerminer'))+'" aria-pressed="'+(fini?'true':'false')+'" onclick="gtBasculer('+qi+')">'+(fini?'✓':'')+'</button>';
+  h+='<div class="gtr-m" role="button" tabindex="0" aria-expanded="'+(ouvert?'true':'false')+'" onclick="gtOuvrir('+qi+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();gtOuvrir('+qi+')}">'+
+       (orpheline && it.gParent ? '<div class="gtr-mere" dir="auto">↳ '+esc(it.gParent.titre)+'</div>' : '')+
+       '<div class="gtr-t" dir="auto">'+esc(it.title[state.lang])+'</div>';
+  if(it.desc && !ouvert) h+='<div class="gtr-d" dir="auto">'+esc(it.desc)+'</div>';
+  const puces=[];
+  if(it.gDue) puces.push('<span class="gtr-p'+(retard?' retard':'')+'">📅 '+esc(fmtDate(it.gDue))+'</span>');
+  if(it.gLiens && it.gLiens.length) puces.push('<span class="gtr-p">🔗 '+it.gLiens.length+'</span>');
+  if(it.gAssign) puces.push('<span class="gtr-p">📨</span>');
+  if(it.gEnAttente) puces.push('<span class="gtr-p attente">⏳ '+t('gtAttente')+'</span>');
+  if(puces.length) h+='<div class="gtr-ps">'+puces.join('')+'</div>';
+  h+='</div></div>';
+  if(ouvert) h+=editeurTache(it, sous);
+  return h;
+}
+/* L'editeur d'une tache ouverte : ce que Google Tasks permet, et qui y part. */
+function editeurTache(it, sous){
+  const k=cssId(it.id), qi='\''+it.id+'\'', ecr=!!it.peutEcrireSource;
+  /* pendant un deplacement vers une autre liste, rien ne se modifie : tout
+     partirait sur l'ancien emplacement */
+  const verrou = state.gtDepl[it.id] ? ' disabled' : '';
+  let h='<div class="gtr-x'+(sous?' sous':'')+'">';
+  if(verrou) h+='<div class="note-line">⏳ '+t('gtDeplEnCours')+'</div>';
+  if(ecr){
+    h+='<input class="mini gtx-t" dir="auto"'+verrou+' value="'+esc(it.title[state.lang])+'" onchange="setSrcTitle('+qi+',this.value)">';
+    if(it.notesModifiables!==false)
+      h+='<textarea class="notes" dir="auto"'+verrou+' rows="'+lignesPour(it.desc)+'" placeholder="'+esc(t('gtDetailsPh'))+'" onchange="setSrcNote('+qi+',this.value)">'+esc(it.desc||'')+'</textarea>';
+    else if(it.desc) h+='<div class="desc" dir="auto">'+esc(it.desc)+'</div>';
+    /* la date part a la SORTIE du champ (Chrome signale chaque chiffre tape) */
+    h+='<div class="gtx-l"><label class="rang"><span>📅 '+t('gtDateEdit')+'</span><input type="date" class="mini"'+verrou+' value="'+esc(it.gDue||'')+'" onblur="if(this.value && this.value!==this.defaultValue) setSrcDue('+qi+',this.value)" onkeydown="if(event.key===\'Enter\') this.blur()"></label>'+
+       (it.gDue?'<button class="act" onclick="setSrcDue('+qi+',\'\')">✕ '+t('gtSansDateBtn')+'</button>':'')+'</div>';
+    /* deplacer vers une autre liste (la « categorie » de Google Tasks) */
+    let listes=[]; try{ listes=(AP.gtasks.info().listes||[]).filter(l=>l.suivi); }catch(e){}
+    /* deplacer : au choix CONFIRME (sortie de la liste), pas a chaque fleche du
+       clavier ; jamais une tache confiee depuis Docs (Google refuse) */
+    if(listes.length>1 && !it.gParentId && !it.gAssign)
+      h+='<label class="rang wide"><span>☑️ '+t('gtListe')+'</span><select class="mini"'+verrou+' data-l="'+esc(it.gListe)+'" onkeydown="gtListeClavier(event,this,'+qi+')" onchange="if(!this.dataset.clavier) gtDeplacer('+qi+',this.value)" onblur="if(this.dataset.clavier && this.value!==this.dataset.l) gtDeplacer('+qi+',this.value)">'+
+         listes.map(l=>'<option value="'+esc(l.id)+'"'+(l.id===it.gListe?' selected':'')+'>'+esc(l.nom)+'</option>').join('')+'</select></label>';
+    /* ajouter une sous-tache (Google Tasks : un seul niveau) */
+    if(!it.gParentId && !it.gAssign)
+      h+='<div class="addsub"><input id="gts_'+k+'" dir="auto"'+verrou+' value="'+esc(state.gtSousBr[it.id]||'')+'" oninput="state.gtSousBr['+qi+']=this.value" placeholder="'+esc(t('gtSousPh'))+'" onkeydown="if(event.key===\'Enter\'){event.preventDefault();gtAjouterSous('+qi+')}">'+
+         '<button'+verrou+' onclick="gtAjouterSous('+qi+')">＋</button></div>';
+  } else {
+    h+='<div class="note-line">✏️ '+t('gtAllumer')+'</div>';
+    if(it.desc) h+='<div class="desc" dir="auto">'+esc(it.desc)+'</div>';
+  }
+  const infos=[];
+  if(it.gLiens && it.gLiens.length) infos.push('🔗 '+it.gLiens.map(l=>lienSur(l.link, l.description||l.type||l.link)).filter(Boolean).join(' • '));
+  if(it.gAssign) infos.push('📨 '+esc((T[state.lang].gtSurf||{})[it.gAssign.type] || it.gAssign.type || '')+(it.gAssign.lien?' '+lienSur(it.gAssign.lien,'↗'):''));
+  if(it.gFaitLe) infos.push('✔️ '+t('gtFaitLe')+' : '+esc(heureLocale(it.gFaitLe)));
+  if(it.gMaj) infos.push('🕘 '+t('gtMaj')+' : '+esc(heureLocale(it.gMaj)));
+  if(infos.length) h+='<div class="gtx-i">'+infos.map(x=>'<div>'+x+'</div>').join('')+'</div>';
+  /* en plus, propre au programme : la section ou cette tache s'affiche */
+  const cCat=catOf(it);
+  h+='<div class="gtx-l">'+
+     '<label class="rang"><span>🗂️ '+t('gtSectionProg')+'</span><select class="mini" onchange="moveCat('+qi+',this.value)">'+
+       secsPour(it).map(s=>'<option value="'+esc(s.id)+'"'+(s.id===cCat?' selected':'')+'>'+esc(s.ic)+' '+esc(secName(s))+'</option>').join('')+'</select></label>'+
+     (it.link?'<a class="act link" href="'+esc(it.link)+'" target="_blank" rel="noopener">✅ '+t('openTasks')+'</a>':'')+
+     '<button class="act" onclick="gtOuvrir('+qi+')">'+t('gtFermer')+'</button>'+
+     '</div></div>';
+  return h;
+}
+function gtOuvrir(id){ state.gtOuv[id]=!state.gtOuv[id]; render(); }
+function gtAjoutOuvrir(l){ state.gtAjout[l]=true; render(); setTimeout(()=>{ const e=document.getElementById('gtn_'+cssId(l)); if(e) e.focus(); },30); }
+function gtAjoutFermer(l){ delete state.gtAjout[l]; delete state.gtBr[l]; render(); }
+function gtBrouillon(l, champ, v){ (state.gtBr[l]=state.gtBr[l]||{})[champ]=v; }
+/* le choix de liste au clavier : les fleches ne deplacent rien ; Entree (ou la sortie du champ) confirme */
+function gtListeClavier(ev, sel, id){
+  if(/^(Arrow|Page|Home|End)/.test(ev.key)) sel.dataset.clavier='1';
+  if(ev.key==='Enter'){ ev.preventDefault(); sel.dataset.clavier=''; if(sel.value!==sel.dataset.l) gtDeplacer(id, sel.value); }
+}
+/* Le rond : terminee <-> a faire, dans Google Tasks. Ecriture desactivee : le
+   programme le garde pour lui (statut local) et le dit. */
+function gtBasculer(id){
+  const it=TID(id); if(!it) return;
+  const fini=gtFinie(it);
+  GT_FOCUS=id;                      // apres le redessin, le focus revient sur ce rond
+  if(it.peutEcrireSource && window.AP && AP.gtasks && AP.gtasks.basculerFait){ AP.gtasks.basculerFait(id, !fini); return; }
+  /* ecriture coupee : le programme le garde pour lui ; une tache terminee
+     dans Google se rouvre ici par un statut local « معلقة » */
+  if(fini) setStatus(id, it.gFait ? 'pending' : null); else setStatus(id, 'done');
+}
+let GT_AJOUT_EN_COURS=false;
+async function gtAjouter(l){
+  const kl=cssId(l), g=p=>document.getElementById(p+kl);
+  const titre=(g('gtn_')||{}).value||''; if(!titre.trim()){ if(g('gtn_')) g('gtn_').focus(); return; }
+  if(GT_AJOUT_EN_COURS) return; GT_AJOUT_EN_COURS=true;
+  const b=g('gtnb_'); if(b){ b.disabled=true; b.textContent=t('enCours'); }
+  try{
+    await AP.gtasks.creerTache({liste:l, titre:titre, notes:(g('gtnn_')||{}).value||'', date:(g('gtnd_')||{}).value||''});
+    delete state.gtAjout[l]; delete state.gtBr[l]; toast(t('toastGtOk')); renderFond();
+  }catch(e){ toast(msgCreation(e)); }
+  finally{ GT_AJOUT_EN_COURS=false; const b2=g('gtnb_'); if(b2){ b2.disabled=false; b2.textContent=t('gtAjouterBtn'); } }
+}
+async function gtAjouterSous(id){
+  const it=TID(id); if(!it) return;
+  const e=document.getElementById('gts_'+cssId(id)); const titre=e?e.value.trim():''; if(!titre) return;
+  if(GT_AJOUT_EN_COURS){ toast(t('enCours')); return; }
+  GT_AJOUT_EN_COURS=true;
+  /* a la fin des sous-taches OUVERTES deja la, comme dans Google Tasks (une
+     terminee est cachee chez Google et ne peut pas servir de repere) */
+  const soeurs=TASKS.filter(x=>x.gtache && x.gParentId===id && !x.gFait).sort((a,b)=>String(a.gPos||'').localeCompare(String(b.gPos||'')));
+  const apres=soeurs.length ? soeurs[soeurs.length-1].gev : null;
+  try{
+    await AP.gtasks.creerTache({liste:it.gListe, titre:titre, parent:it.gev, apres:apres});
+    /* ne pas effacer ce qui a deja ete tape pour la suivante */
+    const e2=document.getElementById('gts_'+cssId(id));
+    if(e2 && e2.value.trim()===titre) e2.value='';
+    if((state.gtSousBr[id]||'').trim()===titre) delete state.gtSousBr[id];
+    toast(t('toastGtOk')); renderFond();
+  }catch(er){ toast(msgCreation(er)); }
+  finally{ GT_AJOUT_EN_COURS=false; }
+}
+async function gtDeplacer(id, liste){
+  const it=TID(id); if(!it || liste===it.gListe || state.gtDepl[id]) return;
+  state.gtDepl[id]=true; renderFond();
+  try{
+    const neuf=await AP.gtasks.deplacerVersListe(id, liste);
+    if(neuf){ delete state.gtOuv[id]; state.gtOuv[neuf]=true; toast(t('gtDeplacee')); }
+  }catch(e){ toast(t('gtDeplKo').replace('%1', errMsg(e))); }
+  finally{ delete state.gtDepl[id]; renderFond(); }
+}
+/* ouvertParDefaut : les listes s'ouvrent seules, les « منجزة » non */
+function togListe(key, ouvertParDefaut){
+  const actuel = ouvertParDefaut ? state.lopen[key]!==false : !!state.lopen[key];
+  state.lopen[key] = !actuel; render();
+}
+/* Le regroupement d'un cadre. Google Tasks s'ouvre sur ses listes, comme
+   dans Google Tasks ; les autres cadres, par date. */
+function modeGroupe(cat){ return state.group[cat] || (cat==='gtasks' ? 'liste' : 'date'); }
 function setGroup(cat,mode){
   state.group[cat]=mode;
-  ['date','cat'].forEach(m=>{
+  ['date','cat','liste'].forEach(m=>{
     const b=document.getElementById('gs_'+cat+'_'+m);
     if(b) b.classList.toggle('on', m===mode);
   });
@@ -4029,7 +4349,12 @@ function card(it){
     ? '<div class="dchip"><div class="d">—</div><div class="m">'+t('sansDateLbl')+'</div></div>'
     : '<div class="dchip"><div class="d">'+d.getDate()+'</div><div class="m">'+T[state.lang].months[d.getMonth()].slice(0,4)+'</div></div>';
   h += '<div class="c-main"><h4>'+S.ic+' '+esc(it.title[state.lang])+'</h4><div class="c-meta">';
-  h += '<span class="tag" style="background:'+hex(S.c,.14)+';color:color-mix(in srgb,'+S.c+',var(--ink) 42%)">'+esc(S[state.lang])+'</span>';
+  if(it.gtache){
+    h += '<span class="tag" style="background:'+hex('#1a73e8',.12)+';color:color-mix(in srgb,#1a73e8,var(--ink) 42%)">☑️ '+esc(it.org?it.org[state.lang]:'')+'</span>';
+    if(subOf(it)!=='perso') h += '<span class="tag" style="background:'+hex(S.c,.14)+';color:color-mix(in srgb,'+S.c+',var(--ink) 42%)">'+esc(S[state.lang])+'</span>';
+  } else {
+    h += '<span class="tag" style="background:'+hex(S.c,.14)+';color:color-mix(in srgb,'+S.c+',var(--ink) 42%)">'+esc(S[state.lang])+'</span>';
+  }
   if(!it.gtache) h += '<span class="tag time">'+(it.allDay? t('allDay') : it.start+(it.end?'–'+it.end:''))+'</span>';
   h += '<span class="tag rel '+relCls+'">'+(nd ? t('sansDateLbl') : T[state.lang].inDays(dd))+'</span>';
   if(list.length) h += '<span class="tag time">📎 '+done.length+'/'+list.length+'</span>';
@@ -4076,7 +4401,7 @@ function card(it){
          '<input class="mini" style="width:100%" value="'+esc(it.title[state.lang])+'" onchange="setSrcTitle(\''+it.id+'\',this.value)">'+
          '<div class="row2c" style="margin-top:7px;align-items:center">'+
            /* vide pendant la frappe : ignore (seul ✕ retire la date) */
-           '<label class="rang"><span>📅 '+t('gtDateEdit')+'</span><input type="date" class="mini" value="'+esc(it.gDue||'')+'" onchange="if(this.value) setSrcDue(\''+it.id+'\',this.value)"></label>'+
+           '<label class="rang"><span>📅 '+t('gtDateEdit')+'</span><input type="date" class="mini" value="'+esc(it.gDue||'')+'" onblur="if(this.value && this.value!==this.defaultValue) setSrcDue(\''+it.id+'\',this.value)" onkeydown="if(event.key===\'Enter\') this.blur()"></label>'+
            (it.gDue ? '<button class="act" onclick="setSrcDue(\''+it.id+'\',\'\')">✕ '+t('gtSansDateBtn')+'</button>' : '')+
          '</div></div>';
   } else if(it.gtache){
@@ -4105,7 +4430,7 @@ function card(it){
            '<label class="rang"><span>'+t('fEnd')+'</span><span class="pair"><input type="date" class="mini" id="gedf_'+k+'" value="'+val('dateFin', it.endDate||it.date)+'" onchange="gDraft('+qi+',\'dateFin\',this.value);gDraft('+qi+',\'finTouchee\',1)"><input type="time" class="mini tm" id="gehf_'+k+'" value="'+val('fin', it.end||'')+'"'+ht+' oninput="gDraft('+qi+',\'fin\',this.value)"></span></label>'+
          '</div>'+
          '<label class="rang wide"><span>'+t('fPlace')+'</span><input class="mini" id="gel_'+k+'" value="'+val('lieu', it.loc||'')+'" oninput="gDraft('+qi+',\'lieu\',this.value)"></label>'+
-         '<label class="rang wide"><span>'+t('details')+'</span><textarea class="notes" id="gen_'+k+'" oninput="gDraft('+qi+',\'desc\',this.value)">'+val('desc', it.gDescH||'')+'</textarea></label>'+
+         '<label class="rang wide"><span>'+t('details')+'</span><textarea class="notes" dir="auto" rows="'+lignesPour(dr.desc!==undefined?dr.desc:it.gDescH)+'" id="gen_'+k+'" oninput="gDraft('+qi+',\'desc\',this.value)">'+val('desc', it.gDescH||'')+'</textarea></label>'+
          (it.gRec ? '<div class="note-line">🔁 '+t('gEditRec')+'</div><label class="chk chk-in"><input type="checkbox" id="ges_'+k+'"'+(dr.serie?' checked':'')+' onchange="gDraft('+qi+',\'serie\',this.checked)"><span>'+t('gEditSerie')+'</span></label>' : '')+
          '<div class="acts"><button class="act a-done" id="gesv_'+k+'"'+(GESV_EN_COURS[it.id]?' disabled':'')+' onclick="saveEditG('+qi+')">'+(GESV_EN_COURS[it.id]?t('enCours'):t('gEditSave'))+'</button>'+
          '<button class="act" onclick="togEditG('+qi+')">'+t('cancel')+'</button></div>'+
@@ -4119,12 +4444,13 @@ function card(it){
        '</div></div>';
   if(it.peutEcrireSource && it.notesModifiables!==false){
     h += '<div class="sec"><div class="sec-t">📝 '+t('gDescEdit')+' <span class="orgv">('+t('gWriteHint')+')</span></div>'+
-         '<textarea class="notes" onchange="setSrcNote(\''+it.id+'\',this.value)">'+esc(it.desc||'')+'</textarea></div>';
+         '<textarea class="notes" dir="auto" rows="'+lignesPour(it.desc)+'" onchange="setSrcNote(\''+it.id+'\',this.value)">'+esc(it.desc||'')+'</textarea></div>';
   } else if(it.desc){
     const long = it.desc.length>260;
+    const plie = long && !(state.descOuv && state.descOuv[it.id]);
     h += '<div class="sec"><div class="sec-t">📝 '+t('details')+'</div>'+
-         '<div class="desc'+(long?' collapsed':'')+'" id="d_'+cssId(it.id)+'">'+esc(it.desc)+'</div>'+
-         (long?'<div class="more" onclick="expandDesc(\''+it.id+'\',event)">▾ '+(state.lang==='ar'?'عرض الكل':'Tout afficher')+'</div>':'')+'</div>';
+         '<div class="desc'+(plie?' collapsed':'')+'" dir="auto" id="d_'+cssId(it.id)+'">'+esc(it.desc)+'</div>'+
+         (long?'<div class="more" onclick="expandDesc(\''+it.id+'\',event)">'+(plie ? '▾ '+(state.lang==='ar'?'عرض الكل':'Tout afficher') : '▴ '+(state.lang==='ar'?'إخفاء':'Réduire'))+'</div>':'')+'</div>';
   }
   /* --- ce que Google sait, et qu'on ne montrait pas ---------------------- */
   const gl = [];
@@ -4175,7 +4501,7 @@ function card(it){
        '<button onclick="var e=document.getElementById(\'as_'+cssId(it.id)+'\');addCheck(TID(\''+it.id+'\'),e.value);e.value=\'\'">＋</button></div></div>';
 
   h += '<div class="sec"><div class="sec-t">🖊️ '+t('notes')+'</div>'+
-       '<textarea class="notes" onchange="setNote(\''+it.id+'\',this.value)">'+esc(store.notes[it.id]||'')+'</textarea></div>';
+       '<textarea class="notes" dir="auto" rows="'+lignesPour(store.notes[it.id])+'" onchange="setNote(\''+it.id+'\',this.value)">'+esc(store.notes[it.id]||'')+'</textarea></div>';
 
   h += '<div class="acts">';
   h += btn('a-done', st==='done', t('markDone'), it.id, 'done');
@@ -4198,6 +4524,13 @@ const TID = id => TASKS.find(x=>x.id===id);
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 /* Un horodatage RFC 3339 (Google) en date + heure LOCALES : couper la chaine
    donnerait le jour UTC, qui n'est pas celui de l'artisan entre minuit et 1 h. */
+/* Nombre de lignes pour montrer TOUT le texte d'une zone de note (repli des
+   navigateurs sans field-sizing) : les sauts de ligne, plus les lignes
+   longues qui se replient (~60 signes). */
+function lignesPour(txt){
+  const l=String(txt||'').split('\n').reduce((n,x)=>n+Math.max(1,Math.ceil(x.length/60)),0);
+  return Math.max(3, Math.min(60, l+1));
+}
 function heureLocale(ts){ const x=new Date(ts); return isNaN(x) ? '' : fmtDate(iso(x))+' '+pad(x.getHours())+':'+pad(x.getMinutes()); }
 /* Un lien venu d'une source exterieure : seulement http(s) ou mailto, et tout
    echappe. Le reste n'est pas un lien. */
@@ -4589,7 +4922,8 @@ function versGoogle(ev){
     sec:ev.cat, sub:ev.sub, liste:(ev.subs||[]).slice()
   };
 }
-function expandDesc(id,e){ e.stopPropagation(); const d=document.getElementById('d_'+cssId(id)); if(d){ d.classList.toggle('collapsed'); } }
+/* « عرض الكل » : ouvert, il le RESTE (un redessin de la carte ne le replie plus). */
+function expandDesc(id,e){ e.stopPropagation(); state.descOuv=state.descOuv||{}; state.descOuv[id]=!state.descOuv[id]; render(); }
 function jumpTo(id){ const it=TID(id); if(it){ state.boards[catOf(it)]=1; applyPanels(); prefSet(); } state.open[id]=true; render(); setTimeout(()=>{const e=document.getElementById('c_'+cssId(id)); if(e) e.scrollIntoView({block:'center',behavior:'smooth'});},80); }
 function toggleRoutine(){ state.routine=!state.routine; state.routineChoisi=true; syncUI(); prefSet(); render(); }
 /* La recherche attend un quart de seconde apres la derniere lettre avant de
@@ -4723,9 +5057,9 @@ function applyPanels(){
     if(!el) return;
     el.classList.toggle('open', !!state.boards[cat]);
     el.classList.toggle('closed', !state.boards[cat]);
-    ['date','cat'].forEach(m=>{
+    ['date','cat','liste'].forEach(m=>{
       const b=document.getElementById('gs_'+cat+'_'+m);
-      if(b) b.classList.toggle('on', (state.group[cat]||'date')===m);
+      if(b) b.classList.toggle('on', modeGroupe(cat)===m);
     });
   });
   syncRing();
