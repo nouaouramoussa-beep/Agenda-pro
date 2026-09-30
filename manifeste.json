@@ -1,5 +1,5 @@
 {
- "genere": "2026-09-30T17:31:49.327Z",
+ "genere": "2026-09-30T20:21:07.466Z",
  "fichiers": {
   ".nojekyll": {
    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -50,8 +50,8 @@
    "octets": 158533
   },
   "app/google/gtasks.js": {
-   "sha256": "d1e6dbbc598253fde6276a6d674a96cff2c7bbdf4aa5eb2fcb6e36010fc9ebae",
-   "octets": 108295
+   "sha256": "090c61ee928d027dfa7ab52c651c772e79a69bb03aefe31e66848ecff1989b54",
+   "octets": 119158
   },
   "app/lock/lock.css": {
    "sha256": "e598a810130e12661dc4d71800af146bc16edc0e2ff3cc1c43faecc0d12a9318",
@@ -138,7 +138,7 @@
    "octets": 1650
   },
   "app/pwa/sw.js": {
-   "sha256": "6a536888ddb9bc366e916bfa80f74b0f07a98d6af9a3b1ecfe4811dfba671b01",
+   "sha256": "65b87c448e671945ce3ae9be83957f04d1b7ed6033f187aad03935ad67a97b8b",
    "octets": 30781
   },
   "app/setup/setup.css": {
@@ -170,8 +170,8 @@
    "octets": 22449
   },
   "index.html": {
-   "sha256": "1a5a47b18b33a6f9ebb468d2e4e6a31da3177238fafd6b9a3f2bbb9bd83de690",
-   "octets": 398928
+   "sha256": "f51f503b6b421eea473fc0d03eacf9abc94c122ffc19dc93dafaeec750aa3b5d",
+   "octets": 411786
   },
   "sw.js": {
    "sha256": "bdca343b03eb8d6eaed1c3eec1de2ab2ac9d94e351beed282ab563ca0635e8c7",

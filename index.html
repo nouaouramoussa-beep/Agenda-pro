@@ -497,7 +497,15 @@ select.fsel:focus,input.fdate:focus{outline:none;border-color:var(--brand)}
    coup, sans ascenseur (Chromium : Electron et Chrome ; ailleurs, rows). */
 .notes{max-height:none;overflow:auto}
 @supports (field-sizing:content){ .notes{field-sizing:content;overflow:hidden} }
-.gtr-mere{font-size:11px;color:var(--txt3);font-weight:700;margin-bottom:2px;unicode-bidi:plaintext;text-align:start}
+/* un texte deja ecrit, montre dans le cadre de son champ (voir champ()) :
+   les nombres y gardent leur sens ; un clic en fait le champ */
+/* le nombre isole : force de gauche a droite, chiffres arabes-indiens (١٥٠ ٠٠٠) compris */
+bdi.n{unicode-bidi:isolate-override;direction:ltr}
+[data-lu]{unicode-bidi:plaintext;text-align:start;white-space:pre-wrap;overflow-wrap:anywhere;cursor:text}
+.mini[data-lu]{height:auto;min-height:34px;padding:7px 11px;line-height:1.5}
+.notes[data-lu]{resize:none}
+[data-lu][aria-disabled]{cursor:default;opacity:.75}
+.gtr-mere{font-size:11px;color:var(--txt3);font-weight:700;margin-bottom:2px;text-align:start}
 /* l'etoile, au bout de la ligne comme dans Google Tasks (ecrite dans le nom : « ⭐ ») */
 .gtr-e{flex:0 0 auto;width:30px;height:30px;margin-top:-4px;border-radius:50%;display:grid;place-items:center;font-size:19px;line-height:1;color:var(--txt3)}
 .gtr-e:hover{background:color-mix(in srgb,#f4b400 14%,transparent);color:#e3a008}
@@ -3708,6 +3716,7 @@ function visible(){
    7. RENDU
    ============================================================================ */
 function render(){
+  const fid=(document.activeElement && /^cl_/.test(document.activeElement.id||'')) ? document.activeElement.id : null;
   majSecGt();
   appliquerNoms();
   brancherRejeu();
@@ -3728,6 +3737,7 @@ function render(){
      blanc et de l'anneau qui chevauchait les cartes. */
   requestAnimationFrame(function(){ syncMains(); syncBarre(); });
   if(GT_FOCUS){ const r=document.querySelector('#c_'+cssId(GT_FOCUS)+' .gtr-c'); if(r){ r.focus(); GT_FOCUS=null; } }
+  if(fid){ const e=document.getElementById(fid); if(e && document.activeElement!==e){ try{ e.focus({preventScroll:true}); }catch(er){} } }
 }
 
 /* Un redessin demande par l'ARRIERE-PLAN (une relecture Google, un autre
@@ -3741,16 +3751,29 @@ function render(){
    relache, sinon le bouton vise disparaissait sous son doigt. */
 let AP_PTR_BAS=false;
 ['pointerdown','pointerup','pointercancel'].forEach(t=>document.addEventListener(t,e=>{ AP_PTR_BAS=(e.type==='pointerdown'); },true));
+/* apres le geste en cours : bouton de la souris relache (ou geste annule) */
+function apresPointeur(fn){
+  if(!AP_PTR_BAS){ setTimeout(fn,0); return; }
+  let fait=false; const une=()=>{ if(fait) return; fait=true; setTimeout(fn,0); };
+  document.addEventListener('pointerup', une, {once:true, capture:true});
+  document.addEventListener('pointercancel', une, {once:true, capture:true});
+}
+/* Jamais dans la suite immediate d'un « change » (le focus n'a pas encore
+   atteint le bouton vise : il serait detache et le clic perdu). */
+let RF_PREVU=false;
 function renderFond(){
+  if(RF_PREVU) return; RF_PREVU=true;
+  const go=()=>{ if(AP_PTR_BAS){ apresPointeur(go); return; } RF_PREVU=false; renderFondMaintenant(); };
+  setTimeout(go,0);
+}
+function renderFondMaintenant(){
   const a=document.activeElement;
-  if(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && a.closest && a.closest('.card, .gtr-x, .gtl-new')){
+  if(a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || (a.matches && a.matches('[data-lu]'))) && a.closest && a.closest('.card, .gtr-x, .gtl-new')){
     if(!a.__apRenduEnAttente){
       a.__apRenduEnAttente=true;
       a.addEventListener('blur', function(){
         a.__apRenduEnAttente=false;
-        const suite=()=>setTimeout(renderFond,0);
-        if(AP_PTR_BAS) document.addEventListener('pointerup', suite, {once:true, capture:true});
-        else suite();
+        renderFond();
       }, {once:true});
     }
     return;
@@ -3850,7 +3873,7 @@ function renderBrief(vis){
     const S = SUBS[subOf(it)]||SUBS.perso;
     return '<button class="nextup-item" onclick="jumpTo(\''+it.id+'\')">'+
       '<span class="when">'+T[state.lang].inDays(dd)+'</span>'+
-      '<span class="ttl">'+S.ic+' '+esc(it.title[state.lang])+'</span>'+
+      '<span class="ttl">'+S.ic+' '+txtNa(it.title[state.lang])+'</span>'+
       '<span class="tag time">'+(it.allDay? t('allDay') : it.start)+'</span></button>';
   }).join('') : '';
 }
@@ -3867,7 +3890,7 @@ function renderAlerts(){
        un drapeau pose A LA MAIN (urgent, en attente) ne depend d'aucune date :
        il merite son alerte, sans le « en retard de N jours » qui n'a pas de sens. */
     if(it.sansDate){
-      const s0=statusOf(it), nm0=esc(it.title[state.lang]);
+      const s0=statusOf(it), nm0=txtNa(it.title[state.lang]);
       if(s0==='overdue') A.push({p:0,k:'a-bad',ic:'🔴',h:state.lang==='ar'
         ? '<b>'+nm0+'</b> معلّمة كعاجلة (بدون تاريخ) — أنجزها أو حدّد لها موعداً.'
         : '<b>'+nm0+'</b> marquée urgente (sans date) — terminez-la ou fixez-lui une date.'});
@@ -3877,7 +3900,7 @@ function renderAlerts(){
       return;
     }
     const s=statusOf(it), d=parse(it.date), dd=diffDays(it.date);
-    const nm = esc(it.title[state.lang]);
+    const nm = txtNa(it.title[state.lang]);
     const list = clOf(it), done = clDone(it);
     if(s==='overdue' && (it.gtache || d>=addDays(T0,-60))){
       A.push({p:0,k:'a-bad',ic:'🔴',h:state.lang==='ar'
@@ -4075,7 +4098,7 @@ function groupByCat(cat, items){
     const isOpen = !!state.gopen[key];
     const late = list.filter(i=>statusOf(i)==='overdue').length;
     const next = list.find(i=>!i.sansDate && statusOf(i)!=='done' && diffDays(i.date)>=0);
-    const sub = (next ? T[state.lang].inDays(diffDays(next.date))+' · '+esc(next.title[state.lang]) : '')
+    const sub = (next ? T[state.lang].inDays(diffDays(next.date))+' · '+txtNa(next.title[state.lang]) : '')
               + (late ? ' · ⚠️ '+late+' '+t('lateLbl') : '');
     return '<div class="cgroup'+(isOpen?' open':'')+'">'+
       '<button class="cg-h" onclick="togGroup(\''+key+'\')">'+
@@ -4202,7 +4225,7 @@ function groupByListe(cat, items){
     }
     return '<div class="gtl'+(ouv?' open':'')+'">'+
       '<button class="gtl-h" onclick="togListe(\''+esc(k)+'\',true)">'+
-        '<span class="gtl-ic">☑️</span><span class="gtl-nom" dir="auto">'+esc(nom)+'</span>'+
+        '<span class="gtl-ic">☑️</span><span class="gtl-nom" dir="auto">'+txtN(nom)+'</span>'+
         '<span class="gtl-n">'+t('gtOuvertes').replace('%1',ouvertes.length)+(late?' · ⚠️ '+late:'')+'</span><span class="cg-ch">▼</span>'+
       '</button>'+
       '<div class="gtl-b">'+h+'</div></div>';
@@ -4215,13 +4238,13 @@ function ligneTache(it, sous, orpheline, vueEtoile){
   const fini=gtFinie(it), k=cssId(it.id), ouvert=!vueEtoile && !!state.gtOuv[it.id], qi='\''+it.id+'\'';
   const retard = !fini && it.gDue && statusOf(it)==='overdue';
   let h='<div class="gtr'+(fini?' fini':'')+(sous?' sous':'')+(ouvert?' ouvert':'')+'"'+(vueEtoile?'':' id="c_'+k+'"')+'>';
-  h+='<button class="gtr-c" title="'+esc(t(fini?'gtRouvrir':'gtTerminer'))+'" aria-label="'+esc(t(fini?'gtRouvrir':'gtTerminer'))+'" aria-pressed="'+(fini?'true':'false')+'" onclick="gtBasculer('+qi+')">'+(fini?'✓':'')+'</button>';
+  h+='<button class="gtr-c" title="'+esc(t(fini?'gtRouvrir':'gtTerminer'))+'" aria-label="'+esc(t(fini?'gtRouvrir':'gtTerminer'))+'" aria-pressed="'+(fini?'true':'false')+'"'+(deplEnCours(it.id)?' disabled':'')+' onclick="gtBasculer('+qi+(vueEtoile?',true':'')+')">'+(fini?'✓':'')+'</button>';
   const geste = vueEtoile ? 'gtAllerA' : 'gtOuvrir';
   h+='<div class="gtr-m" role="button" tabindex="0"'+(vueEtoile?' title="'+esc(it.org?it.org[state.lang]:'')+'"':' aria-expanded="'+(ouvert?'true':'false')+'"')+' onclick="'+geste+'('+qi+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();'+geste+'('+qi+')}">'+
-       (vueEtoile ? '<div class="gtr-mere" dir="auto">☑️ '+esc(it.org?it.org[state.lang]:'')+(it.gParent?' · ↳ '+esc(it.gParent.titre):'')+'</div>' : '')+
-       (orpheline && it.gParent ? '<div class="gtr-mere" dir="auto">↳ '+esc(it.gParent.titre)+'</div>' : '')+
-       '<div class="gtr-t" dir="auto">'+esc(it.title[state.lang])+'</div>';
-  if(it.desc && !ouvert) h+='<div class="gtr-d" dir="auto">'+esc(it.desc)+'</div>';
+       (vueEtoile ? '<div class="gtr-mere">☑️ '+txtNa(it.org?it.org[state.lang]:'')+(it.gParent?' · ↳ '+txtNa(it.gParent.titre):'')+'</div>' : '')+
+       (orpheline && it.gParent ? '<div class="gtr-mere">↳ '+txtNa(it.gParent.titre)+'</div>' : '')+
+       '<div class="gtr-t" dir="auto">'+txtN(it.title[state.lang])+'</div>';
+  if(it.desc && !ouvert) h+='<div class="gtr-d" dir="auto">'+txtN(it.desc)+'</div>';
   const puces=[];
   if(it.gDue) puces.push('<span class="gtr-p'+(retard?' retard':'')+'">📅 '+esc(fmtDate(it.gDue))+'</span>');
   if(it.gLiens && it.gLiens.length) puces.push('<span class="gtr-p">🔗 '+it.gLiens.length+'</span>');
@@ -4229,7 +4252,7 @@ function ligneTache(it, sous, orpheline, vueEtoile){
   if(it.gEnAttente) puces.push('<span class="gtr-p attente">⏳ '+t('gtAttente')+'</span>');
   if(puces.length) h+='<div class="gtr-ps">'+puces.join('')+'</div>';
   const lblE=esc(t(it.gEtoile?'gtEtoileRetirer':'gtEtoileMettre'));
-  h+='</div><button class="gtr-e'+(it.gEtoile?' on':'')+'" title="'+lblE+'" aria-label="'+lblE+'" aria-pressed="'+(it.gEtoile?'true':'false')+'" onclick="gtEtoile('+qi+')">'+(it.gEtoile?'★':'☆')+'</button></div>';
+  h+='</div><button class="gtr-e'+(it.gEtoile?' on':'')+'" title="'+lblE+'" aria-label="'+lblE+'" aria-pressed="'+(it.gEtoile?'true':'false')+'"'+((state.gtDepl[it.id] || (it.gParentId && state.gtDepl[it.gParentId]))?' disabled':'')+' onclick="gtEtoile('+qi+','+(it.gEtoile?'false':'true')+')">'+(it.gEtoile?'★':'☆')+'</button></div>';
   if(ouvert) h+=editeurTache(it, sous);
   return h;
 }
@@ -4238,14 +4261,14 @@ function editeurTache(it, sous){
   const k=cssId(it.id), qi='\''+it.id+'\'', ecr=!!it.peutEcrireSource;
   /* pendant un deplacement vers une autre liste, rien ne se modifie : tout
      partirait sur l'ancien emplacement */
-  const verrou = state.gtDepl[it.id] ? ' disabled' : '';
+  const verrou = (state.gtDepl[it.id] || (it.gParentId && state.gtDepl[it.gParentId])) ? ' disabled' : '';
   let h='<div class="gtr-x'+(sous?' sous':'')+'">';
   if(verrou) h+='<div class="note-line">⏳ '+t('gtDeplEnCours')+'</div>';
   if(ecr){
-    h+='<input class="mini gtx-t" dir="auto"'+verrou+' value="'+esc(it.title[state.lang])+'" onchange="setSrcTitle('+qi+',this.value)">';
+    h+=champ('gtT:'+it.id, it.title[state.lang], {cls:'mini gtx-t', dis:!!verrou, onchange:'setSrcTitle('+qi+',this.value)'});
     if(it.notesModifiables!==false)
-      h+='<textarea class="notes" dir="auto"'+verrou+' rows="'+lignesPour(it.desc)+'" placeholder="'+esc(t('gtDetailsPh'))+'" onchange="setSrcNote('+qi+',this.value)">'+esc(it.desc||'')+'</textarea>';
-    else if(it.desc) h+='<div class="desc" dir="auto">'+esc(it.desc)+'</div>';
+      h+=champ('gtN:'+it.id, it.desc||'', {tag:'textarea', cls:'notes', dis:!!verrou, ph:t('gtDetailsPh'), onchange:'setSrcNote('+qi+',this.value)'});
+    else if(it.desc) h+='<div class="desc" dir="auto">'+txtN(it.desc)+'</div>';
     /* la date part a la SORTIE du champ (Chrome signale chaque chiffre tape) */
     h+='<div class="gtx-l"><label class="rang"><span>📅 '+t('gtDateEdit')+'</span><input type="date" class="mini"'+verrou+' value="'+esc(it.gDue||'')+'" onblur="if(this.value && this.value!==this.defaultValue) setSrcDue('+qi+',this.value)" onkeydown="if(event.key===\'Enter\') this.blur()"></label>'+
        (it.gDue?'<button class="act" onclick="setSrcDue('+qi+',\'\')">✕ '+t('gtSansDateBtn')+'</button>':'')+'</div>'+
@@ -4263,7 +4286,7 @@ function editeurTache(it, sous){
          '<button'+verrou+' onclick="gtAjouterSous('+qi+')">＋</button></div>';
   } else {
     h+='<div class="note-line">✏️ '+t('gtAllumer')+'</div>';
-    if(it.desc) h+='<div class="desc" dir="auto">'+esc(it.desc)+'</div>';
+    if(it.desc) h+='<div class="desc" dir="auto">'+txtN(it.desc)+'</div>';
   }
   const infos=[];
   if(it.gLiens && it.gLiens.length) infos.push('🔗 '+it.gLiens.map(l=>lienSur(l.link, l.description||l.type||l.link)).filter(Boolean).join(' • '));
@@ -4284,9 +4307,12 @@ function editeurTache(it, sous){
 function gtOuvrir(id){ state.gtOuv[id]=!state.gtOuv[id]; render(); }
 /* L'etoile : « ⭐ » en tete du nom, dans Google Tasks (app/google/gtasks.js,
    basculerEtoile). Ecriture coupee : gtasks le dit, rien ne change. */
-function gtEtoile(id){
+function gtEtoile(id, veut){
   const it=TID(id); if(!it) return;
-  if(window.AP && AP.gtasks && AP.gtasks.basculerEtoile) AP.gtasks.basculerEtoile(id, !it.gEtoile);
+  if(state.gtDepl && (state.gtDepl[id] || (it.gParentId && state.gtDepl[it.gParentId]))) return;   // deplacement en cours (la tache ou sa mere) : tout partirait sur l'ancienne liste
+  /* veut : l'etat que MONTRAIT le bouton au moment du clic (un redessin
+     differe ne doit pas inverser le geste) */
+  if(window.AP && AP.gtasks && AP.gtasks.basculerEtoile) AP.gtasks.basculerEtoile(id, typeof veut==='boolean' ? veut : !it.gEtoile);
 }
 /* Depuis le bloc des etoiles : ouvrir la tache dans SA liste. */
 function gtAllerA(id){
@@ -4306,10 +4332,13 @@ function gtListeClavier(ev, sel, id){
 }
 /* Le rond : terminee <-> a faire, dans Google Tasks. Ecriture desactivee : le
    programme le garde pour lui (statut local) et le dit. */
-function gtBasculer(id){
+function gtBasculer(id, depuisEtoile){
   const it=TID(id); if(!it) return;
   const fini=gtFinie(it);
-  GT_FOCUS=id;                      // apres le redessin, le focus revient sur ce rond
+  if(it.peutEcrireSource && deplEnCours(id)) return apresDepl(id, n=>{ if(window.AP && AP.gtasks && AP.gtasks.basculerFait) AP.gtasks.basculerFait(n, !fini); });
+  /* apres le redessin, le focus revient sur ce rond — pas depuis le bloc
+     des etoiles : l'autre copie (dans sa liste) ferait sauter la page */
+  if(!depuisEtoile) GT_FOCUS=id;
   if(it.peutEcrireSource && window.AP && AP.gtasks && AP.gtasks.basculerFait){ AP.gtasks.basculerFait(id, !fini); return; }
   /* ecriture coupee : le programme le garde pour lui ; une tache terminee
      dans Google se rouvre ici par un statut local « معلقة » */
@@ -4348,12 +4377,12 @@ async function gtAjouterSous(id){
 }
 async function gtDeplacer(id, liste){
   const it=TID(id); if(!it || liste===it.gListe || state.gtDepl[id]) return;
-  state.gtDepl[id]=true; renderFond();
+  state.gtDepl[id]=true; render();
   try{
     const neuf=await AP.gtasks.deplacerVersListe(id, liste);
     if(neuf){ delete state.gtOuv[id]; state.gtOuv[neuf]=true; toast(t('gtDeplacee')); }
   }catch(e){ toast(t('gtDeplKo').replace('%1', errMsg(e))); }
-  finally{ delete state.gtDepl[id]; renderFond(); }
+  finally{ delete state.gtDepl[id]; renderFond(); rejouerApresDepl(); }
 }
 /* ouvertParDefaut : les listes s'ouvrent seules, les « منجزة » non */
 function togListe(key, ouvertParDefaut){
@@ -4388,9 +4417,9 @@ function card(it){
   h += ndOuvert
     ? '<div class="dchip"><div class="d">—</div><div class="m">'+t('sansDateLbl')+'</div></div>'
     : '<div class="dchip"><div class="d">'+d.getDate()+'</div><div class="m">'+T[state.lang].months[d.getMonth()].slice(0,4)+'</div></div>';
-  h += '<div class="c-main"><h4>'+S.ic+' '+(it.gtache && it.gEtoile ? '⭐ ' : '')+esc(it.title[state.lang])+'</h4><div class="c-meta">';
+  h += '<div class="c-main"><h4>'+S.ic+' '+(it.gtache && it.gEtoile ? '⭐ ' : '')+txtNa(it.title[state.lang])+'</h4><div class="c-meta">';
   if(it.gtache){
-    h += '<span class="tag" style="background:'+hex('#1a73e8',.12)+';color:color-mix(in srgb,#1a73e8,var(--ink) 42%)">☑️ '+esc(it.org?it.org[state.lang]:'')+'</span>';
+    h += '<span class="tag" style="background:'+hex('#1a73e8',.12)+';color:color-mix(in srgb,#1a73e8,var(--ink) 42%)">☑️ '+txtNa(it.org?it.org[state.lang]:'')+'</span>';
     if(subOf(it)!=='perso') h += '<span class="tag" style="background:'+hex(S.c,.14)+';color:color-mix(in srgb,'+S.c+',var(--ink) 42%)">'+esc(S[state.lang])+'</span>';
   } else {
     h += '<span class="tag" style="background:'+hex(S.c,.14)+';color:color-mix(in srgb,'+S.c+',var(--ink) 42%)">'+esc(S[state.lang])+'</span>';
@@ -4407,7 +4436,7 @@ function card(it){
   if(!isOpen){ h += '<div class="card-body"></div></article>'; return h; }
   h += '<div class="card-body">';
   h += '<div class="sec"><div class="sec-t">📅 '+(nd ? t('sansDateLbl') : fmtDayName(it.date)+' • '+fmtDate(it.date))+
-       (it.raw? ' &nbsp;·&nbsp; <span class="orgv">'+t('sourceTitle')+' : “'+esc(it.raw)+'”</span>':'')+'</div></div>';
+       (it.raw? ' &nbsp;·&nbsp; <span class="orgv">'+t('sourceTitle')+' : “'+txtNa(it.raw)+'”</span>':'')+'</div></div>';
   /* Google Tasks seulement, et seulement si l'artisan a active l'ecriture
      (it.peutEcrireSource, posee par app/google/gtasks.js) : le titre et la
      note deviennent des champs, et ce qu'on y tape repart vers le VRAI
@@ -4438,22 +4467,22 @@ function card(it){
   const gWritable = it.src==='google' && !it.gtache && it.gev && !it.gRO && it.gOrg!==false && window.AP && AP.gsync && AP.gsync.modifierTache;
   if(it.peutEcrireSource){
     h += '<div class="sec"><div class="sec-t">✏️ '+t('gTitleEdit')+' <span class="orgv">('+t('gWriteHint')+')</span></div>'+
-         '<input class="mini" style="width:100%" value="'+esc(it.title[state.lang])+'" onchange="setSrcTitle(\''+it.id+'\',this.value)">'+
+         champ('cT:'+it.id, it.title[state.lang], {cls:'mini', style:'width:100%', dis:deplEnCours(it.id), onchange:'setSrcTitle(\''+it.id+'\',this.value)'})+
          '<div class="row2c" style="margin-top:7px;align-items:center">'+
            /* vide pendant la frappe : ignore (seul ✕ retire la date) */
            '<label class="rang"><span>📅 '+t('gtDateEdit')+'</span><input type="date" class="mini" value="'+esc(it.gDue||'')+'" onblur="if(this.value && this.value!==this.defaultValue) setSrcDue(\''+it.id+'\',this.value)" onkeydown="if(event.key===\'Enter\') this.blur()"></label>'+
            (it.gDue ? '<button class="act" onclick="setSrcDue(\''+it.id+'\',\'\')">✕ '+t('gtSansDateBtn')+'</button>' : '')+
-           (it.gtache ? '<button class="act" aria-pressed="'+(it.gEtoile?'true':'false')+'" onclick="gtEtoile(\''+it.id+'\')">'+(it.gEtoile ? '★ '+t('gtEtoileRetirer') : '☆ '+t('gtEtoileMettre'))+'</button>' : '')+
+           (it.gtache ? '<button class="act" aria-pressed="'+(it.gEtoile?'true':'false')+'"'+(state.gtDepl&&(state.gtDepl[it.id] || (it.gParentId && state.gtDepl[it.gParentId]))?' disabled':'')+' onclick="gtEtoile(\''+it.id+'\','+(it.gEtoile?'false':'true')+')">'+(it.gEtoile ? '★ '+t('gtEtoileRetirer') : '☆ '+t('gtEtoileMettre'))+'</button>' : '')+
          '</div>'+(it.gtache ? '<div class="gtx-h" dir="auto" style="margin-top:6px">⏰ '+t('gtHeureIci')+'</div>' : '')+'</div>';
   } else if(it.gtache){
     h += '<div class="sec"><div class="note-line">✏️ '+t('gtAllumer')+'</div></div>';
   } else if(it.manual){
     h += '<div class="sec"><div class="sec-t">✏️ '+t('nomTitle')+'</div>'+
-         '<input class="mini" style="width:100%" value="'+esc(it.title[state.lang])+'" onchange="renameCustom(\''+it.id+'\',this.value)"></div>';
+         champ('cC:'+it.id, it.title[state.lang], {cls:'mini', style:'width:100%', onchange:'renameCustom(\''+it.id+'\',this.value)'})+'</div>';
   } else if(!gWritable){
     const aNom = !!((store.titleOf||{})[it.id] || (it.sk && (store.titleSk||{})[it.sk]));
     h += '<div class="sec"><div class="sec-t">✏️ '+t('nomTitle')+' <span class="orgv">('+t(it.gRO?'gRO':'nomLocal')+')</span></div>'+
-         '<input class="mini" style="width:100%" value="'+esc(it.title[state.lang])+'" onchange="setNomLocal(\''+it.id+'\',this.value)">'+
+         champ('cL:'+it.id, it.title[state.lang], {cls:'mini', style:'width:100%', onchange:'setNomLocal(\''+it.id+'\',this.value)'})+
          (aNom ? '<button class="act" style="margin-top:6px" onclick="nomOrigine(\''+it.id+'\')">'+t('nomReset')+'</button>' : '')+
          '</div>';
   }
@@ -4478,24 +4507,24 @@ function card(it){
          '</div>';
   }
   const orgTxt = it.org ? it.org[state.lang] : S[state.lang];
-  h += '<div class="sec"><div class="sec-t">🏷️ '+t('orgLbl')+' : <span class="orgv">'+esc(orgTxt)+'</span></div>'+
+  h += '<div class="sec"><div class="sec-t">🏷️ '+t('orgLbl')+' : <span class="orgv">'+txtNa(orgTxt)+'</span></div>'+
        '<div class="row2c">'+
        '<input class="mini" placeholder="'+t('contactPh')+'" value="'+esc(store.contact[it.sk]||'')+'" onchange="setMeta(\'contact\',\''+it.sk+'\',this.value)">'+
        '<input class="mini" placeholder="'+t('placePh')+'" value="'+esc(store.place[it.sk]||'')+'" onchange="setMeta(\'place\',\''+it.sk+'\',this.value)">'+
        '</div></div>';
   if(it.peutEcrireSource && it.notesModifiables!==false){
     h += '<div class="sec"><div class="sec-t">📝 '+t('gDescEdit')+' <span class="orgv">('+t('gWriteHint')+')</span></div>'+
-         '<textarea class="notes" dir="auto" rows="'+lignesPour(it.desc)+'" onchange="setSrcNote(\''+it.id+'\',this.value)">'+esc(it.desc||'')+'</textarea></div>';
+         champ('cG:'+it.id, it.desc||'', {tag:'textarea', cls:'notes', dis:deplEnCours(it.id), onchange:'setSrcNote(\''+it.id+'\',this.value)'})+'</div>';
   } else if(it.desc){
     const long = it.desc.length>260;
     const plie = long && !(state.descOuv && state.descOuv[it.id]);
     h += '<div class="sec"><div class="sec-t">📝 '+t('details')+'</div>'+
-         '<div class="desc'+(plie?' collapsed':'')+'" dir="auto" id="d_'+cssId(it.id)+'">'+esc(it.desc)+'</div>'+
+         '<div class="desc'+(plie?' collapsed':'')+'" dir="auto" id="d_'+cssId(it.id)+'">'+txtN(it.desc)+'</div>'+
          (long?'<div class="more" onclick="expandDesc(\''+it.id+'\',event)">'+(plie ? '▾ '+(state.lang==='ar'?'عرض الكل':'Tout afficher') : '▴ '+(state.lang==='ar'?'إخفاء':'Réduire'))+'</div>':'')+'</div>';
   }
   /* --- ce que Google sait, et qu'on ne montrait pas ---------------------- */
   const gl = [];
-  if(it.loc) gl.push(['📍', t('gPlace'), esc(it.loc)]);
+  if(it.loc) gl.push(['📍', t('gPlace'), txtN(it.loc)]);
   if(it.endDate && it.endDate !== it.date) gl.push(['🗓️', t('gUntil'), esc(fmtDate(it.endDate))]);
   if(it.rap && it.rap.length) gl.push(['⏰', t('gRemind'), esc(fmtRappels(it.rap))]);
   if(it.inv && it.inv.length) gl.push(['👥', t('gGuests'), esc(it.inv.join(' • '))]);
@@ -4509,7 +4538,7 @@ function card(it){
     else if(it.gFaitIci && statusOf(it)==='done') gl.push(['✔️', t('gtFaitLe'), esc(fmtDate(it.gFaitIci))]);
     if(it.gEnAttente) gl.push(['⏳', t('gtAttente'), t('gtAttenteTxt')]);
     if(it.gMaj) gl.push(['🕘', t('gtMaj'), esc(heureLocale(it.gMaj))]);
-    if(it.gParent) gl.push(['↳', t('gtParent'), esc(it.gParent.titre)]);
+    if(it.gParent) gl.push(['↳', t('gtParent'), txtN(it.gParent.titre)]);
     if(it.gLiens && it.gLiens.length) gl.push(['🔗', t('gtLiens'), it.gLiens.map(l=>lienSur(l.link, l.description||l.type||l.link)).filter(Boolean).join(' • ')]);
     if(it.gAssign) gl.push(['📨', t('gtAssigne'), esc((T[state.lang].gtSurf||{})[it.gAssign.type] || it.gAssign.type || '')+(it.gAssign.lien ? ' '+lienSur(it.gAssign.lien, '↗') : '')]);
   }
@@ -4524,7 +4553,7 @@ function card(it){
   if(it.gEnfants && it.gEnfants.length){
     h += '<div class="sec"><div class="sec-t">🧩 '+t('gtSous')+'</div><div class="checklist">';
     it.gEnfants.forEach(c=>{
-      h += '<label class="chk'+(c.fait?' done':'')+'"><input type="checkbox" disabled '+(c.fait?'checked':'')+'><span>'+esc(c.titre)+'</span></label>';
+      h += '<label class="chk'+(c.fait?' done':'')+'"><input type="checkbox" disabled '+(c.fait?'checked':'')+'><span>'+txtNa(c.titre)+'</span></label>';
     });
     h += '</div></div>';
   }
@@ -4535,14 +4564,14 @@ function card(it){
     const on = done.indexOf(c)>=0;
     h += '<label class="chk'+(on?' done':'')+'">'+
          '<input type="checkbox" '+(on?'checked':'')+' onchange="setCheck(TID(\''+it.id+'\'),'+i+',this.checked)">'+
-         '<span>'+esc(c)+'</span>'+
+         '<span>'+txtNa(c)+'</span>'+
          '<span class="del" onclick="event.preventDefault();delCheck(TID(\''+it.id+'\'),'+i+')">✕</span></label>';
   });
   h += '</div><div class="addsub"><input id="as_'+cssId(it.id)+'" placeholder="'+t('addSub')+'" onkeydown="if(event.key===\'Enter\'){addCheck(TID(\''+it.id+'\'),this.value);this.value=\'\'}">'+
        '<button onclick="var e=document.getElementById(\'as_'+cssId(it.id)+'\');addCheck(TID(\''+it.id+'\'),e.value);e.value=\'\'">＋</button></div></div>';
 
   h += '<div class="sec"><div class="sec-t">🖊️ '+t('notes')+'</div>'+
-       '<textarea class="notes" dir="auto" rows="'+lignesPour(store.notes[it.id])+'" onchange="setNote(\''+it.id+'\',this.value)">'+esc(store.notes[it.id]||'')+'</textarea></div>';
+       champ('cN:'+it.id, store.notes[it.id]||'', {tag:'textarea', cls:'notes', onchange:'setNote(\''+it.id+'\',this.value)'})+'</div>';
 
   h += '<div class="acts">';
   h += btn('a-done', st==='done', t('markDone'), it.id, 'done');
@@ -4563,6 +4592,162 @@ const btn = (cls,on,lbl,id,v) => '<button class="act '+cls+(on?' on':'')+'" oncl
 const cssId = s => s.replace(/[^a-zA-Z0-9]/g,'_');
 const TID = id => TASKS.find(x=>x.id===id);
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+/* LES NOMBRES DANS UN TEXTE ARABE — un montant a milliers (« AAA BBB »)
+   s'affichait « BBB AAA », un numero de telephone par groupes a l'envers,
+   une mesure « L × H » en « H × L », une plage d'heures ou une date a
+   tirets a l'envers, les chiffres arabes-indiens groupes aussi : dans une
+   ligne de droite a gauche,
+   l'algorithme bidi range chaque groupe de chiffres de droite a gauche des
+   qu'un espace ou un signe les separe (apres une lettre arabe, meme « - »
+   et « + » : les chiffres y deviennent « arabes », regle W2). Un tel nombre
+   est isole de gauche a droite (<bdi class="n">), sans rien changer au
+   texte lui-meme (ni ici, ni chez Google).
+   Seulement les formes qui sont UN nombre : milliers (groupes de 3),
+   telephone (0…, 00…, +…), plages (heures, « – », « a - b » de meme forme),
+   mesures (× x *), et les nombres a separateurs colles. Deux nombres voisins
+   d'une phrase (« 3 4 نوافذ », « 12 - 3 ») restent deux nombres.
+   Seulement la ou il s'inverserait : apres une lettre arabe, ou sur une
+   ligne sans lettre (ou avant une lettre arabe). Apres une lettre latine
+   (un titre francais suivi d'une heure, un lien, « tel: » …), l'algorithme le garde deja
+   en place : n'y touchons pas. Les chiffres arabes-indiens, eux, s'inversent
+   partout. */
+const _D='[0-9٠-٩۰-۹]', _S='[   ]', _FIN='(?![0-9٠-٩۰-۹])', _Z='[0٠۰]';
+const _N1=_D+'+(?:[.,:٫٬/\\-+]'+_D+'+)*';
+const _NM=_D+'{1,3}(?:'+_S+_D+'{3}'+_FIN+')+(?:[.,٫]'+_D+'+)?';
+const _NUM='(?:'+_NM+'|'+_N1+')';
+const _TEL='(?:(?:\\+|'+_Z+'{2})'+_D+'{1,3}(?:'+_S+_D+'{1,4}'+_FIN+'){2,}|\\+'+_D+'{1,3}'+_S+_D+'{6,}'+_FIN+'|'+_Z+_D+'{1,3}(?:'+_S+_D+'{2,4}'+_FIN+'){2,})';
+const _PLAGE=_D+'{1,2}:'+_D+'{2}'+_S+'*[\\-–]'+_S+'*'+_D+'{1,2}:'+_D+'{2}'+_FIN;
+const _B=_NUM+'[%٪]?';
+const _TIRET=_B+_S+'*–'+_S+'*'+_B;          // « – » : toujours un intervalle
+const _DIM=_NUM+'(?:'+_S+'*[×xX*]'+_S+'*'+_NUM+')+';
+const RE_NOMBRE=new RegExp('(?:'+_TEL+'|'+_PLAGE+'|'+_TIRET+'|[+−]?(?:'+_DIM+'|'+_NUM+'))[%٪]?','g');
+const RE_NOMBRE2=new RegExp(RE_NOMBRE.source,'g');                       // pour le masque (lastIndex a part)
+const RE_SUITE=new RegExp(_S+'+-'+_S+'+('+_B+')','y');                    // « a - b » : seulement de meme forme
+const _forme=b=>b.replace(/[0-9\u0660-\u0669\u06F0-\u06F9]/g,'9');
+const _ESP=/[ \u00A0\u202F]/, _CHIFFRE=/[0-9\u0660-\u0669\u06F0-\u06F9%\u066A]/;
+/* juste avant i : « chiffre (ou %) + tiret » ? juste apres i : « tiret + chiffre » ? */
+function _chaineAvant(s,i){ let k=i-1; while(k>=0 && _ESP.test(s[k])) k--; if(k<0 || (s[k]!=='-' && s[k]!=='\u2013')) return false; k--; while(k>=0 && _ESP.test(s[k])) k--; return k>=0 && _CHIFFRE.test(s[k]); }
+function _chaineApres(s,i){ let k=i; while(k<s.length && _ESP.test(s[k])) k++; if(k>=s.length || (s[k]!=='-' && s[k]!=='\u2013')) return false; k++; while(k<s.length && _ESP.test(s[k])) k++; return k<s.length && /[0-9\u0660-\u0669\u06F0-\u06F9]/.test(s[k]); }
+const _AN=/[٠-٩۰-۹]/, _LETTRE=/\p{L}/u;
+const _RTL=/[\p{Script_Extensions=Arabic}\p{Script_Extensions=Hebrew}\p{Script_Extensions=Syriac}\p{Script_Extensions=Thaana}\p{Script_Extensions=Nko}]/u;
+function _fort(c){ return !_LETTRE.test(c) ? '' : (_RTL.test(c) ? 'R' : 'L'); }
+/* la forme peut-elle s'inverser ? commeAN : chiffres arabes-indiens, ou
+   chiffres ordinaires apres une lettre arabe (W2) — seuls . , : / y tiennent */
+function _inversable(v, commeAN){
+  const w=v.replace(/[%٪]$/,'');
+  if(/[   ×*–]/.test(w) || /^[+−]/.test(w)) return true;
+  return commeAN && /[^0-9٠-٩۰-۹.,:\/٫٬]/.test(w);
+}
+function txtN(s){
+  s=String(s==null?'':s);
+  /* le contexte se lit sur un masque : le « x » d'une mesure est neutre
+     pour l'algorithme une fois la mesure isolee */
+  const sM=s.replace(RE_NOMBRE2, v=>v.replace(/[xX]/g,' '));
+  let out='', i=0, m, pAv=0, dAv='', pAp=-1, dAp='';
+  RE_NOMBRE.lastIndex=0;
+  while((m=RE_NOMBRE.exec(s))){
+    let v=m[0];
+    const enChaine=_chaineAvant(s,m.index);
+    if(/\u2013/.test(v) && (enChaine || _chaineApres(s,m.index+v.length))){
+      /* « – » dans une suite : chaque nombre reste seul (l'ordre de la suite reste coherent) */
+      v=v.slice(0, v.search(/[ \u00A0\u202F]*\u2013/)); RE_NOMBRE.lastIndex=m.index+v.length;
+    } else if(!enChaine){
+      /* « 2026 - 2027 », « 10% - 20% » : un intervalle si les deux bornes ont la meme forme */
+      RE_SUITE.lastIndex=m.index+v.length;
+      const x=RE_SUITE.exec(s);
+      if(x && !/[ \u00A0\u202F\u2013\u00D7xX*]/.test(v) && _forme(x[1])===_forme(v) && !_chaineApres(s,m.index+v.length+x[0].length)){ v+=x[0]; RE_NOMBRE.lastIndex=m.index+v.length; }
+    }
+    out+=esc(s.slice(i,m.index));
+    /* derniere lettre avant, sur la meme ligne (parcours lineaire) */
+    for(;pAv<m.index;pAv++){ const c=sM[pAv]; if(c==='\n') dAv=''; else { const f=_fort(c); if(f) dAv=f; } }
+    const an=_AN.test(v);
+    let iso=false;
+    if(_inversable(v, an || dAv==='R')){
+      if(an || dAv==='R') iso=true;
+      else if(dAv===''){
+        const deb=m.index+v.length;
+        if(pAp<deb){ let k=deb; dAp=''; for(;k<sM.length;k++){ const c=sM[k]; if(c==='\n') break; const f=_fort(c); if(f){ dAp=f; break; } } pAp=k; }
+        iso = dAp!=='L';
+      }
+    }
+    out+= iso ? '<bdi class="n" dir="ltr">'+esc(v)+'</bdi>' : esc(v);
+    i=m.index+v.length;
+    pAv=Math.max(pAv,i);
+  }
+  return out+esc(s.slice(i));
+}
+/* Le meme, pour un texte pose dans un element qui prend le sens de la PAGE
+   (titre de carte, alerte, liste a cocher…) : le texte y garde son propre
+   sens (un titre francais dans l'interface arabe, et l'inverse). */
+function txtNa(s){ return '<bdi dir="auto">'+txtN(s)+'</bdi>'; }
+
+/* Un champ qui montre un texte DEJA ecrit (nom, details, notes). Un <input>
+   ou un <textarea> ne sait pas isoler un nombre : s'il y en a un a remettre
+   dans le bon sens, le texte est MONTRE dans le meme cadre, et devient champ
+   au premier clic ou a la premiere touche (curseur a la fin) — sur place,
+   sans redessiner la page ; sinon, le champ tel qu'avant.
+   o : {tag:'textarea'|'input', cls, style, ph (texte d'attente), dis
+   (verrouille), onchange (le code d'enregistrement, inchange)}. */
+state.champEd = state.champEd || {};
+const CHAMP = {};
+function champ(cle, v, o){
+  o=o||{};
+  const s=String(v==null?'':v), q='\''+cle+'\'', k=cssId(cle), multi=o.tag==='textarea';
+  CHAMP[cle]={v:s, o:o};
+  const base=' class="'+o.cls+'" dir="auto"'+(o.style?' style="'+o.style+'"':'');
+  const lu=txtN(s);
+  if(!state.champEd[cle] && s.trim() && lu!==esc(s)){
+    return '<div'+base+' id="cl_'+k+'" data-lu="1"'+(o.dis ? ' aria-disabled="true"' :
+      ' role="button" tabindex="0" onclick="ouvrirChamp('+q+',event)" onkeydown="champTouche(event,'+q+')"')+
+      '>'+lu+'</div>';
+  }
+  const ev=' id="ce_'+k+'"'+(o.dis?' disabled':'')+(o.ph?' placeholder="'+esc(o.ph)+'"':'')+' onchange="'+o.onchange+'" onblur="finChamp('+q+')"';
+  return multi
+    ? '<textarea'+base+ev+' rows="'+lignesPour(s)+'">'+esc(s)+'</textarea>'
+    : '<input'+base+ev+' value="'+esc(s)+'">';
+}
+/* au clavier : Entree/Espace ouvrent ; une lettre, un effacement ou un
+   collage ouvrent AUSSI, sans etre retenus — la touche arrive dans le champ */
+function champTouche(ev, cle){
+  if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); ouvrirChamp(cle); return; }
+  if(ev.altKey || ev.isComposing) return;
+  const mod=ev.ctrlKey||ev.metaKey;
+  const imprimable=!mod && [...String(ev.key||'')].length===1;
+  const coller=(mod && ev.code==='KeyV') || (ev.shiftKey && ev.key==='Insert');
+  if(imprimable || coller || ev.key==='Backspace' || ev.key==='Delete' || ev.key==='Process') ouvrirChamp(cle);
+}
+function ouvrirChamp(cle, ev){
+  if(ev){
+    if(ev.target && ev.target.closest && ev.target.closest('a')) return;
+    /* un texte qu'on selectionne (pour copier un numero) n'ouvre pas le champ */
+    const sel=window.getSelection ? getSelection() : null;
+    if(sel && !sel.isCollapsed && ev.currentTarget && ev.currentTarget.contains && ev.currentTarget.contains(sel.anchorNode)) return;
+  }
+  state.champEd[cle]=true;
+  const d=document.getElementById('cl_'+cssId(cle)), r=CHAMP[cle];
+  const enAttente=!!(d && d.__apRenduEnAttente);   // un redessin attendait la sortie du texte montre
+  if(d && r) d.outerHTML=champ(cle, r.v, r.o); else render();
+  const e=document.getElementById('ce_'+cssId(cle));
+  if(e){ e.focus(); const n=e.value.length; try{ e.setSelectionRange(n,n); }catch(er){} }
+  if(enAttente) renderFond();                    // il attendra maintenant la sortie du champ
+}
+/* A la sortie : le texte TAPE (enregistre sur « change », avant « blur »)
+   redevient montre — sur place : pas de redessin qui ferait perdre le focus
+   (Tab) ni ce qui est tape ailleurs ; pas pendant un clic en cours (meme
+   regle que renderFond), pour ne pas deplacer le bouton vise. La fenetre
+   seulement quittee (Alt+Tab) : le champ reste en cours. */
+function finChamp(cle){
+  delete state.champEd[cle];
+  const echanger=()=>{
+    if(state.champEd[cle]) return;
+    const e=document.getElementById('ce_'+cssId(cle)), r=CHAMP[cle];
+    if(!e || !r) return;
+    if(document.activeElement===e){ state.champEd[cle]=true; return; }
+    const html=champ(cle, e.value, r.o);
+    if(html.indexOf(' data-lu=')>=0) e.outerHTML=html;
+  };
+  if(AP_PTR_BAS) document.addEventListener('pointerup', ()=>setTimeout(echanger,0), {once:true, capture:true}); else setTimeout(echanger,0);
+}
 /* Un horodatage RFC 3339 (Google) en date + heure LOCALES : couper la chaine
    donnerait le jour UTC, qui n'est pas celui de l'artisan entre minuit et 1 h. */
 /* Nombre de lignes pour montrer TOUT le texte d'une zone de note (repli des
@@ -4592,8 +4777,21 @@ function setNote(id,v){ store.notes[id]=v; lsSet();
 /* Ces deux-la ne touchent aucun stockage local : le titre et la note "source"
    d'une tache venue de Google Tasks vivent chez gtasks.js (TACHES), pas dans
    store. Sans effet si la tache ne vient pas de la avec l'ecriture activee. */
-function setSrcTitle(id,v){ if(window.AP&&AP.gtasks&&AP.gtasks.ecrireTitre) AP.gtasks.ecrireTitre(id,v); }
-function setSrcNote(id,v){ if(window.AP&&AP.gtasks&&AP.gtasks.ecrireNote) AP.gtasks.ecrireNote(id,v); }
+/* Un geste fait pendant un deplacement (la tache ou sa mere change de liste) :
+   garde, puis rejoue sur la tache a sa nouvelle place */
+const GT_APRES_DEPL={};
+function deplEnCours(id){ const it=TID(id); return !!(state.gtDepl && (state.gtDepl[id] || (it && it.gParentId && state.gtDepl[it.gParentId]))); }
+function apresDepl(id, f){ (GT_APRES_DEPL[id]=GT_APRES_DEPL[id]||[]).push(f); toast(t('gtDeplEnCours')); }
+function rejouerApresDepl(){
+  Object.keys(GT_APRES_DEPL).forEach(id=>{
+    if(deplEnCours(id)) return;
+    const fs=GT_APRES_DEPL[id]; delete GT_APRES_DEPL[id];
+    const nid=(window.AP && AP.gtasks && AP.gtasks.idActuel) ? AP.gtasks.idActuel(id) : id;
+    fs.forEach(fn=>{ try{ fn(nid); }catch(e){} });
+  });
+}
+function setSrcTitle(id,v){ if(deplEnCours(id)) return apresDepl(id, n=>setSrcTitle(n,v)); if(window.AP&&AP.gtasks&&AP.gtasks.ecrireTitre) AP.gtasks.ecrireTitre(id,v); }
+function setSrcNote(id,v){ if(deplEnCours(id)) return apresDepl(id, n=>setSrcNote(n,v)); if(window.AP&&AP.gtasks&&AP.gtasks.ecrireNote) AP.gtasks.ecrireNote(id,v); }
 function setMeta(kind,sk,v){ store[kind][sk]=v; lsSet(); toast(t('toastSaved')); }
 /* Une tache ajoutee a la main ne pouvait ni etre supprimee ni corrigee : elle
    restait a vie. */
@@ -4774,7 +4972,7 @@ function renameCustom(id, v){
 }
 /* L'echeance d'une tache Google Tasks (gtasks.js : file, attente, conflit).
    Envoyee a la sortie du champ (pas a chaque chiffre tape). */
-function setSrcDue(id,v){ if(window.AP&&AP.gtasks&&AP.gtasks.ecrireEcheance) return AP.gtasks.ecrireEcheance(id,v); }
+function setSrcDue(id,v){ if(deplEnCours(id)) return apresDepl(id, n=>setSrcDue(n,v)); if(window.AP&&AP.gtasks&&AP.gtasks.ecrireEcheance) return AP.gtasks.ecrireEcheance(id,v); }
 
 /* ---- GOOGLE AGENDA : ecrire depuis le programme ---------------------------
    La permission d'ecrire est demandee au moment du geste, jamais avant. Le
@@ -5559,7 +5757,7 @@ function exportAllICS(){
     const done=l.length? ('\n\n'+t('checklist')+' : '+d.length+'/'+l.length+'\n'+l.map(x=>(d.indexOf(x)>=0?'[x] ':'[ ] ')+x).join('\n')) : '';
     return {
       uid:'agendapro-'+it.id.replace(/[^a-zA-Z0-9]/g,'')+'@agendapro.local',
-      title:it.title[state.lang],
+      title:(it.gtache && it.gEtoile ? '⭐ ' : '')+it.title[state.lang],
       description:(it.desc||'')+done+(store.notes[it.id]?('\n\n'+t('notes')+' : '+store.notes[it.id]):''),
       allDay:it.allDay,
       start: it.allDay? it.date : it.date+'T'+(it.start||'09:00'),
@@ -5579,7 +5777,7 @@ function exportAllICS(){
 function exportJSON(){
   const vis = visible();
   const map = it=>({
-    id:it.id, title:it.title[state.lang], source_title:it.raw, date:it.sansDate ? '' : it.date, no_date:!!it.sansDate,
+    id:it.id, title:(it.gtache && it.gEtoile ? '⭐ ' : '')+it.title[state.lang], starred:!!it.gEtoile, source_title:it.raw, date:it.sansDate ? '' : it.date, no_date:!!it.sansDate,
     time:(it.allDay?'':it.start+(it.end?'-'+it.end:'')),
     sub_category:SUBS[subOf(it)]?SUBS[subOf(it)][state.lang]:subOf(it),
     status:t('st.'+statusOf(it)), sub_tasks:clOf(it), done_tasks:clDone(it),

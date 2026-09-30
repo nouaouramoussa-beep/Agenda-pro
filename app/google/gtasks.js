@@ -57,7 +57,6 @@
       ecritureOff: 'الكتابة في Google Tasks غير مفعّلة — لم يُرسل هذا التغيير.',
       ecritureOffNote: 'الكتابة في Google Tasks غير مفعّلة — حُفظ نصّك في «ملاحظات» هذه البطاقة فقط.',
       ecritureOffEtoile: 'الكتابة في Google Tasks غير مفعّلة — النجمة تُكتب في اسم المهمة داخل Google Tasks، فشغّل الكتابة أولاً.',
-      etoileSansNom: 'هذه المهمة بلا اسم: اكتب لها اسماً أولاً ثم أزل النجمة.',
       enAttente: 'لم يُرسل الآن — سيُرسل تلقائياً إلى Google Tasks عند عودة الاتصال أو بعد إعادة الربط.',
       nouvelleListe: 'قائمة جديدة في Google Tasks تُعرض الآن: {n}',
       crea_titre: 'اكتب عنوان المهمة أولاً.',
@@ -103,7 +102,6 @@
       ecritureOff: 'L\'ecriture dans Google Tasks est desactivee — ce changement n\'a pas ete envoye.',
       ecritureOffNote: 'L\'ecriture dans Google Tasks est desactivee — votre texte a ete garde dans les « Notes » de cette carte seulement.',
       ecritureOffEtoile: 'L\'ecriture dans Google Tasks est desactivee — l\'etoile s\'ecrit dans le nom de la tache chez Google : activez d\'abord l\'ecriture.',
-      etoileSansNom: 'Cette tache n\'a pas de nom : donnez-lui un nom avant de retirer l\'etoile.',
       enAttente: 'Pas envoye pour l\'instant — il partira tout seul vers Google Tasks au retour de la connexion ou apres reconnexion.',
       nouvelleListe: 'Nouvelle liste Google Tasks, affichee maintenant : {n}',
       crea_titre: 'Ecrivez d\'abord le titre de la tache.',
@@ -595,6 +593,8 @@
           return;
         }
         recues[idTache] = 1;
+        /* relue chez Google a cet identifiant : il est vivant, plus « deplace » */
+        if (complet) { delete DEPLACEES[idTache]; }
         /* Une de nos ecritures est en vol : sa reponse fera foi. On note que
            cette lecture l'a sautee (si l'ecriture echoue, la liste sera relue
            en entier). Une lecture plus ancienne que ce qu'une ecriture a deja
@@ -756,10 +756,31 @@
      l'on voit dans Google Tasks sur le telephone, et qu'un « ⭐ » tape la-bas
      allume ici. Le programme montre le nom SANS ce signe, et l'etoile a
      part (le bouton ☆/★ de la ligne). */
-  var ETOILE_RE = /^\s*\u2B50\uFE0F?\s*/;
-  function estEtoile(titre) { return ETOILE_RE.test(String(titre == null ? '' : titre)); }
-  function sansEtoile(titre) { return String(titre == null ? '' : titre).replace(ETOILE_RE, '').trim(); }
+  /* Toutes les etoiles de tete comptent pour UNE (« ⭐⭐ عاجل ») ; une etoile
+     mise en FIN de nom (le curseur y tombe sur le telephone) compte aussi,
+     et revient en tete a la prochaine ecriture. */
+  var ETOILE_DEBUT = /^\s*(?:\u2B50\uFE0F?\s*)+/;
+  var ETOILE_FIN = /(?:\s*\u2B50\uFE0F?)+\s*$/;
+  function estEtoile(titre) { titre = String(titre == null ? '' : titre); return ETOILE_DEBUT.test(titre) || ETOILE_FIN.test(titre); }
+  function sansEtoile(titre) { return String(titre == null ? '' : titre).replace(ETOILE_DEBUT, '').replace(ETOILE_FIN, '').trim(); }
   function avecEtoile(titre) { var n = sansEtoile(titre); return n ? ('\u2B50 ' + n) : '\u2B50'; }
+  /* Le nom avec l'etoile de « modele » : ses etoiles de tete telles quelles
+     (« ⭐⭐ » reste « ⭐⭐ »), sinon une seule. */
+  function poserEtoile(nom, allumee, modele) {
+    nom = sansEtoile(nom);
+    if (!allumee) { return nom; }
+    var m = String(modele == null ? '' : modele).match(ETOILE_DEBUT);
+    var pre = (m && m[0].trim()) || '\u2B50';
+    return nom ? (pre + ' ' + nom) : pre;
+  }
+  /* Deux titres qui disent la meme chose (meme nom, meme etoile). */
+  function memeTitre(a, b) { return sansEtoile(a) === sansEtoile(b) && estEtoile(a) === estEtoile(b); }
+  /* Le titre avec ou sans l'etoile ; null s'il n'y a rien a changer. */
+  function titreEtoile(actuel, veut) {
+    var allumer = (veut === undefined) ? !estEtoile(actuel) : !!veut;
+    if (allumer === estEtoile(actuel)) { return null; }
+    return poserEtoile(actuel, allumer, actuel);
+  }
   /* Le titre tel qu'on le montre : sans l'etoile, ou « (بدون عنوان) ». */
   function titreDe(t, lg) { return sansEtoile(t.title) || (lg === 'fr' ? '(sans titre)' : '(بدون عنوان)'); }
 
@@ -795,10 +816,11 @@
     /* Une modification pas encore partie (hors ligne, reconnexion) est
        montree telle que l'artisan l'a tapee — jamais l'ancien texte. */
     var att = (ctx.peutEcrire && ctx.attente && ctx.attente[idTache]) || null;
+    var tp = TAPE[idTache] || null;
     var brut = (att && att.title !== undefined) ? att.title : String(t.title || '');
-    var etoile = estEtoile(brut);
-    var titre = sansEtoile(brut) || titreDe({}, ctx.lg);
-    var notes = (att && att.notes !== undefined) ? att.notes : (t.notes || '');
+    var etoile = (tp && tp.etoile) ? tp.etoile.v : estEtoile(brut);
+    var titre = sansEtoile((tp && tp.title) ? tp.title.v : brut) || titreDe({}, ctx.lg);
+    var notes = (tp && tp.notes) ? tp.notes.v : ((att && att.notes !== undefined) ? att.notes : (t.notes || ''));
     var fait = (att && att.fait !== undefined) ? !!att.fait : (t.status === 'completed');
     /* L'echeance changee ici et pas encore partie : montree telle quelle. */
     var jour = (att && att.due !== undefined) ? (att.due || null) : e.jour;
@@ -1047,6 +1069,18 @@
         pull();
       } catch (e) { }
     }, 5 * 60 * 1000);
+    /* Au retour sur la fenetre (reduite, autre onglet) : une relecture si la
+       derniere date de plus d'une minute — la page ne montre pas des heures
+       durant ce qui a change sur le telephone. */
+    document.addEventListener('visibilitychange', function () {
+      try {
+        if (document.visibilityState !== 'visible') { return; }
+        if (Date.now() - (ETAT.derniereLecture || 0) < 60000) { return; }
+        if (typeof navigator !== 'undefined' && navigator.onLine === false) { return; }
+        if (!listesSuivies().length || !lectureAutorisee()) { return; }
+        pull();
+      } catch (e) { }
+    });
   }
 
   var reveilEnCours = false;
@@ -1177,7 +1211,7 @@
     maj(d);
     if (jset(K.attente, d)) { ATTENTE = d; } else { maj(ATTENTE); }
   }
-  function mettreEnAttente(idTache, champs, seulementManquants) {
+  function mettreEnAttente(idTache, champs, seulementManquants, envoye) {
     var e = TACHES[idTache];
     var t = e ? e.tache : {};
     ecrireAttente(function (d) {
@@ -1186,6 +1220,8 @@
       if ('title' in champs && (!seulementManquants || a.title === undefined)) {
         if (a.title === undefined) { a.oTitle = String(t.title || ''); }
         a.title = champs.title;
+        if (envoye !== undefined) { a.envoye = envoye; }
+        if (a.oTitle !== undefined && memeTitre(a.title, a.oTitle) && (a.envoye === undefined || memeTitre(a.title, a.envoye))) { delete a.title; delete a.oTitle; delete a.envoye; }
       }
       if ('notes' in champs && (!seulementManquants || a.notes === undefined)) {
         if (a.notes === undefined) { a.oNotes = String(t.notes || ''); }
@@ -1204,7 +1240,8 @@
         if (a.due === undefined) { a.oDue = jourDue(t.due); }
         a.due = jourDue(champs.due);
       }
-      d[idTache] = a;
+      if (a.title === undefined && a.notes === undefined && a.fait === undefined && a.due === undefined) { delete d[idTache]; }
+      else { d[idTache] = a; }
     });
   }
   /* Un « due » de Google (minuit UTC) ou d'un champ, ramene a 'YYYY-MM-DD'
@@ -1216,7 +1253,7 @@
     ecrireAttente(function (d) {
       var a = d[idTache]; if (!a) { return; }
       if (!champs) { delete d[idTache]; return; }
-      if ('title' in champs) { delete a.title; delete a.oTitle; }
+      if ('title' in champs) { delete a.title; delete a.oTitle; delete a.envoye; }
       if ('notes' in champs) { delete a.notes; delete a.oNotes; }
       if ('status' in champs) { delete a.fait; delete a.completed; delete a.oFait; }
       if ('due' in champs) { delete a.due; delete a.oDue; }
@@ -1293,7 +1330,9 @@
       var code = classerErreur(err);
       avert('ecriture vers Google Tasks : ' + (err && err.message));
       if (REESSAYABLES[code]) {
-        mettreEnAttente(idTache, champs, opts.deFile);
+        /* la requete est peut-etre arrivee chez Google (reponse perdue) : on
+           garde ce qui a ete envoye comme reference possible */
+        mettreEnAttente(idTache, champs, opts.deFile, ('title' in champs) ? champs.title : undefined);
         if (!opts.silencieux) { dire2('enAttente'); }
         reconstruire();
         return 'attente';
@@ -1304,7 +1343,7 @@
       var tG = String((TACHES[idTache] && TACHES[idTache].tache.title) || '').trim();
       var aGarder = {};
       if ('notes' in champs && String(champs.notes || '').trim() && String(champs.notes).trim() !== noteG) { aGarder.notes = champs.notes; }
-      if ('title' in champs && String(champs.title || '').trim() && String(champs.title).trim() !== tG) { aGarder.title = champs.title; }
+      if ('title' in champs && String(champs.title || '').trim() && String(champs.title).trim() !== tG && sansEtoile(champs.title) !== sansEtoile(tG)) { aGarder.title = champs.title; }
       if ('due' in champs) { aGarder.due = jourDue(champs.due); }
       if (Object.keys(aGarder).length) {
         garderEnNotes(idTache, aGarder);
@@ -1331,10 +1370,13 @@
   /* Ce qui attendait d'etre envoye et ne partira plus (liste supprimee,
      tache disparue, compte delie) : le texte tape n'est jamais perdu, il va
      dans les notes locales de la carte — note, titre et date. */
+  /* Ce qui attendait n'etait qu'une etoile (le nom n'a pas change) : rien
+     de tape a garder. */
+  function etoileSeule(a) { return !!a && a.title !== undefined && a.oTitle !== undefined && sansEtoile(a.title) === sansEtoile(a.oTitle); }
   function garderEnNotes(id, a) {
     if (!a) { return; }
     if (a.notes !== undefined) { garderNoteLocale(id, a.notes); }
-    if (a.title !== undefined) { garderNoteLocale(id, (langue() === 'fr' ? 'Titre propose : ' : 'العنوان المقترح: ') + a.title); }
+    if (a.title !== undefined && !etoileSeule(a)) { garderNoteLocale(id, (langue() === 'fr' ? 'Titre propose : ' : 'العنوان المقترح: ') + a.title); }
     if (a.due !== undefined) { garderNoteLocale(id, (langue() === 'fr' ? 'Date proposee : ' : 'التاريخ المقترح: ') + (a.due || '—')); }
   }
   /* La tache (ou sa liste) n'existe plus : sa carte ne reviendra pas, ecrire
@@ -1345,7 +1387,7 @@
     var e = TACHES[id];
     var titre = titreConnu || (e && e.tache && e.tache.title) || a.oTitle || a.title || '';
     var lignes = [];
-    if (a.title !== undefined) { lignes.push((langue() === 'fr' ? 'Titre : ' : 'العنوان: ') + a.title); }
+    if (a.title !== undefined && !etoileSeule(a)) { lignes.push((langue() === 'fr' ? 'Titre : ' : 'العنوان: ') + a.title); }
     if (a.due !== undefined) { lignes.push((langue() === 'fr' ? 'Date : ' : 'التاريخ: ') + (a.due || '—')); }
     if (a.notes !== undefined && String(a.notes).trim()) { lignes.push(String(a.notes)); }
     if (!lignes.length) { return; }
@@ -1385,18 +1427,27 @@
         if (!a) { return; }
         var t = e.tache, champs = {};
         var titreG = String(t.title || ''), noteG = String(t.notes || ''), faitG = t.status === 'completed';
-        if (a.title !== undefined && a.title !== titreG) {
-          if (a.oTitle !== undefined && titreG !== a.oTitle) {
+        if (a.title !== undefined && !memeTitre(a.title, titreG)) {
+          /* la reference : ce qui a peut-etre deja ete ecrit (envoye) si
+             Google l'a, sinon Google au moment du geste */
+          var applique = a.envoye !== undefined && (memeTitre(titreG, a.envoye) ||
+            (sansEtoile(a.envoye) !== sansEtoile(a.oTitle) && sansEtoile(titreG) === sansEtoile(a.envoye)));
+          var refT = applique ? a.envoye : a.oTitle;
+          if (refT !== undefined && !memeTitre(titreG, refT)) {
             /* Google a change ce titre depuis. Deux cas se fusionnent sans
                rien perdre : ici seule l'etoile a change (on la pose sur le
                nom de Google) ; la-bas seule l'etoile a change (on garde le nom
                tape ici avec l'etoile de Google). Sinon : vrai conflit. */
-            var nomIci = sansEtoile(a.title), nomAvant = sansEtoile(a.oTitle), nomG = sansEtoile(titreG);
-            var fusion = null;
-            if (nomIci === nomAvant) { fusion = estEtoile(a.title) ? avecEtoile(titreG) : nomG; }
-            else if (nomG === nomAvant) { fusion = estEtoile(titreG) ? avecEtoile(a.title) : nomIci; }
-            if (fusion && fusion !== titreG) { champs.title = fusion; }
-            else if (!fusion) { conflit = true; garderNoteLocale(id, (langue() === 'fr' ? 'Titre propose : ' : 'العنوان المقترح: ') + a.title); }
+            var nomIci = sansEtoile(a.title), nomAvant = sansEtoile(refT), nomG = sansEtoile(titreG);
+            /* le nom : celui d'ici s'il a change ici, sinon celui de Google ;
+               change des deux cotes et differemment : vrai conflit */
+            var nom = (nomIci === nomAvant) ? nomG : ((nomG === nomAvant || nomG === nomIci) ? nomIci : null);
+            /* l'etoile : celle d'ici si elle a change ici, sinon celle de Google */
+            var etIci = estEtoile(a.title), etG = estEtoile(titreG);
+            var et = (etIci !== estEtoile(refT)) ? etIci : etG;
+            var fusion = (nom === null) ? null : poserEtoile(nom, et, etG ? titreG : a.title);
+            if (fusion !== null && !memeTitre(fusion, titreG)) { champs.title = fusion; }
+            else if (fusion === null) { conflit = true; garderNoteLocale(id, (langue() === 'fr' ? 'Titre propose : ' : 'العنوان المقترح: ') + a.title); }
           }
           else { champs.title = a.title; }
         }
@@ -1441,6 +1492,7 @@
     if (!ecritureCochee()) { return Promise.resolve(false); }   // statut local seulement, voulu
     if (!peutEcrire()) { signalerPermis(); return Promise.resolve(false); }
     return enFile(idTache, function () {
+      var idTache0 = idTache; idTache = idActuel(idTache0);   // la tache a pu changer de liste en attendant
       if (!TACHES[idTache]) { return false; }
       var att = ATTENTE[idTache];
       var faitChezGoogle = (att && att.fait !== undefined) ? att.fait : (TACHES[idTache].tache.status === 'completed');
@@ -1493,30 +1545,136 @@
      fait sur l'ancien (champ ouvert pendant le deplacement, file d'attente)
      suit la tache au lieu d'etre jete. */
   var DEPLACEES = {};
-  function idActuel(id) { var n = 0; while (DEPLACEES[id] && n++ < 10) { id = DEPLACEES[id]; } return id; }
+  function idActuel(id) {
+    var n = 0;
+    while (DEPLACEES[id] && n++ < 10) {
+      var suite = DEPLACEES[id];
+      /* l'ancien identifiant est de nouveau vivant et la cible ne l'est pas :
+         la tache est revenue a sa place — la redirection est perimee */
+      if (TACHES[id] && !TACHES[suite]) { delete DEPLACEES[id]; break; }
+      id = suite;
+    }
+    return id;
+  }
   /* La tache a disparu avant que le geste parte : le texte tape est garde,
      visible, au lieu d'un abandon muet. */
   function perdueGarder(id, a) { garderOrphelin(id, a); }
 
+  /* CE QUI VIENT D'ETRE TAPE (ou choisi) et part vers Google : montre tel
+     quel (tacheDe) pendant tout l'envoi — relecture puis ecriture —, jamais
+     l'ancien texte qu'un redessin remontrerait entre-temps. */
+  var TAPE = {}, TAPE_N = 0;
+  function detaper(id, champs, n) {
+    if (!TAPE[id]) { id = idActuel(id); }            // la tache a change de liste pendant l'envoi
+    var t = TAPE[id]; if (!t) { return; }
+    Object.keys(champs).forEach(function (k) { if (t[k] && t[k].n === n) { delete t[k]; } });
+    if (!Object.keys(t).length) { delete TAPE[id]; }
+    reconstruire();
+  }
+  function avecTape(id, champs, fabrique) {
+    var n = ++TAPE_N, t = TAPE[id] = TAPE[id] || {};
+    Object.keys(champs).forEach(function (k) { t[k] = { v: champs[k], n: n }; });
+    /* la liste des taches est refaite tout de suite : n'importe quel dessin
+       (meme sans relecture) montre deja ce qui vient d'etre tape ou choisi.
+       L'etoile se redessine aussitot ; un texte tape, lui, est deja a
+       l'ecran (son champ) : pas de redessin qui ferait perdre le focus. */
+    if (champs.etoile !== undefined) { reconstruire(); }
+    else { try { if (typeof W.buildTasks === 'function') { W.buildTasks(); } } catch (e) { } }
+    var p;
+    try { p = fabrique(); } catch (e) { detaper(id, champs, n); throw e; }
+    return p.then(function (r) { detaper(id, champs, n); return r; }, function (e) { detaper(id, champs, n); throw e; });
+  }
+
+  /* RELIRE UNE TACHE juste avant d'ecrire son titre : l'etoile et le nom
+     partent de la valeur de GOOGLE, jamais d'une copie vieille de quelques
+     minutes (un nom change sur le telephone n'est pas ecrase par un clic
+     sur l'etoile ici, une etoile posee la-bas ne tombe pas quand on corrige
+     le nom ici). Rend l'entree fraiche ; { deplacee: nouvelId } si la tache a
+     change de liste pendant la relecture ; null si elle n'existe plus ;
+     rejette si Google n'a pas pu repondre (ou si le compte a change).
+     LECTURE : une tache mere ne se deplace pas pendant qu'une de ses filles
+     est relue (deplacerVersListe). */
+  var LECTURE = {};
+  function lireFraiche(cur) {
+    var e = TACHES[cur]; if (!e) { return Promise.resolve(null); }
+    if (!(AP.gauth && typeof AP.gauth.appel === 'function')) { return Promise.reject(new Error('gauth absent')); }
+    var gen = GEN;
+    var chemin = '/lists/' + encodeURIComponent(e.liste) + '/tasks/' + encodeURIComponent(e.tache.id);
+    LECTURE[cur] = (LECTURE[cur] || 0) + 1;
+    function fin() { LECTURE[cur] = (LECTURE[cur] || 1) - 1; if (LECTURE[cur] <= 0) { delete LECTURE[cur]; } }
+    return AP.gauth.appel(TASKS_API + chemin, { methode: 'GET', attendre: false }).then(function (frais) {
+      fin();
+      if (gen !== GEN) { throw new Error('compte change'); }
+      var c = TACHES[cur];
+      if (!c) { return DEPLACEES[cur] ? { deplacee: idActuel(cur) } : null; }
+      if (!frais || !frais.id) { return c; }
+      if (frais.deleted) { return null; }
+      if (!(c.tache.updated && frais.updated && frais.updated < c.tache.updated)) {
+        trancherStatut(cur, c.tache, frais);
+        TACHES[cur] = entreeDe(c.liste, frais);
+        if (CREEES[cur]) { CREEES[cur].e = TACHES[cur]; }
+        ranger();
+      }
+      return TACHES[cur];
+    }, function (err) {
+      fin();
+      if (gen !== GEN) { throw err; }
+      if (DEPLACEES[cur] && !TACHES[cur]) { return { deplacee: idActuel(cur) }; }
+      if (err && (err.statut === 404 || err.statut === 410)) { return null; }
+      throw err;
+    });
+  }
+
+  /* Un geste sur le titre qui ATTEND (hors ligne, un nom deja en attente,
+     Google injoignable) : ajoute a l'attente avec sa reference (oTitle), que
+     viderAttente enverra avec son controle et sa fusion. En ligne, la
+     relecture suivante est demandee tout de suite. */
+  function titreEnAttente(cur, titre, panne) {
+    mettreEnAttente(cur, { title: titre });
+    if (panne || !envoiPossible()) { dire2('enAttente'); } else { setTimeout(function () { pull(); }, 0); }
+    reconstruire();
+    return 'attente';
+  }
+
   function ecrireTitre(idTache, v) {
+    var id0 = idTache;
     idTache = idActuel(idTache);
-    if (!estGtache(idTache)) { return Promise.resolve(false); }
     var tape = String(v == null ? '' : v).trim();
+    if (!estGtache(idTache)) { if (id0 !== idTache && sansEtoile(tape)) { perdueGarder(id0, { title: tape }); } return Promise.resolve(false); }
     if (!sansEtoile(tape)) { setTimeout(reconstruire, 0); return Promise.resolve(false); }
     if (!ecritureCochee() || !peutEcrire()) { refuserModif(idTache, 'title', tape); return Promise.resolve(false); }
-    return enFile(idTache, function () {
+    return avecTape(idTache, { title: tape }, function () { return enFile(idTache, function () {
       var cur = idActuel(idTache);
       if (!TACHES[cur]) { perdueGarder(idTache, { title: tape }); return false; }
+      /* L'etoile suit la tache, pas le champ : une tache etoilee garde ses
+         « ⭐ » quand on corrige son nom. Un « ⭐ » tape dans le nom l'allume.
+         Reference : ce qui attend encore (le dernier geste d'ici), sinon
+         Google tel qu'il est A L'INSTANT. null : rien a ecrire (« ⭐باب »
+         tape sur le telephone et « ⭐ باب » sont la meme chose). */
+      function calcul(ref) {
+        var titre = estEtoile(ref) ? poserEtoile(tape, true, ref) : (estEtoile(tape) ? avecEtoile(tape) : tape);
+        return (titre === ref || memeTitre(titre, ref)) ? null : titre;
+      }
       var att = ATTENTE[cur];
-      var actuel = (att && att.title !== undefined) ? att.title : String(TACHES[cur].tache.title || '').trim();
-      /* L'etoile suit la tache, pas le champ : une tache etoilee garde son
-         « ⭐ » quand on corrige son nom. Un « ⭐ » tape en tete l'allume. */
-      var titre = (estEtoile(actuel) || estEtoile(tape)) ? avecEtoile(tape) : tape;
-      /* Meme nom, meme etoile : rien a ecrire (« ⭐باب » tape sur le
-         telephone et « ⭐ باب » sont la meme chose). */
-      if (titre === actuel || (sansEtoile(titre) === sansEtoile(actuel) && estEtoile(titre) === estEtoile(actuel))) { return false; }
-      return ecrireDansGoogle(cur, { title: titre });
-    });
+      if (att && att.title !== undefined) { var ta = calcul(att.title); return ta === null ? false : titreEnAttente(cur, ta); }
+      var local = String(TACHES[cur].tache.title || '').trim();
+      if (!envoiPossible()) { var t0 = calcul(local); return t0 === null ? false : ecrireDansGoogle(cur, { title: t0 }); }
+      return lireFraiche(cur).then(function (e2) {
+        if (e2 && e2.deplacee) {
+          if (estGtache(e2.deplacee)) { return ecrireTitre(e2.deplacee, tape); }
+          garderEnNotes(e2.deplacee, { title: tape }); dire2('ecritureKoNote'); return false;
+        }
+        if (!e2) { perdueGarder(idTache, { title: tape }); reconstruire(); return false; }
+        var t2 = calcul(String(e2.tache.title || '').trim());
+        return t2 === null ? false : ecrireDansGoogle(cur, { title: t2 });
+      }, function (err) {
+        /* compte delie pendant la relecture : le nom tape est garde */
+        if (!TACHES[cur]) { if (sansEtoile(tape) !== sansEtoile(local)) { garderEnNotes(idTache, { title: tape }); } return false; }
+        /* Google injoignable : le nom attend, la fusion gardera l'etoile de Google */
+        if (REESSAYABLES[classerErreur(err)]) { var tr = calcul(local); return tr === null ? false : titreEnAttente(cur, tr, classerErreur(err)); }
+        var t3 = calcul(local); return t3 === null ? false : ecrireDansGoogle(cur, { title: t3 });
+      });
+    }); });
   }
 
   /* L'ETOILE, par son bouton : allumee = « ⭐ » en tete du nom dans Google
@@ -1527,19 +1685,37 @@
     idTache = idActuel(idTache);
     if (!estGtache(idTache)) { return Promise.resolve(false); }
     if (!ecritureCochee() || !peutEcrire()) { refuserModif(idTache, 'etoile'); return Promise.resolve(false); }
-    return enFile(idTache, function () {
+    var a0 = ATTENTE[idTache];
+    var vu = (a0 && a0.title !== undefined) ? a0.title : String(TACHES[idTache].tache.title || '');
+    var allumer = (veut === undefined) ? !estEtoile(vu) : !!veut;
+    return avecTape(idTache, { etoile: allumer }, function () { return enFile(idTache, function () {
       var cur = idActuel(idTache);
       if (!TACHES[cur]) { return false; }
       var att = ATTENTE[cur];
-      var actuel = (att && att.title !== undefined) ? att.title : String(TACHES[cur].tache.title || '').trim();
-      var allumer = (veut === undefined) ? !estEtoile(actuel) : !!veut;
-      if (allumer === estEtoile(actuel)) { return false; }
-      /* Une tache sans nom etoilee : on ne l'eteint pas en lui laissant un
-         nom vide (Google l'afficherait vide, le programme « بدون عنوان »). */
-      var titre = allumer ? avecEtoile(actuel) : sansEtoile(actuel);
-      if (!titre) { dire2('etoileSansNom'); reconstruire(); return false; }
-      return ecrireDansGoogle(cur, { title: titre });
-    });
+      if ((att && att.title !== undefined) || !envoiPossible()) {
+        var t1 = titreEtoile((att && att.title !== undefined) ? att.title : String(TACHES[cur].tache.title || ''), allumer);
+        return t1 === null ? false : titreEnAttente(cur, t1);
+      }
+      /* En ligne : le titre de Google A L'INSTANT, seule l'etoile change.
+         (Une tache sans nom se rallume ou s'eteint aussi : '' etait son nom.) */
+      return lireFraiche(cur).then(function (e2) {
+        if (e2 && e2.deplacee) {
+          if (estGtache(e2.deplacee)) { return basculerEtoile(e2.deplacee, allumer); }
+          dire2('ecritureKo'); return false;
+        }
+        if (!e2) { return false; }
+        var t2 = titreEtoile(String(e2.tache.title || ''), allumer);
+        return t2 === null ? false : ecrireDansGoogle(cur, { title: t2 });
+      }, function (err) {
+        if (!TACHES[cur]) { return false; }
+        if (REESSAYABLES[classerErreur(err)]) {
+          var t3 = titreEtoile(String(TACHES[cur].tache.title || ''), allumer);
+          return t3 === null ? false : titreEnAttente(cur, t3, classerErreur(err));
+        }
+        avert('relecture avant l\'etoile : ' + (err && err.message));
+        dire2('ecritureKo'); return false;
+      });
+    }); });
   }
 
   /* L'ECHEANCE (« التاريخ ») d'une tache Google Tasks : un jour, ou vide pour
@@ -1566,11 +1742,12 @@
   }
 
   function ecrireNote(idTache, v) {
+    var id0 = idTache;
     idTache = idActuel(idTache);
-    if (!estGtache(idTache)) { return Promise.resolve(false); }
     var note = String(v == null ? '' : v);
+    if (!estGtache(idTache)) { if (id0 !== idTache && note.trim()) { perdueGarder(id0, { notes: note }); } return Promise.resolve(false); }
     if (!ecritureCochee() || !peutEcrire()) { refuserModif(idTache, 'notes', note); return Promise.resolve(false); }
-    return enFile(idTache, function () {
+    return avecTape(idTache, { notes: note }, function () { return enFile(idTache, function () {
       var cur = idActuel(idTache);
       var e = TACHES[cur];
       if (!e) { perdueGarder(idTache, { notes: note }); return false; }
@@ -1580,7 +1757,7 @@
       var actuel = (att && att.notes !== undefined) ? att.notes : String(e.tache.notes || '');
       if (note.trim() === String(actuel).trim()) { return false; }
       return ecrireDansGoogle(cur, { notes: note });
-    });
+    }); });
   }
 
   /* CREER UNE TACHE DANS GOOGLE TASKS — le formulaire « إضافة » d'index.html,
@@ -1751,21 +1928,23 @@
       try { if (P.lsSet) { P.lsSet(); } } catch (e) { }
     }
     function rendreStatut() {
-      if (ancienStatut !== undefined && P.store && P.store.status && P.store.status[idTache] === undefined) {
-        P.store.status[idTache] = ancienStatut;
+      var k = idActuel(idTache);
+      if (ancienStatut !== undefined && P.store && P.store.status && P.store.status[k] === undefined) {
+        P.store.status[k] = ancienStatut;
         try { if (P.lsSet) { P.lsSet(); } } catch (e) { }
       }
     }
     return enFile(idTache, function () {
-      var e = TACHES[idTache]; if (!e) { rendreStatut(); return false; }
-      var att = ATTENTE[idTache];
+      var cur = idActuel(idTache);
+      var e = TACHES[cur]; if (!e) { rendreStatut(); return false; }
+      var att = ATTENTE[cur];
       var faitG = (att && att.fait !== undefined) ? att.fait : (e.tache.status === 'completed');
       if (faitG === !!fait) { reconstruire(); return false; }
       var champs = fait ? { status: 'completed', completed: new Date().toISOString() } : { status: 'needsAction', completed: null };
-      return ecrireDansGoogle(idTache, champs).then(function (r) {
-        var fr = TACHES[idTache];
-        if (r === true) { poserOmbre(idTache, { faitIci: !!fait, stAt: (fr && Date.parse(fr.tache.updated)) || maintenantGoogle(), faitLe: null }); }
-        else if (r === 'attente') { poserOmbre(idTache, { faitIci: !!fait }); }
+      return ecrireDansGoogle(cur, champs).then(function (r) {
+        var fr = TACHES[cur];
+        if (r === true) { poserOmbre(cur, { faitIci: !!fait, stAt: (fr && Date.parse(fr.tache.updated)) || maintenantGoogle(), faitLe: null }); }
+        else if (r === 'attente') { poserOmbre(cur, { faitIci: !!fait }); }
         else if (r === false) { rendreStatut(); }
         /* Google Tasks : terminer une tache termine ses sous-taches */
         if (fait && r !== false && !sansFilles) {
@@ -1805,7 +1984,7 @@
       if (!e) { throw erreurDepl('disparue'); }
       if (e.liste === cible) { return false; }
       var filles = fillesDe(e);
-      if (ATTENTE[idTache] || filles.some(function (id) { return ATTENTE[id] || EN_VOL[id]; })) { throw erreurDepl('attente'); }
+      if (ATTENTE[idTache] || filles.some(function (id) { return ATTENTE[id] || EN_VOL[id] || LECTURE[id]; })) { throw erreurDepl('attente'); }
       if (!envoiPossible()) { var g0 = etatCompte(); throw erreurDepl((g0 && g0.besoinReconnexion) ? 'sansJeton' : 'reseau'); }
       var gen = GEN, source = e.liste, gid = e.tache.id;
       var url = TASKS_API + '/lists/' + encodeURIComponent(source) + '/tasks/' + encodeURIComponent(gid) +
@@ -1816,9 +1995,12 @@
         var neuf = idDeTache(cible, { id: gid });
         filles.forEach(function (fid) {
           var fx = TACHES[fid]; var nf = idDeTache(cible, { id: fx ? fx.tache.id : String(fid).split('|').pop() });
-          migrerCles(fid, nf); DEPLACEES[fid] = nf; delete CREEES[fid]; delete TACHES[fid];
+          if (fx && !TACHES[nf]) { TACHES[nf] = entreeDe(cible, Object.assign({}, fx.tache)); }
+          if (TAPE[fid]) { TAPE[nf] = TAPE[fid]; delete TAPE[fid]; }
+          migrerCles(fid, nf); DEPLACEES[fid] = nf; delete DEPLACEES[nf]; delete CREEES[fid]; delete TACHES[fid];
         });
-        migrerCles(idTache, neuf); DEPLACEES[idTache] = neuf; delete CREEES[idTache];
+        if (TAPE[idTache]) { TAPE[neuf] = TAPE[idTache]; delete TAPE[idTache]; }
+        migrerCles(idTache, neuf); DEPLACEES[idTache] = neuf; delete DEPLACEES[neuf]; delete CREEES[idTache];
         return neuf;
       }
       EN_VOL[idTache] = (EN_VOL[idTache] || 0) + 1;
