@@ -56,6 +56,8 @@
       attenteCoupee: 'أُوقفت الكتابة: التعديلات التي لم تُرسل بعد لن تُرسل؛ الملاحظات منها حُفظت في «ملاحظات» بطاقاتها.',
       ecritureOff: 'الكتابة في Google Tasks غير مفعّلة — لم يُرسل هذا التغيير.',
       ecritureOffNote: 'الكتابة في Google Tasks غير مفعّلة — حُفظ نصّك في «ملاحظات» هذه البطاقة فقط.',
+      ecritureOffEtoile: 'الكتابة في Google Tasks غير مفعّلة — النجمة تُكتب في اسم المهمة داخل Google Tasks، فشغّل الكتابة أولاً.',
+      etoileSansNom: 'هذه المهمة بلا اسم: اكتب لها اسماً أولاً ثم أزل النجمة.',
       enAttente: 'لم يُرسل الآن — سيُرسل تلقائياً إلى Google Tasks عند عودة الاتصال أو بعد إعادة الربط.',
       nouvelleListe: 'قائمة جديدة في Google Tasks تُعرض الآن: {n}',
       crea_titre: 'اكتب عنوان المهمة أولاً.',
@@ -100,6 +102,8 @@
       attenteCoupee: 'Ecriture coupee : les modifications pas encore envoyees ne le seront pas ; les notes ont ete gardees dans les « Notes » de leurs cartes.',
       ecritureOff: 'L\'ecriture dans Google Tasks est desactivee — ce changement n\'a pas ete envoye.',
       ecritureOffNote: 'L\'ecriture dans Google Tasks est desactivee — votre texte a ete garde dans les « Notes » de cette carte seulement.',
+      ecritureOffEtoile: 'L\'ecriture dans Google Tasks est desactivee — l\'etoile s\'ecrit dans le nom de la tache chez Google : activez d\'abord l\'ecriture.',
+      etoileSansNom: 'Cette tache n\'a pas de nom : donnez-lui un nom avant de retirer l\'etoile.',
       enAttente: 'Pas envoye pour l\'instant — il partira tout seul vers Google Tasks au retour de la connexion ou apres reconnexion.',
       nouvelleListe: 'Nouvelle liste Google Tasks, affichee maintenant : {n}',
       crea_titre: 'Ecrivez d\'abord le titre de la tache.',
@@ -746,7 +750,18 @@
      ========================================================================= */
 
   function httpsOuRien(u) { u = String(u || ''); return /^https:\/\//i.test(u) ? u : ''; }
-  function titreDe(t, lg) { return (t.title || '').trim() || (lg === 'fr' ? '(sans titre)' : '(بدون عنوان)'); }
+  /* L'ETOILE — Google ne donne l'etoile de Google Tasks a AUCUN programme
+     (ni en lecture ni en ecriture : pas de champ « starred » dans son API).
+     L'artisan a choisi l'etoile DANS LE NOM : « ⭐ » en tete du titre, que
+     l'on voit dans Google Tasks sur le telephone, et qu'un « ⭐ » tape la-bas
+     allume ici. Le programme montre le nom SANS ce signe, et l'etoile a
+     part (le bouton ☆/★ de la ligne). */
+  var ETOILE_RE = /^\s*\u2B50\uFE0F?\s*/;
+  function estEtoile(titre) { return ETOILE_RE.test(String(titre == null ? '' : titre)); }
+  function sansEtoile(titre) { return String(titre == null ? '' : titre).replace(ETOILE_RE, '').trim(); }
+  function avecEtoile(titre) { var n = sansEtoile(titre); return n ? ('\u2B50 ' + n) : '\u2B50'; }
+  /* Le titre tel qu'on le montre : sans l'etoile, ou « (بدون عنوان) ». */
+  function titreDe(t, lg) { return sansEtoile(t.title) || (lg === 'fr' ? '(sans titre)' : '(بدون عنوان)'); }
 
   /* Tout ce qui est commun a toutes les taches d'une meme construction, lu
      UNE fois : reglages, ombres, permission d'ecrire, le jour d'aujourd'hui,
@@ -780,7 +795,9 @@
     /* Une modification pas encore partie (hors ligne, reconnexion) est
        montree telle que l'artisan l'a tapee — jamais l'ancien texte. */
     var att = (ctx.peutEcrire && ctx.attente && ctx.attente[idTache]) || null;
-    var titre = (att && att.title) ? att.title : titreDe(t, ctx.lg);
+    var brut = (att && att.title !== undefined) ? att.title : String(t.title || '');
+    var etoile = estEtoile(brut);
+    var titre = sansEtoile(brut) || titreDe({}, ctx.lg);
     var notes = (att && att.notes !== undefined) ? att.notes : (t.notes || '');
     var fait = (att && att.fait !== undefined) ? !!att.fait : (t.status === 'completed');
     /* L'echeance changee ici et pas encore partie : montree telle quelle. */
@@ -817,6 +834,8 @@
       allDay: true,
       sansDate: sansDate,
       gFait: fait,
+      /* L'etoile, lue dans le nom (voir ETOILE_RE) */
+      gEtoile: etoile,
       gDue: jour || null,
       gFaitLe: fait ? (t.completed || null) : null,
       gFaitIci: etat.faitLe || null,
@@ -832,7 +851,7 @@
       gEnfants: filles.length ? filles : null,
       gLiens: liens.length ? liens : null,
       gAssign: ai ? { type: ai.surfaceType || '', lien: httpsOuRien(ai.linkToTask) } : null,
-      srch: liens.map(function (l) { return l.description; }).concat(filles.map(function (f) { return f.titre; })).join(' '),
+      srch: liens.map(function (l) { return l.description; }).concat(filles.map(function (f) { return f.titre; })).concat(etoile ? ['\u2B50'] : []).join(' '),
       desc: String(notes).trim(),
       org: { ar: nom, fr: nom },
       loc: '',
@@ -1367,7 +1386,18 @@
         var t = e.tache, champs = {};
         var titreG = String(t.title || ''), noteG = String(t.notes || ''), faitG = t.status === 'completed';
         if (a.title !== undefined && a.title !== titreG) {
-          if (a.oTitle !== undefined && titreG !== a.oTitle) { conflit = true; garderNoteLocale(id, (langue() === 'fr' ? 'Titre propose : ' : 'العنوان المقترح: ') + a.title); }
+          if (a.oTitle !== undefined && titreG !== a.oTitle) {
+            /* Google a change ce titre depuis. Deux cas se fusionnent sans
+               rien perdre : ici seule l'etoile a change (on la pose sur le
+               nom de Google) ; la-bas seule l'etoile a change (on garde le nom
+               tape ici avec l'etoile de Google). Sinon : vrai conflit. */
+            var nomIci = sansEtoile(a.title), nomAvant = sansEtoile(a.oTitle), nomG = sansEtoile(titreG);
+            var fusion = null;
+            if (nomIci === nomAvant) { fusion = estEtoile(a.title) ? avecEtoile(titreG) : nomG; }
+            else if (nomG === nomAvant) { fusion = estEtoile(titreG) ? avecEtoile(a.title) : nomIci; }
+            if (fusion && fusion !== titreG) { champs.title = fusion; }
+            else if (!fusion) { conflit = true; garderNoteLocale(id, (langue() === 'fr' ? 'Titre propose : ' : 'العنوان المقترح: ') + a.title); }
+          }
           else { champs.title = a.title; }
         }
         if (a.notes !== undefined && String(a.notes).trim() !== noteG.trim()) {
@@ -1455,7 +1485,7 @@
   function refuserModif(idTache, champ, v) {
     if (champ === 'notes') { garderNoteLocale(idTache, v); }
     if (ecritureCochee()) { permisSignale = false; signalerPermis(); }
-    else { dire2(champ === 'notes' ? 'ecritureOffNote' : 'ecritureOff'); }
+    else { dire2(champ === 'notes' ? 'ecritureOffNote' : (champ === 'etoile' ? 'ecritureOffEtoile' : 'ecritureOff')); }
     setTimeout(reconstruire, 0);
   }
 
@@ -1471,15 +1501,43 @@
   function ecrireTitre(idTache, v) {
     idTache = idActuel(idTache);
     if (!estGtache(idTache)) { return Promise.resolve(false); }
-    var titre = String(v == null ? '' : v).trim();
-    if (!titre) { setTimeout(reconstruire, 0); return Promise.resolve(false); }
-    if (!ecritureCochee() || !peutEcrire()) { refuserModif(idTache, 'title', titre); return Promise.resolve(false); }
+    var tape = String(v == null ? '' : v).trim();
+    if (!sansEtoile(tape)) { setTimeout(reconstruire, 0); return Promise.resolve(false); }
+    if (!ecritureCochee() || !peutEcrire()) { refuserModif(idTache, 'title', tape); return Promise.resolve(false); }
     return enFile(idTache, function () {
       var cur = idActuel(idTache);
-      if (!TACHES[cur]) { perdueGarder(idTache, { title: titre }); return false; }
+      if (!TACHES[cur]) { perdueGarder(idTache, { title: tape }); return false; }
       var att = ATTENTE[cur];
       var actuel = (att && att.title !== undefined) ? att.title : String(TACHES[cur].tache.title || '').trim();
-      if (titre === actuel) { return false; }
+      /* L'etoile suit la tache, pas le champ : une tache etoilee garde son
+         « ⭐ » quand on corrige son nom. Un « ⭐ » tape en tete l'allume. */
+      var titre = (estEtoile(actuel) || estEtoile(tape)) ? avecEtoile(tape) : tape;
+      /* Meme nom, meme etoile : rien a ecrire (« ⭐باب » tape sur le
+         telephone et « ⭐ باب » sont la meme chose). */
+      if (titre === actuel || (sansEtoile(titre) === sansEtoile(actuel) && estEtoile(titre) === estEtoile(actuel))) { return false; }
+      return ecrireDansGoogle(cur, { title: titre });
+    });
+  }
+
+  /* L'ETOILE, par son bouton : allumee = « ⭐ » en tete du nom dans Google
+     Tasks, eteinte = le nom sans ce signe. Meme chemin que le nom : la file
+     de la tache, l'attente hors ligne, le controle de conflit. veut : true
+     (allumer), false (eteindre), absent (inverser). */
+  function basculerEtoile(idTache, veut) {
+    idTache = idActuel(idTache);
+    if (!estGtache(idTache)) { return Promise.resolve(false); }
+    if (!ecritureCochee() || !peutEcrire()) { refuserModif(idTache, 'etoile'); return Promise.resolve(false); }
+    return enFile(idTache, function () {
+      var cur = idActuel(idTache);
+      if (!TACHES[cur]) { return false; }
+      var att = ATTENTE[cur];
+      var actuel = (att && att.title !== undefined) ? att.title : String(TACHES[cur].tache.title || '').trim();
+      var allumer = (veut === undefined) ? !estEtoile(actuel) : !!veut;
+      if (allumer === estEtoile(actuel)) { return false; }
+      /* Une tache sans nom etoilee : on ne l'eteint pas en lui laissant un
+         nom vide (Google l'afficherait vide, le programme « بدون عنوان »). */
+      var titre = allumer ? avecEtoile(actuel) : sansEtoile(actuel);
+      if (!titre) { dire2('etoileSansNom'); reconstruire(); return false; }
       return ecrireDansGoogle(cur, { title: titre });
     });
   }
@@ -1911,6 +1969,9 @@
     couperEcriture: couperEcriture,
     ecrireStatut: ecrireStatut,
     ecrireTitre: ecrireTitre,
+    basculerEtoile: basculerEtoile,
+    estEtoile: estEtoile,
+    sansEtoile: sansEtoile,
     ecrireNote: ecrireNote,
     ecrireEcheance: ecrireEcheance,
     basculerFait: basculerFait,

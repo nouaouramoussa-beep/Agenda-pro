@@ -498,6 +498,12 @@ select.fsel:focus,input.fdate:focus{outline:none;border-color:var(--brand)}
 .notes{max-height:none;overflow:auto}
 @supports (field-sizing:content){ .notes{field-sizing:content;overflow:hidden} }
 .gtr-mere{font-size:11px;color:var(--txt3);font-weight:700;margin-bottom:2px;unicode-bidi:plaintext;text-align:start}
+/* l'etoile, au bout de la ligne comme dans Google Tasks (ecrite dans le nom : « ⭐ ») */
+.gtr-e{flex:0 0 auto;width:30px;height:30px;margin-top:-4px;border-radius:50%;display:grid;place-items:center;font-size:19px;line-height:1;color:var(--txt3)}
+.gtr-e:hover{background:color-mix(in srgb,#f4b400 14%,transparent);color:#e3a008}
+.gtr-e.on{color:#f4b400}
+.gtl.etoiles .gtl-h{background:color-mix(in srgb,#f4b400 12%,var(--surface2))}
+.gtx-h{font-size:11.5px;color:var(--txt3);unicode-bidi:plaintext;text-align:start}
 .gtr-m:focus-visible,.gtr-c:focus-visible{outline:2px solid #1a73e8;outline-offset:2px}
 .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;padding-top:13px;border-top:1px solid var(--line)}
 .act{padding:8px 13px;border-radius:10px;font-size:11.6px;font-weight:600;border:1px solid var(--line);background:var(--surface2);color:var(--txt2);transition:.15s}
@@ -2826,7 +2832,7 @@ ar:{
   gtAjouter:'إضافة مهمة', gtAjouterBtn:'إضافة', gtTitrePh:'عنوان المهمة', gtDetailsPh:'التفاصيل', gtSousPh:'إضافة مهمة فرعية…',
   gtTerminer:'وضع علامة «مكتملة»', gtRouvrir:'إرجاعها غير مكتملة', gtListe:'القائمة', gtSectionProg:'القسم في البرنامج',
   gtFermer:'إغلاق', gtDeplacee:'نُقلت المهمة إلى القائمة الأخرى في Google Tasks ✓',
-  gtDeplKo:'لم تُنقل المهمة: %1', gtDeplEnCours:'جارٍ نقل المهمة إلى القائمة الأخرى…', openHint:'اضغط للفتح', orbHint:'اضغط لتشغيل المساعد',
+  gtDeplKo:'لم تُنقل المهمة: %1', gtDeplEnCours:'جارٍ نقل المهمة إلى القائمة الأخرى…', gtEtoileMettre:'تمييز بنجمة', gtEtoileRetirer:'إزالة النجمة', gtEtoiles:'المهام المميَّزة بنجمة', gtHeureIci:'الوقت والتنبيه يُضبطان في تطبيق Google Tasks أو في Google Agenda — Google لا تسمح للبرامج بهما.', openHint:'اضغط للفتح', orbHint:'اضغط لتشغيل المساعد',
   loadTitle:'توزيع الحمل', busiest:'أثقل يوم', freeDay:'أول يوم فارغ', lateLbl:'متأخرة', noneOpen:'لا عناصر مفتوحة في هذا النطاق',
   nextUpT:'القادم', noAlerts:'كل شيء تحت السيطرة — لا يوجد ما يستدعي التدخل العاجل ✅',
   checklist:'قائمة الوثائق والمهام الفرعية', notes:'ملاحظات', details:'التفاصيل',
@@ -2957,7 +2963,7 @@ fr:{
   gtAjouter:'Ajouter une tâche', gtAjouterBtn:'Ajouter', gtTitrePh:'Titre de la tâche', gtDetailsPh:'Détails', gtSousPh:'Ajouter une sous-tâche…',
   gtTerminer:'Marquer comme terminée', gtRouvrir:'Marquer comme non terminée', gtListe:'Liste', gtSectionProg:'Section dans le programme',
   gtFermer:'Fermer', gtDeplacee:'Tâche déplacée vers l\'autre liste dans Google Tasks ✓',
-  gtDeplKo:'Tâche non déplacée : %1', gtDeplEnCours:'Déplacement vers l\'autre liste en cours…', openHint:'Cliquez pour ouvrir', orbHint:"Cliquez pour activer l'assistant",
+  gtDeplKo:'Tâche non déplacée : %1', gtDeplEnCours:'Déplacement vers l\'autre liste en cours…', gtEtoileMettre:'Ajouter une étoile', gtEtoileRetirer:'Retirer l\'étoile', gtEtoiles:'Tâches suivies (étoile)', gtHeureIci:'L\'heure et le rappel se règlent dans Google Tasks ou Google Agenda — Google ne les ouvre pas aux programmes.', openHint:'Cliquez pour ouvrir', orbHint:"Cliquez pour activer l'assistant",
   loadTitle:'Répartition de la charge', busiest:'Jour le plus chargé', freeDay:'Premier jour libre', lateLbl:'en retard', noneOpen:'Aucun élément ouvert dans cette période',
   nextUpT:'À venir', noAlerts:'Tout est sous contrôle — aucune urgence ✅',
   checklist:'Documents et sous-tâches', notes:'Notes', details:'Détails',
@@ -4131,7 +4137,21 @@ function groupByListe(cat, items){
   const cles=ordre.concat(Object.keys(g).filter(l=>ordre.indexOf(l)<0));
   const parPos=(a,b)=>String(a.gPos||'').localeCompare(String(b.gPos||'')) || String(a.title.ar).localeCompare(String(b.title.ar));
   const ecriture = !!(items[0] ? items[0].peutEcrireSource : (window.AP&&AP.gtasks&&AP.gtasks.info&&AP.gtasks.info().ecritureAutorisee&&AP.gtasks.info().ecrireVersGoogle));
-  return (ecriture ? '' : '<div class="note-line">✏️ '+t('gtAllumer')+'</div>')+cles.map(l=>{
+  /* Les taches ouvertes marquees d'une etoile, toutes listes confondues,
+     comme la vue « المميَّزة بنجمة » de Google Tasks : chaque ligne dit sa
+     liste, et un clic l'ouvre A SA PLACE (une seule fiche ouverte par tache). */
+  const posEt=i=>{ const p=i.gParentId?TID(i.gParentId):null; return (p?String(p.gPos||''):String(i.gPos||''))+'|'+(p?String(i.gPos||''):''); };
+  const rangL=i=>{ const r=ordre.indexOf(i.gListe); return r<0?ordre.length:r; };
+  const etoilees=items.filter(i=>i.gEtoile && !gtFinie(i)).sort((a,b)=>(rangL(a)-rangL(b)) || posEt(a).localeCompare(posEt(b)));
+  let blocEt='';
+  if(etoilees.length){
+    const ke='L:'+cat+':★', ouvE=state.lopen[ke]!==false;
+    blocEt='<div class="gtl etoiles'+(ouvE?' open':'')+'">'+
+      '<button class="gtl-h" onclick="togListe(\''+esc(ke)+'\',true)"><span class="gtl-ic">⭐</span><span class="gtl-nom">'+esc(t('gtEtoiles'))+'</span>'+
+      '<span class="gtl-n">'+t('gtOuvertes').replace('%1',etoilees.length)+'</span><span class="cg-ch">▼</span></button>'+
+      '<div class="gtl-b">'+(ouvE ? etoilees.map(i=>ligneTache(i,false,false,true)).join('') : '')+'</div></div>';
+  }
+  return (ecriture ? '' : '<div class="note-line">✏️ '+t('gtAllumer')+'</div>')+blocEt+cles.map(l=>{
     const list=g[l]||[];
     const lst=listes.find(x=>x.id===l);
     const nom=(lst&&lst.nom) || (list[0]&&list[0].org&&list[0].org[state.lang]) || l;
@@ -4189,12 +4209,16 @@ function groupByListe(cat, items){
   }).join('');
 }
 /* Une tache, sur une ligne, comme dans Google Tasks. */
-function ligneTache(it, sous, orpheline){
-  const fini=gtFinie(it), k=cssId(it.id), ouvert=!!state.gtOuv[it.id], qi='\''+it.id+'\'';
+function ligneTache(it, sous, orpheline, vueEtoile){
+  /* vueEtoile : la meme tache montree une 2e fois (bloc des etoiles) — sans
+     identifiant ni fiche : un clic l'ouvre dans sa liste. */
+  const fini=gtFinie(it), k=cssId(it.id), ouvert=!vueEtoile && !!state.gtOuv[it.id], qi='\''+it.id+'\'';
   const retard = !fini && it.gDue && statusOf(it)==='overdue';
-  let h='<div class="gtr'+(fini?' fini':'')+(sous?' sous':'')+(ouvert?' ouvert':'')+'" id="c_'+k+'">';
+  let h='<div class="gtr'+(fini?' fini':'')+(sous?' sous':'')+(ouvert?' ouvert':'')+'"'+(vueEtoile?'':' id="c_'+k+'"')+'>';
   h+='<button class="gtr-c" title="'+esc(t(fini?'gtRouvrir':'gtTerminer'))+'" aria-label="'+esc(t(fini?'gtRouvrir':'gtTerminer'))+'" aria-pressed="'+(fini?'true':'false')+'" onclick="gtBasculer('+qi+')">'+(fini?'✓':'')+'</button>';
-  h+='<div class="gtr-m" role="button" tabindex="0" aria-expanded="'+(ouvert?'true':'false')+'" onclick="gtOuvrir('+qi+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();gtOuvrir('+qi+')}">'+
+  const geste = vueEtoile ? 'gtAllerA' : 'gtOuvrir';
+  h+='<div class="gtr-m" role="button" tabindex="0"'+(vueEtoile?' title="'+esc(it.org?it.org[state.lang]:'')+'"':' aria-expanded="'+(ouvert?'true':'false')+'"')+' onclick="'+geste+'('+qi+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();'+geste+'('+qi+')}">'+
+       (vueEtoile ? '<div class="gtr-mere" dir="auto">☑️ '+esc(it.org?it.org[state.lang]:'')+(it.gParent?' · ↳ '+esc(it.gParent.titre):'')+'</div>' : '')+
        (orpheline && it.gParent ? '<div class="gtr-mere" dir="auto">↳ '+esc(it.gParent.titre)+'</div>' : '')+
        '<div class="gtr-t" dir="auto">'+esc(it.title[state.lang])+'</div>';
   if(it.desc && !ouvert) h+='<div class="gtr-d" dir="auto">'+esc(it.desc)+'</div>';
@@ -4204,7 +4228,8 @@ function ligneTache(it, sous, orpheline){
   if(it.gAssign) puces.push('<span class="gtr-p">📨</span>');
   if(it.gEnAttente) puces.push('<span class="gtr-p attente">⏳ '+t('gtAttente')+'</span>');
   if(puces.length) h+='<div class="gtr-ps">'+puces.join('')+'</div>';
-  h+='</div></div>';
+  const lblE=esc(t(it.gEtoile?'gtEtoileRetirer':'gtEtoileMettre'));
+  h+='</div><button class="gtr-e'+(it.gEtoile?' on':'')+'" title="'+lblE+'" aria-label="'+lblE+'" aria-pressed="'+(it.gEtoile?'true':'false')+'" onclick="gtEtoile('+qi+')">'+(it.gEtoile?'★':'☆')+'</button></div>';
   if(ouvert) h+=editeurTache(it, sous);
   return h;
 }
@@ -4223,7 +4248,8 @@ function editeurTache(it, sous){
     else if(it.desc) h+='<div class="desc" dir="auto">'+esc(it.desc)+'</div>';
     /* la date part a la SORTIE du champ (Chrome signale chaque chiffre tape) */
     h+='<div class="gtx-l"><label class="rang"><span>📅 '+t('gtDateEdit')+'</span><input type="date" class="mini"'+verrou+' value="'+esc(it.gDue||'')+'" onblur="if(this.value && this.value!==this.defaultValue) setSrcDue('+qi+',this.value)" onkeydown="if(event.key===\'Enter\') this.blur()"></label>'+
-       (it.gDue?'<button class="act" onclick="setSrcDue('+qi+',\'\')">✕ '+t('gtSansDateBtn')+'</button>':'')+'</div>';
+       (it.gDue?'<button class="act" onclick="setSrcDue('+qi+',\'\')">✕ '+t('gtSansDateBtn')+'</button>':'')+'</div>'+
+       '<div class="gtx-h" dir="auto">⏰ '+t('gtHeureIci')+'</div>';
     /* deplacer vers une autre liste (la « categorie » de Google Tasks) */
     let listes=[]; try{ listes=(AP.gtasks.info().listes||[]).filter(l=>l.suivi); }catch(e){}
     /* deplacer : au choix CONFIRME (sortie de la liste), pas a chaque fleche du
@@ -4256,6 +4282,20 @@ function editeurTache(it, sous){
   return h;
 }
 function gtOuvrir(id){ state.gtOuv[id]=!state.gtOuv[id]; render(); }
+/* L'etoile : « ⭐ » en tete du nom, dans Google Tasks (app/google/gtasks.js,
+   basculerEtoile). Ecriture coupee : gtasks le dit, rien ne change. */
+function gtEtoile(id){
+  const it=TID(id); if(!it) return;
+  if(window.AP && AP.gtasks && AP.gtasks.basculerEtoile) AP.gtasks.basculerEtoile(id, !it.gEtoile);
+}
+/* Depuis le bloc des etoiles : ouvrir la tache dans SA liste. */
+function gtAllerA(id){
+  const it=TID(id); if(!it) return;
+  const kl='L:'+catOf(it)+':'+it.gListe; if(state.lopen[kl]===false) delete state.lopen[kl];
+  state.gtOuv[id]=true; render();
+  setTimeout(()=>{ const e=document.getElementById('c_'+cssId(id)); if(!e) return;
+    e.scrollIntoView({block:'center'}); const m=e.querySelector('.gtr-m'); if(m) m.focus({preventScroll:true}); },30);
+}
 function gtAjoutOuvrir(l){ state.gtAjout[l]=true; render(); setTimeout(()=>{ const e=document.getElementById('gtn_'+cssId(l)); if(e) e.focus(); },30); }
 function gtAjoutFermer(l){ delete state.gtAjout[l]; delete state.gtBr[l]; render(); }
 function gtBrouillon(l, champ, v){ (state.gtBr[l]=state.gtBr[l]||{})[champ]=v; }
@@ -4348,7 +4388,7 @@ function card(it){
   h += ndOuvert
     ? '<div class="dchip"><div class="d">—</div><div class="m">'+t('sansDateLbl')+'</div></div>'
     : '<div class="dchip"><div class="d">'+d.getDate()+'</div><div class="m">'+T[state.lang].months[d.getMonth()].slice(0,4)+'</div></div>';
-  h += '<div class="c-main"><h4>'+S.ic+' '+esc(it.title[state.lang])+'</h4><div class="c-meta">';
+  h += '<div class="c-main"><h4>'+S.ic+' '+(it.gtache && it.gEtoile ? '⭐ ' : '')+esc(it.title[state.lang])+'</h4><div class="c-meta">';
   if(it.gtache){
     h += '<span class="tag" style="background:'+hex('#1a73e8',.12)+';color:color-mix(in srgb,#1a73e8,var(--ink) 42%)">☑️ '+esc(it.org?it.org[state.lang]:'')+'</span>';
     if(subOf(it)!=='perso') h += '<span class="tag" style="background:'+hex(S.c,.14)+';color:color-mix(in srgb,'+S.c+',var(--ink) 42%)">'+esc(S[state.lang])+'</span>';
@@ -4403,7 +4443,8 @@ function card(it){
            /* vide pendant la frappe : ignore (seul ✕ retire la date) */
            '<label class="rang"><span>📅 '+t('gtDateEdit')+'</span><input type="date" class="mini" value="'+esc(it.gDue||'')+'" onblur="if(this.value && this.value!==this.defaultValue) setSrcDue(\''+it.id+'\',this.value)" onkeydown="if(event.key===\'Enter\') this.blur()"></label>'+
            (it.gDue ? '<button class="act" onclick="setSrcDue(\''+it.id+'\',\'\')">✕ '+t('gtSansDateBtn')+'</button>' : '')+
-         '</div></div>';
+           (it.gtache ? '<button class="act" aria-pressed="'+(it.gEtoile?'true':'false')+'" onclick="gtEtoile(\''+it.id+'\')">'+(it.gEtoile ? '★ '+t('gtEtoileRetirer') : '☆ '+t('gtEtoileMettre'))+'</button>' : '')+
+         '</div>'+(it.gtache ? '<div class="gtx-h" dir="auto" style="margin-top:6px">⏰ '+t('gtHeureIci')+'</div>' : '')+'</div>';
   } else if(it.gtache){
     h += '<div class="sec"><div class="note-line">✏️ '+t('gtAllumer')+'</div></div>';
   } else if(it.manual){
