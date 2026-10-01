@@ -1082,6 +1082,27 @@
         allDay, desc, org, routine, link
      ========================================================================== */
 
+  /* LES NOMS TRADUITS par le bureau (voir le classement) : par serie, et
+     par nom exact pour un rendez-vous d'une autre serie qui porte le meme
+     nom. Jamais une traduction inventee : seulement celle que le programme
+     a, et seulement si le nom chez Google n'a pas change depuis. */
+  var TRAD_NOMS = null, TRAD_SRC = null;
+  function normNom(x) { return String(x == null ? '' : x).toLowerCase().replace(/\s+/g, ' ').trim(); }
+  function tradParNom() {
+    var c = classement();
+    if (TRAD_SRC !== c) {
+      TRAD_SRC = c; TRAD_NOMS = {};
+      Object.keys(c.s || {}).forEach(function (k) { var v = c.s[k]; if (v && v[5] && (v[3] || v[4])) { TRAD_NOMS[normNom(v[5])] = v; } });
+    }
+    return TRAD_NOMS;
+  }
+  function titresDe(titre, cl) {
+    var n = normNom(titre);
+    var v = (cl && cl[5] && normNom(cl[5]) === n) ? cl : tradParNom()[n];
+    if (v && (v[3] || v[4])) { return { ar: String(v[3] || titre), fr: String(v[4] || titre) }; }
+    return { ar: titre, fr: titre };
+  }
+
   function tacheDe(idTache, regl) {
     var e = EVENEMENTS[idTache];
     if (!e) return null;
@@ -1113,9 +1134,10 @@
       id:     idTache,
       sk:     serieDe(e.cal, ev),
       src:    'google',
-      /* Un evenement n'a qu'un titre, le meme dans les deux langues : on ne
-         va pas inventer une traduction que l'artisan n'a pas ecrite. */
-      title:  { ar: titre, fr: titre },
+      /* Un evenement n'a qu'un titre. On n'invente pas de traduction : on
+         reprend celle que le programme a deja pour ce rendez-vous (titresDe),
+         sinon le meme titre dans les deux langues. raw garde le vrai nom. */
+      title:  titresDe(titre, cl),
       raw:    titre,
       cat:    etat.sc || (cl && cl[0]) || parAgenda.sec || 'perso',
       sub:    etat.sb || (cl && cl[1]) || parAgenda.sub || 'perso',
@@ -2007,9 +2029,10 @@
      (entreprise / personnel), sa sous-categorie et si c'est une routine :
      c'est ecrit dans ses propres donnees. Le telephone, lui, ne recoit de
      Google que des rendez-vous nus, et rangeait tout dans « personnel ».
-     Le bureau depose donc ce classement — des identifiants de series et
-     trois lettres, rien de lisible — dans le dossier prive de l'application
-     sur le Drive de l'artisan ; le telephone le reprend a la liaison et une
+     Le bureau depose donc ce classement — des identifiants de series, trois
+     lettres, et la traduction arabe/francaise des noms que le programme a
+     traduits — dans le dossier prive de l'application sur le Drive de
+     l'artisan ; le telephone le reprend a la liaison et une
      fois par jour. Aucun serveur a nous, rien de public.
      ========================================================================== */
   var CLASSEMENT = null;

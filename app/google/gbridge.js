@@ -1330,7 +1330,8 @@
         var cl = AP.gsync.classement();
         var enDur = (taches() || []).some(function (t) { return t && EN_DUR.indexOf(t.src) >= 0; });
         /* l appareil source compte ce qu il ENVOIE (photo vivante), l autre ce qu il a RECU */
-        var nbCl = enDur ? Object.keys(PAQUET_ENTIER || paquetClassement() || {}).length : Object.keys(cl.s || {}).length;
+        var sansNoms = function (o) { return Object.keys(o || {}).filter(function (k) { return k.indexOf('#') < 0; }).length; };
+        var nbCl = enDur ? sansNoms(PAQUET_ENTIER || paquetClassement()) : sansNoms(cl.s);
         /* « i.drive » vient du dernier jeton EFFECTIVEMENT obtenu, pas
            seulement du reglage local — un renouvellement silencieux qui
            echoue doit aussi se voir ici. */
@@ -2117,7 +2118,9 @@
   /* LE CLASSEMENT DU BUREAU, DEPOSE POUR LE TELEPHONE.
      Pour chaque serie de rendez-vous ecrite dans le programme (donnees en
      dur), on retient [section, sous-categorie, routine] sous l'identifiant
-     Google de la serie — rien de lisible, pas un titre. gsync le depose dans
+     Google de la serie — et, quand le programme a traduit son nom, ce nom en
+     arabe et en francais avec le nom qu'il traduit (le tout dans le dossier
+     PRIVE de l'application sur le Drive de l'artisan). gsync le depose dans
      le dossier prive de l'application sur le Drive ; le telephone, qui n'a
      que Google, range alors ses rendez-vous comme le bureau. Une fois par
      jour, ou des que le classement change. */
@@ -2138,7 +2141,18 @@
          _AAAAMMJJTHHMMSSZ) : un identifiant Google peut lui-meme commencer
          par « _ » (evenements importes), split('_') le jetait. */
       var serie = String(id).replace(/_\d{8}(T\d{6}Z)?$/, ''); if (!serie) { return; }
-      if (s[serie]) { return; }
+      var brut0 = String(t.raw || '').trim();
+      if (s[serie]) {
+        /* deja classee : un AUTRE nom traduit de la meme serie (occurrence
+           renommee chez Google) est garde a part, sous « serie#empreinte du nom »
+           — gsync le retrouve par son nom (tradParNom), jamais par la serie */
+        var ar1 = String((t.title && t.title.ar) || '').trim(), fr1 = String((t.title && t.title.fr) || '').trim();
+        var cle1 = serie + '#' + h32(brut0.toLowerCase().replace(/\s+/g, ' '));
+        if (brut0 && ((ar1 && ar1 !== brut0) || (fr1 && fr1 !== brut0)) && s[serie][5] !== brut0 && !s[cle1]) {
+          s[cle1] = [s[serie][0], s[serie][1], s[serie][2], ar1 || brut0, fr1 || brut0, brut0];
+        }
+        return;
+      }
       /* la section telle que l'artisan la voit (deplacements compris) */
       /* Le NIVEAU SERIE seulement (choix « toutes les repetitions ») : le
          choix fait sur UNE occurrence ne doit pas deplacer toute la serie
@@ -2151,7 +2165,16 @@
          celui de sa serie */
       var cat = (seul && st.cat && st.cat[t.id]) || (st.catSk && t.sk && st.catSk[t.sk]) || t.cat;
       var sub = (seul && st.subOf && st.subOf[t.id]) || (st.subSk && t.sk && st.subSk[t.sk]) || t.sub;
-      s[serie] = [cat || 'perso', sub || 'perso', t.routine ? 1 : 0]; n++;
+      /* Le NOM dans les deux langues, quand le programme en a une traduction
+         (son nom arabe et son nom francais ne sont pas le nom brut de
+         Google) : [.., arabe, francais, nom brut]. Le telephone et les
+         rendez-vous lus chez Google s'affichent alors dans la langue choisie,
+         comme les rendez-vous ecrits dans le programme — un meme rendez-vous
+         ne passe plus pour deux (l'un en arabe, l'autre en francais). */
+      var brut = String(t.raw || '').trim(), ar = String((t.title && t.title.ar) || '').trim(), fr = String((t.title && t.title.fr) || '').trim();
+      var trad = !!brut && ((ar && ar !== brut) || (fr && fr !== brut));
+      s[serie] = trad ? [cat || 'perso', sub || 'perso', t.routine ? 1 : 0, ar || brut, fr || brut, brut]
+                      : [cat || 'perso', sub || 'perso', t.routine ? 1 : 0]; n++;
     });
     return n ? s : null;
   }
@@ -2162,6 +2185,8 @@
       /* Sans la permission Drive, rien ne peut monter : on le dit UNE fois
          par appareil, pas a chaque lecture. */
       if (!i || !i.drive) {
+        var s0 = PAQUET_ENTIER || paquetClassement();
+        if (s0) { AP.gsync.classementMonter({ s: s0 }, { sansDrive: true }); }
         if (!reglagesPont().driveDit) { poserReglagesPont({ driveDit: 1 }); dire('classement : la permission Drive manque, il reste local.'); }
         return;
       }
