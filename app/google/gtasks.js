@@ -57,6 +57,11 @@
       ecritureOff: 'الكتابة في Google Tasks غير مفعّلة — لم يُرسل هذا التغيير.',
       ecritureOffNote: 'الكتابة في Google Tasks غير مفعّلة — حُفظ نصّك في «ملاحظات» هذه البطاقة فقط.',
       ecritureOffEtoile: 'الكتابة في Google Tasks غير مفعّلة — النجمة تُكتب في اسم المهمة داخل Google Tasks، فشغّل الكتابة أولاً.',
+      ecritureOffListe: 'الكتابة في Google Tasks غير مفعّلة — فعّلها أولاً لإنشاء القوائم أو تسميتها أو حذفها.',
+      listeHorsLigne: 'لا يمكن تعديل القوائم الآن (لا اتصال بـ Google). أعد المحاولة بعد قليل.',
+      listeKo: 'لم يقبل Google هذا التغيير على القائمة.',
+      listeIncertaine: 'انقطع الاتصال أثناء إنشاء القائمة — ربما أُنشئت. انتظر لحظة حتى تظهر قبل أن تعيد المحاولة.',
+      listeDefaut: 'لم يقبل Google حذف هذه القائمة — القائمة الرئيسية في Google Tasks لا تُحذف.',
       enAttente: 'لم يُرسل الآن — سيُرسل تلقائياً إلى Google Tasks عند عودة الاتصال أو بعد إعادة الربط.',
       nouvelleListe: 'قائمة جديدة في Google Tasks تُعرض الآن: {n}',
       crea_titre: 'اكتب عنوان المهمة أولاً.',
@@ -102,6 +107,11 @@
       ecritureOff: 'L\'ecriture dans Google Tasks est desactivee — ce changement n\'a pas ete envoye.',
       ecritureOffNote: 'L\'ecriture dans Google Tasks est desactivee — votre texte a ete garde dans les « Notes » de cette carte seulement.',
       ecritureOffEtoile: 'L\'ecriture dans Google Tasks est desactivee — l\'etoile s\'ecrit dans le nom de la tache chez Google : activez d\'abord l\'ecriture.',
+      ecritureOffListe: 'L\'ecriture dans Google Tasks est desactivee — activez-la pour creer, renommer ou supprimer une liste.',
+      listeHorsLigne: 'Impossible de modifier les listes pour l\'instant (pas de connexion a Google). Reessayez dans un moment.',
+      listeKo: 'Google n\'a pas accepte ce changement sur la liste.',
+      listeIncertaine: 'La connexion a coupe pendant la creation de la liste — elle a peut-etre ete creee. Attendez qu\'elle apparaisse avant de reessayer.',
+      listeDefaut: 'Google refuse de supprimer cette liste — la liste principale de Google Tasks ne se supprime pas.',
       enAttente: 'Pas envoye pour l\'instant — il partira tout seul vers Google Tasks au retour de la connexion ou apres reconnexion.',
       nouvelleListe: 'Nouvelle liste Google Tasks, affichee maintenant : {n}',
       crea_titre: 'Ecrivez d\'abord le titre de la tache.',
@@ -379,12 +389,15 @@
      est suivie d'office ; un choix de l'artisan (decocher) reste respecte.
      Reprise d'une version plus ancienne (pas de « vues ») : les listes
      presentes gardent exactement leur etat d'avant. */
-  function chargerListes() {
+  var LISTES_LUES = 0, RELECTURE_LISTES = false;     // derniere lecture des listes (ms) ; relecture en cours
+  function chargerListes(opts) {
+    opts = opts || {};
     if (!clientId()) { return Promise.resolve([]); }
     /* Une ancienne erreur ne doit pas survivre a une nouvelle tentative —
        sauf pendant une lecture en cours, dont l'echec doit rester visible. */
     if (!enCours) { ETAT.erreur = null; ETAT.brut = null; }
     return toutesLesPages('/users/@me/lists', { maxResults: 100 }).then(function (items) {
+      LISTES_LUES = Date.now();
       var r = reglages();
       var premiereFois = !Object.keys(r.listes || {}).length;
       var reprise = !r.vues && !premiereFois;
@@ -399,6 +412,7 @@
         LISTES.forEach(function (x) { connuesAvant[x.id] = 1; });
         Object.keys(r.listes || {}).forEach(function (id) { connuesAvant[id] = 1; });
       }
+      var empreinteAvant = LISTES.map(function (x) { return x.id + '|' + x.nom + '|' + (x.suivi ? 1 : 0); }).join('\n');
       LISTES = (items || []).map(function (l) {
         var nom = l.title || l.id;
         var pref = r.listes[l.id];
@@ -419,7 +433,8 @@
       emettre({ listes: true });
       /* Une liste qui vient d'etre suivie n'a pas de curseur : la lecture
          normale la lit en entier. La premiere fois, lecture complete. */
-      if (aSuivre) { pull(premiereFois ? { complet: true } : {}); }
+      if (aSuivre && !opts.sansLecture) { pull(Object.assign(premiereFois ? { complet: true } : {}, { sansListes: true })); }
+      if (LISTES.map(function (x) { return x.id + '|' + x.nom + '|' + (x.suivi ? 1 : 0); }).join('\n') !== empreinteAvant) { reconstruire(); }
       return listes();
     }).catch(function (e) {
       noterErreur(e);
@@ -638,6 +653,12 @@
   function pull(opts) {
     opts = opts || {};
     if (!clientId()) { return Promise.resolve(false); }
+    if (!opts.sansListes && !enCours && !RELECTURE_LISTES && (Date.now() - LISTES_LUES > (opts.complet ? 5000 : 60000)) && lectureAutorisee()) {
+      LISTES_LUES = Date.now(); RELECTURE_LISTES = true;
+      var suite = function () { RELECTURE_LISTES = false; return pull(Object.assign({}, opts, { sansListes: true })); };
+      return chargerListes({ sansLecture: true }).then(suite, suite);
+    }
+    if (RELECTURE_LISTES && !opts.sansListes) { enAttente = (enAttente === 'complet' || opts.complet) ? 'complet' : 'leger'; return Promise.resolve(false); }
     /* Une lecture demandee PENDANT qu'une autre tourne n'est jamais perdue :
        elle repart des que la chaine en cours s'acheve (complete si l'une des
        demandes l'etait). Sinon une liste tout juste suivie, ou tout juste
@@ -1120,7 +1141,7 @@
       taches: nb,
       sansDate: sansDate,
       faites: faites,
-      enCours: enCours,
+      enCours: enCours || RELECTURE_LISTES,
       derniereLecture: ETAT.derniereLecture,
       derniereComplete: ETAT.derniereComplete,
       erreur: texteErreur(),
@@ -1537,7 +1558,7 @@
   function refuserModif(idTache, champ, v) {
     if (champ === 'notes') { garderNoteLocale(idTache, v); }
     if (ecritureCochee()) { permisSignale = false; signalerPermis(); }
-    else { dire2(champ === 'notes' ? 'ecritureOffNote' : (champ === 'etoile' ? 'ecritureOffEtoile' : 'ecritureOff')); }
+    else { dire2(champ === 'notes' ? 'ecritureOffNote' : (champ === 'etoile' ? 'ecritureOffEtoile' : (champ === 'liste' ? 'ecritureOffListe' : 'ecritureOff'))); }
     setTimeout(reconstruire, 0);
   }
 
@@ -1959,6 +1980,127 @@
     });
   }
 
+  /* =========================================================================
+     LES LISTES, COMME DANS L'APPLICATION GOOGLE TASKS : creer, renommer,
+     supprimer — sur un geste explicite de l'artisan, en ligne seulement (rien
+     n'attend hors ligne : une liste creee deux fois, ou supprimee des heures
+     plus tard, serait pire qu'un message « reessayez »). Le gardien final
+     reste gauth.js (verifierEcriture : nom seul, permission explicite).
+     ========================================================================= */
+  function apiListes(methode, chemin, corps) {
+    var o = { methode: methode, permission: AP.gauth.PERMISSION_EXPLICITE, attendre: false };
+    if (corps) { o.corps = corps; }
+    return AP.gauth.appel(TASKS_API + '/users/@me/lists' + (chemin || ''), o);
+  }
+  /* null si l'on peut ecrire ; sinon le refus est deja dit */
+  function refusListes() {
+    if (!(AP.gauth && typeof AP.gauth.appel === 'function')) { return 'gauth'; }
+    if (!ecritureCochee() || !peutEcrire()) { refuserModif(null, 'liste'); return 'ecriture'; }
+    if (!envoiPossible()) { dire2('listeHorsLigne'); return 'horsLigne'; }
+    return null;
+  }
+  function direErreurListe(err, suppression) {
+    avert('liste Google Tasks : ' + (err && err.message));
+    var code = classerErreur(err);
+    if (code === 'portee') { permisSignale = false; signalerPermis(); return; }
+    if (REESSAYABLES[code]) { dire2('listeHorsLigne'); return; }
+    dire2(suppression && err && err.statut === 400 ? 'listeDefaut' : 'listeKo');
+  }
+  function compterListe(idListe) {
+    var n = 0; Object.keys(TACHES).forEach(function (id) { if (TACHES[id].liste === idListe) { n++; } }); return n;
+  }
+  /* Le nombre REEL de taches d'une liste chez Google (terminees et cachees
+     comprises), 10 pages au plus : { n, plus } ; rejette si Google ne repond pas. */
+  function compterListeDistante(idListe) {
+    var n = 0, pages = 0;
+    function page(jeton) {
+      var p = { showCompleted: true, showHidden: true, showAssigned: true, maxResults: 100 };
+      if (jeton) { p.pageToken = jeton; }
+      return api('/lists/' + encodeURIComponent(idListe) + '/tasks', p).then(function (d) {
+        n += ((d && d.items) || []).filter(function (t) { return !t.deleted; }).length; pages++;
+        if (d && d.nextPageToken) { return pages >= 10 ? { n: n, plus: true } : page(d.nextPageToken); }
+        return { n: n, plus: false };
+      });
+    }
+    return page(null);
+  }
+  var CREATIONS_INCERTAINES = {};   // titre -> heure d'une creation dont la reponse s'est perdue
+  function creerListe(titre) {
+    titre = String(titre == null ? '' : titre).trim();
+    if (!titre || refusListes()) { return Promise.resolve(false); }
+    var gen = GEN;
+    /* la meme liste demandee juste apres une reponse perdue : Google l'a
+       peut-etre deja creee — on regarde avant d'en creer une seconde */
+    if (CREATIONS_INCERTAINES[titre] && Date.now() - CREATIONS_INCERTAINES[titre] < 600000) {
+      return chargerListes({ sansLecture: true }).then(function () {
+        var deja = LISTES.filter(function (x) { return x.nom === titre; })[0];
+        if (deja) { delete CREATIONS_INCERTAINES[titre]; reconstruire(); return deja.id; }
+        delete CREATIONS_INCERTAINES[titre];
+        return creerListe(titre);
+      });
+    }
+    return apiListes('POST', '', { title: titre }).then(function (l) {
+      if (gen !== GEN) { return false; }
+      if (!l || !l.id) { CREATIONS_INCERTAINES[titre] = Date.now(); dire2('listeIncertaine'); setTimeout(function () { pull({ complet: true }); }, 1500); return false; }
+      var nom = l.title || titre, r = reglages();
+      var listesR = Object.assign({}, r.listes); listesR[l.id] = { suivi: true, nom: nom };
+      var vues = Object.assign({}, r.vues || {}); vues[l.id] = 1;
+      poserReglages({ listes: listesR, vues: vues });
+      if (!LISTES.some(function (x) { return x.id === l.id; })) { LISTES.push({ id: l.id, nom: nom, suivi: true }); }
+      ranger(); emettre({ listes: true }); reconstruire();
+      return l.id;
+    }, function (err) {
+      if (gen !== GEN) { return false; }
+      var avantEnvoi = err && (err.name === 'AP_SANS_JETON' || err.name === 'AP_REGLE_ECRITURE');
+      var code = classerErreur(err);
+      if (!avantEnvoi && (code === 'reseau' || code === 'serveur')) {
+        /* partie sans reponse sure : peut-etre creee — on le dit, et on relit */
+        CREATIONS_INCERTAINES[titre] = Date.now();
+        avert('liste Google Tasks (creation incertaine) : ' + (err && err.message));
+        dire2('listeIncertaine');
+        setTimeout(function () { pull({ complet: true }); }, 1500);
+        return false;
+      }
+      direErreurListe(err, false); return false;
+    });
+  }
+  function renommerListe(idListe, titre) {
+    titre = String(titre == null ? '' : titre).trim();
+    if (!titre) { return Promise.resolve(false); }
+    if (nomListe(idListe) === titre) { return Promise.resolve(true); }
+    if (refusListes()) { return Promise.resolve(false); }
+    var gen = GEN;
+    return apiListes('PATCH', '/' + encodeURIComponent(idListe), { title: titre }).then(function (l) {
+      if (gen !== GEN) { return false; }
+      var nom = (l && l.title) || titre;
+      LISTES.forEach(function (x) { if (x.id === idListe) { x.nom = nom; } });
+      var r = reglages();
+      if (r.listes[idListe]) { var listesR = Object.assign({}, r.listes); listesR[idListe] = Object.assign({}, listesR[idListe], { nom: nom }); poserReglages({ listes: listesR }); }
+      ranger(); emettre({ listes: true }); reconstruire();
+      return true;
+    }, function (err) { if (gen === GEN) { direErreurListe(err, false); } return false; });
+  }
+  function supprimerListe(idListe) {
+    if (refusListes()) { return Promise.resolve(false); }
+    var gen = GEN;
+    return apiListes('DELETE', '/' + encodeURIComponent(idListe)).then(null, function (err) {
+      if (err && (err.statut === 404 || err.statut === 410)) { return null; }   // deja supprimee
+      throw err;
+    }).then(function () {
+      if (gen !== GEN) { return false; }
+      /* ce qui attendait pour ses taches ne partira plus : le texte tape est
+         garde, visible (garderOrphelin) */
+      abandonnerAttenteListe(idListe);
+      LISTES = LISTES.filter(function (x) { return x.id !== idListe; });
+      var r = reglages(); var listesR = Object.assign({}, r.listes); delete listesR[idListe];
+      poserReglages({ listes: listesR });
+      Object.keys(TACHES).forEach(function (id) { if (TACHES[id].liste === idListe) { delete TACHES[id]; delete CREEES[id]; } });
+      delete ETAT.curs[idListe];
+      ranger(); emettre({ listes: true }); reconstruire();
+      return true;
+    }, function (err) { if (gen === GEN) { direErreurListe(err, true); } return false; });
+  }
+
   /* « Deplacer vers une autre liste » de Google Tasks : la tache (et ses
      sous-taches, que Google emporte avec elle) change de liste CHEZ GOOGLE.
      Son identifiant dans ce programme contient la liste : ce que le
@@ -2159,6 +2301,11 @@
     basculerFait: basculerFait,
     idActuel: idActuel,
     deplacerVersListe: deplacerVersListe,
+    creerListe: creerListe,
+    renommerListe: renommerListe,
+    supprimerListe: supprimerListe,
+    compterListe: compterListe,
+    compterListeDistante: compterListeDistante,
     creerTache: creerTache,
     listesSuivies: listesSuivies,
     _: { tacheDe: tacheDe, taches: function () { return TACHES; } }

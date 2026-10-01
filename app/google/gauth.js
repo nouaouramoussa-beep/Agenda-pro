@@ -447,8 +447,9 @@
        permission explicite — pas d'exception « c'est notre tache ».
        Deux gestes seulement : PATCH sur une tache precise (statut, titre,
        note, echeance) et POST dans une liste precise (creer une tache que
-       l'artisan vient d'ecrire). Jamais de suppression, jamais rien sur les
-       listes elles-memes. */
+       l'artisan vient d'ecrire). Jamais de suppression d'une tache. Les
+       listes : creer, renommer, supprimer — geste explicite seulement (plus
+       bas). */
     if (estUneTache(url)) {
       if (methode === 'POST' && estUneCreationDeTache(url)) {
         if (!permis) {
@@ -478,6 +479,29 @@
           throw refus('Regle d\'ecriture : un deplacement de tache Google Tasks ne porte aucun corps.');
         }
         return undefined;
+      }
+      /* LES LISTES (comme dans l'application Google Tasks), sur un geste
+         explicite de l'artisan seulement : creer (POST /users/@me/lists,
+         corps {title} seul), renommer (PATCH /users/@me/lists/ID, corps
+         {title} seul), supprimer (DELETE /users/@me/lists/ID, sans corps —
+         le programme le fait confirmer avant, nombre de taches a l'appui). */
+      var mL = /\/tasks\/v1\/users\/@me\/lists(\/([^\/?#]+))?(\?[^#]*)?$/.exec(url);
+      if (mL && (methode === 'POST' || methode === 'PATCH' || methode === 'DELETE')) {
+        if (!permis) {
+          throw refus('Regle d\'ecriture : modifier les listes Google Tasks exige la permission explicite de l\'artisan.');
+        }
+        if (mL[3]) { throw refus('Regle d\'ecriture : aucune option sur une liste Google Tasks.'); }
+        if (methode === 'POST' && mL[1]) { throw refus('Regle d\'ecriture : une liste se cree sur la collection des listes.'); }
+        if (methode !== 'POST' && !mL[1]) { throw refus('Regle d\'ecriture : renommer ou supprimer vise UNE liste precise.'); }
+        if (methode === 'DELETE') {
+          if (corps && Object.keys(corps).length) { throw refus('Regle d\'ecriture : la suppression d\'une liste ne porte aucun corps.'); }
+          return undefined;
+        }
+        var clesL = Object.keys(corps || {});
+        if (clesL.length !== 1 || clesL[0] !== 'title' || !String(corps.title || '').trim()) {
+          throw refus('Regle d\'ecriture : une liste Google Tasks ne porte qu\'un nom (title), non vide.');
+        }
+        return corps;
       }
       if (methode !== 'PATCH' || !estUneTachePrecise(url)) {
         throw refus(

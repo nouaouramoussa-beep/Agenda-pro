@@ -413,6 +413,16 @@ select.fsel:focus,input.fdate:focus{outline:none;border-color:var(--brand)}
 .gtl-ic{font-size:16px}
 .gtl-nom{flex:1;min-width:0;font-weight:800;font-size:14px;unicode-bidi:plaintext;text-align:start}
 .gtl-n{font-size:11.5px;font-weight:700;color:var(--txt3)}
+/* l'en-tete d'une liste : la partie qui ouvre/ferme, et « ⋮ » (renommer,
+   supprimer) — comme le menu d'une liste dans Google Tasks */
+.gtl-t{flex:1;min-width:0;display:flex;align-items:center;gap:10px;text-align:start;background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer}
+.gtl-menu{flex:0 0 auto;width:30px;height:30px;margin:-6px -6px -6px 0;border-radius:50%;display:grid;place-items:center;font-size:18px;font-weight:900;line-height:1;color:var(--txt2)}
+.gtl-menu:hover,.gtl-menu[aria-expanded="true"]{background:var(--bg2);color:var(--txt)}
+.gtl-menu-b{display:flex;gap:8px;flex-wrap:wrap;padding:8px 14px;border-bottom:1px solid var(--line);background:var(--surface)}
+.gtl-ren{flex:1;min-width:0;display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.gtl-ren .mini{flex:1 1 160px;width:auto}
+.gtl-nouvb{margin-bottom:10px;border:1px dashed color-mix(in srgb,#1a73e8 45%,transparent)}
+.gtl-nouv{margin:0 0 10px}
 .gtl:not(.open) .gtl-b{display:none}
 .gtl.open .cg-ch{transform:rotate(180deg)}
 .gtl-b{padding:6px 8px 10px}
@@ -1454,6 +1464,7 @@ input[type="color"]{height:40px;padding:3px;cursor:pointer}
           <button class="mb" id="cCancelBtn" style="width:100%;display:none" onclick="uiCancelEditSub()" data-t="renCancel"></button>
         </div>
       </div>
+      <div class="fld" style="margin-top:20px" id="gtListesModal"></div>
       <div class="note-line" data-t="secNote"></div>
     </div>
     <div class="modal-f"><button class="mb pri" onclick="closeModal('mSec')" data-t="ok"></button></div>
@@ -2847,7 +2858,7 @@ ar:{
   gtAjouter:'إضافة مهمة', gtAjouterBtn:'إضافة', gtTitrePh:'عنوان المهمة', gtDetailsPh:'التفاصيل', gtSousPh:'إضافة مهمة فرعية…',
   gtTerminer:'وضع علامة «مكتملة»', gtRouvrir:'إرجاعها غير مكتملة', gtListe:'القائمة', gtSectionProg:'القسم في البرنامج',
   gtFermer:'إغلاق', gtDeplacee:'نُقلت المهمة إلى القائمة الأخرى في Google Tasks ✓',
-  gtDeplKo:'لم تُنقل المهمة: %1', gtDeplEnCours:'جارٍ نقل المهمة إلى القائمة الأخرى…', gtEtoileMettre:'تمييز بنجمة', gtEtoileRetirer:'إزالة النجمة', gtEtoiles:'المهام المميَّزة بنجمة', gtHeureIci:'الوقت والتنبيه يُضبطان في تطبيق Google Tasks أو في Google Agenda — Google لا تسمح للبرامج بهما.', openHint:'اضغط للفتح', orbHint:'اضغط لتشغيل المساعد',
+  gtDeplKo:'لم تُنقل المهمة: %1', gtDeplEnCours:'جارٍ نقل المهمة إلى القائمة الأخرى…', gtListeNouv:'قائمة جديدة', gtListeNomPh:'اسم القائمة', gtListeCreer:'إنشاء', gtListeEnr:'حفظ', gtListeMenu:'خيارات القائمة', gtListeRen:'إعادة تسمية القائمة', gtListeSuppr:'حذف القائمة', gtListeSupprQ:'حذف القائمة «%1» من Google Tasks؟\nستُحذف معها %2 مهمة نهائياً، ولا يمكن التراجع.', gtListeSupprVideQ:'حذف القائمة «%1» من Google Tasks؟ (لا مهام فيها)', gtListeSupprInconnuQ:'حذف القائمة «%1» من Google Tasks؟\nستُحذف معها كل مهامها نهائياً (حتى التي لا تظهر هنا)، ولا يمكن التراجع.', gtListeHorsLigne:'لا اتصال الآن — لا يمكن حذف القائمة.', gtListeCachee:'غير معروضة', gtListeOk:'أُنشئت القائمة في Google Tasks ✓', gtListeRenOk:'تغيّر اسم القائمة في Google Tasks ✓', gtListeSupprOk:'حُذفت القائمة من Google Tasks.', gtListesTitre:'قوائم Google Tasks (أقسام «مهام Google Tasks»)', gtListesNote:'هذه قوائمك في Google Tasks نفسه: ما تنشئه أو تسمّيه أو تحذفه هنا يحدث هناك أيضاً، وما تضيفه على الهاتف يظهر هنا وحده. التصنيفات أعلاه خاصة بالبرنامج.', gtEtoileMettre:'تمييز بنجمة', gtEtoileRetirer:'إزالة النجمة', gtEtoiles:'المهام المميَّزة بنجمة', gtHeureIci:'الوقت والتنبيه يُضبطان في تطبيق Google Tasks أو في Google Agenda — Google لا تسمح للبرامج بهما.', openHint:'اضغط للفتح', orbHint:'اضغط لتشغيل المساعد',
   loadTitle:'توزيع الحمل', busiest:'أثقل يوم', freeDay:'أول يوم فارغ', lateLbl:'متأخرة', noneOpen:'لا عناصر مفتوحة في هذا النطاق',
   nextUpT:'القادم', noAlerts:'كل شيء تحت السيطرة — لا يوجد ما يستدعي التدخل العاجل ✅',
   checklist:'قائمة الوثائق والمهام الفرعية', notes:'ملاحظات', details:'التفاصيل',
@@ -2978,7 +2989,7 @@ fr:{
   gtAjouter:'Ajouter une tâche', gtAjouterBtn:'Ajouter', gtTitrePh:'Titre de la tâche', gtDetailsPh:'Détails', gtSousPh:'Ajouter une sous-tâche…',
   gtTerminer:'Marquer comme terminée', gtRouvrir:'Marquer comme non terminée', gtListe:'Liste', gtSectionProg:'Section dans le programme',
   gtFermer:'Fermer', gtDeplacee:'Tâche déplacée vers l\'autre liste dans Google Tasks ✓',
-  gtDeplKo:'Tâche non déplacée : %1', gtDeplEnCours:'Déplacement vers l\'autre liste en cours…', gtEtoileMettre:'Ajouter une étoile', gtEtoileRetirer:'Retirer l\'étoile', gtEtoiles:'Tâches suivies (étoile)', gtHeureIci:'L\'heure et le rappel se règlent dans Google Tasks ou Google Agenda — Google ne les ouvre pas aux programmes.', openHint:'Cliquez pour ouvrir', orbHint:"Cliquez pour activer l'assistant",
+  gtDeplKo:'Tâche non déplacée : %1', gtDeplEnCours:'Déplacement vers l\'autre liste en cours…', gtListeNouv:'Nouvelle liste', gtListeNomPh:'Nom de la liste', gtListeCreer:'Créer', gtListeEnr:'Enregistrer', gtListeMenu:'Options de la liste', gtListeRen:'Renommer la liste', gtListeSuppr:'Supprimer la liste', gtListeSupprQ:'Supprimer la liste « %1 » de Google Tasks ?\nSes %2 tâche(s) seront supprimées définitivement, sans retour possible.', gtListeSupprVideQ:'Supprimer la liste « %1 » de Google Tasks ? (elle ne contient aucune tâche)', gtListeSupprInconnuQ:'Supprimer la liste « %1 » de Google Tasks ?\nToutes ses tâches seront supprimées définitivement (même celles qui ne s\'affichent pas ici), sans retour possible.', gtListeHorsLigne:'Pas de connexion — impossible de supprimer la liste.', gtListeCachee:'non affichée', gtListeOk:'Liste créée dans Google Tasks ✓', gtListeRenOk:'Liste renommée dans Google Tasks ✓', gtListeSupprOk:'Liste supprimée de Google Tasks.', gtListesTitre:'Listes Google Tasks (sections de « Tâches Google Tasks »)', gtListesNote:'Ce sont vos listes dans Google Tasks même : ce que vous créez, renommez ou supprimez ici s\'y fait aussi, et ce que vous ajoutez sur le téléphone apparaît ici tout seul. Les catégories ci-dessus sont propres au programme.', gtEtoileMettre:'Ajouter une étoile', gtEtoileRetirer:'Retirer l\'étoile', gtEtoiles:'Tâches suivies (étoile)', gtHeureIci:'L\'heure et le rappel se règlent dans Google Tasks ou Google Agenda — Google ne les ouvre pas aux programmes.', openHint:'Cliquez pour ouvrir', orbHint:"Cliquez pour activer l'assistant",
   loadTitle:'Répartition de la charge', busiest:'Jour le plus chargé', freeDay:'Premier jour libre', lateLbl:'en retard', noneOpen:'Aucun élément ouvert dans cette période',
   nextUpT:'À venir', noAlerts:'Tout est sous contrôle — aucune urgence ✅',
   checklist:'Documents et sous-tâches', notes:'Notes', details:'Détails',
@@ -3775,7 +3786,7 @@ function renderFond(){
 }
 function renderFondMaintenant(){
   const a=document.activeElement;
-  if(a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || (a.matches && a.matches('[data-lu]'))) && a.closest && a.closest('.card, .gtr-x, .gtl-new')){
+  if(a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || (a.matches && a.matches('[data-lu]'))) && a.closest && a.closest('.card, .gtr-x, .gtl-new, .gtl-ren, #gtListesModal')){
     if(!a.__apRenduEnAttente){
       a.__apRenduEnAttente=true;
       a.addEventListener('blur', function(){
@@ -4181,7 +4192,15 @@ function groupByListe(cat, items){
       '<span class="gtl-n">'+t('gtOuvertes').replace('%1',etoilees.length)+'</span><span class="cg-ch">▼</span></button>'+
       '<div class="gtl-b">'+(ouvE ? etoilees.map(i=>ligneTache(i,false,false,true)).join('') : '')+'</div></div>';
   }
-  return (ecriture ? '' : '<div class="note-line">✏️ '+t('gtAllumer')+'</div>')+blocEt+cles.map(l=>{
+  /* ＋ قائمة جديدة — comme « Créer une liste » de Google Tasks */
+  let barre='';
+  if(ecriture){
+    barre = state.gtNouvL
+      ? '<div class="gtl-new gtl-nouv"><input class="mini" dir="auto" id="gtnl" value="'+esc(state.gtNouvLBr||'')+'" oninput="state.gtNouvLBr=this.value" placeholder="'+esc(t('gtListeNomPh'))+'" onkeydown="if(event.key===\'Enter\'){event.preventDefault();gtNouvListeCreer()} if(event.key===\'Escape\'){gtNouvListeFermer()}">'+
+        '<div class="gtl-new-b"><button class="act a-done" id="gtnlb" onclick="gtNouvListeCreer()">'+t('gtListeCreer')+'</button><button class="act" onclick="gtNouvListeFermer()">'+t('cancel')+'</button></div></div>'
+      : '<button class="gtl-add gtl-nouvb" onclick="gtNouvListeOuvrir()">＋ '+t('gtListeNouv')+'</button>';
+  }
+  return (ecriture ? '' : '<div class="note-line">✏️ '+t('gtAllumer')+'</div>')+barre+blocEt+cles.map(l=>{
     const list=g[l]||[];
     const lst=listes.find(x=>x.id===l);
     const nom=(lst&&lst.nom) || (list[0]&&list[0].org&&list[0].org[state.lang]) || l;
@@ -4230,11 +4249,24 @@ function groupByListe(cat, items){
         }
       }
     }
-    return '<div class="gtl'+(ouv?' open':'')+'">'+
-      '<button class="gtl-h" onclick="togListe(\''+esc(k)+'\',true)">'+
+    const ql='\''+esc(l)+'\'', kl=cssId(l), geree=ecriture && !!lst;
+    let tete;
+    if(geree && state.gtRen===l){
+      tete='<div class="gtl-ren"><span class="gtl-ic">☑️</span><input class="mini" dir="auto" id="gtlr_'+kl+'" value="'+esc(state.gtRenBr!=null?state.gtRenBr:nom)+'" oninput="state.gtRenBr=this.value" onkeydown="if(event.key===\'Enter\'){event.preventDefault();gtListeRenommer('+ql+')} if(event.key===\'Escape\'){gtListeRenFermer()}">'+
+           '<button class="act a-done" onclick="gtListeRenommer('+ql+')">'+t('gtListeEnr')+'</button><button class="act" onclick="gtListeRenFermer()">'+t('cancel')+'</button></div>';
+    } else {
+      tete='<button class="gtl-t" onclick="togListe(\''+esc(k)+'\',true)">'+
         '<span class="gtl-ic">☑️</span><span class="gtl-nom" dir="auto">'+txtN(nom)+'</span>'+
         '<span class="gtl-n">'+t('gtOuvertes').replace('%1',ouvertes.length)+(late?' · ⚠️ '+late:'')+'</span><span class="cg-ch">▼</span>'+
       '</button>'+
+      (geree ? '<button class="gtl-menu" title="'+esc(t('gtListeMenu'))+'" aria-label="'+esc(t('gtListeMenu'))+'" aria-expanded="'+(state.gtMenu===l?'true':'false')+'" onclick="gtListeMenu('+ql+')">⋮</button>' : '');
+    }
+    const menu = (geree && state.gtMenu===l && state.gtRen!==l)
+      ? '<div class="gtl-menu-b"><button class="act" onclick="gtListeRenOuvrir('+ql+')">✎ '+t('gtListeRen')+'</button>'+
+        '<button class="act" onclick="gtListeSupprimer('+ql+')">🗑 '+t('gtListeSuppr')+'</button></div>'
+      : '';
+    return '<div class="gtl'+(ouv?' open':'')+'">'+
+      '<div class="gtl-h">'+tete+'</div>'+menu+
       '<div class="gtl-b">'+h+'</div></div>';
   }).join('');
 }
@@ -4312,6 +4344,59 @@ function editeurTache(it, sous){
   return h;
 }
 function gtOuvrir(id){ state.gtOuv[id]=!state.gtOuv[id]; render(); }
+/* LES LISTES, comme dans Google Tasks (app/google/gtasks.js : creerListe,
+   renommerListe, supprimerListe — ecrites dans Google Tasks lui-meme) */
+state.gtMenu=null; state.gtRen=null; state.gtRenBr=null; state.gtNouvL=false; state.gtNouvLBr='';
+let GT_LISTE_EN_COURS=false;
+function gtNomListe(l){ try{ const x=(AP.gtasks.info().listes||[]).find(y=>y.id===l); if(x) return x.nom; }catch(e){} return l; }
+function gtListeMenu(l){ state.gtMenu = state.gtMenu===l ? null : l; render(); }
+function gtListeRenOuvrir(l){ state.gtRen=l; state.gtRenBr=null; state.gtMenu=null; render();
+  setTimeout(()=>{ const e=document.getElementById('gtlr_'+cssId(l)); if(e){ e.focus(); e.select(); } },30); }
+function gtListeRenFermer(){ state.gtRen=null; state.gtRenBr=null; render(); }
+async function gtListeRenommerVal(l, v){
+  v=String(v||'').trim(); if(!v || GT_LISTE_EN_COURS) return false;
+  GT_LISTE_EN_COURS=true;
+  try{ const ok=await AP.gtasks.renommerListe(l, v); if(ok){ toast(t('gtListeRenOk')); } return ok; }
+  finally{ GT_LISTE_EN_COURS=false; }
+}
+async function gtListeRenommer(l){
+  const e=document.getElementById('gtlr_'+cssId(l)); const v=e?e.value:'';
+  if(!String(v).trim()){ if(e) e.focus(); return; }
+  if(await gtListeRenommerVal(l, v)){ state.gtRen=null; state.gtRenBr=null; }
+  render(); if(typeof renderSecModal==='function') renderSecModal();
+}
+async function gtListeSupprimer(l){
+  if(GT_LISTE_EN_COURS) return;
+  if(typeof navigator!=='undefined' && navigator.onLine===false){ toast(t('gtListeHorsLigne')); return; }
+  const nom=gtNomListe(l);
+  /* le nombre de taches est demande a GOOGLE (une liste non affichee, ou pas
+     encore lue, n'a rien ici) ; inconnu -> l'avertissement le plus fort */
+  GT_LISTE_EN_COURS=true; let c=null;
+  try{ c = AP.gtasks.compterListeDistante ? await AP.gtasks.compterListeDistante(l) : null; }catch(e){ c=null; }
+  finally{ GT_LISTE_EN_COURS=false; }
+  const q = !c ? t('gtListeSupprInconnuQ').replace('%1',nom)
+          : (c.n===0 && !c.plus) ? t('gtListeSupprVideQ').replace('%1',nom)
+          : t('gtListeSupprQ').replace('%1',nom).replace('%2', c.plus ? (c.n+'+') : String(c.n));
+  if(!confirm(q)) return;
+  GT_LISTE_EN_COURS=true;
+  try{ if(await AP.gtasks.supprimerListe(l)){ state.gtMenu=null; toast(t('gtListeSupprOk')); } }
+  finally{ GT_LISTE_EN_COURS=false; render(); if(typeof renderSecModal==='function') renderSecModal(); }
+}
+function gtNouvListeOuvrir(){ state.gtNouvL=true; render(); setTimeout(()=>{ const e=document.getElementById('gtnl'); if(e) e.focus(); },30); }
+function gtNouvListeFermer(){ state.gtNouvL=false; state.gtNouvLBr=''; render(); }
+async function gtNouvListeCreerVal(v){
+  v=String(v||'').trim(); if(!v || GT_LISTE_EN_COURS) return false;
+  GT_LISTE_EN_COURS=true;
+  try{ const id=await AP.gtasks.creerListe(v); if(id){ toast(t('gtListeOk')); state.gtAjout[id]=true; } return id; }
+  finally{ GT_LISTE_EN_COURS=false; }
+}
+async function gtNouvListeCreer(){
+  const e=document.getElementById('gtnl'); const v=e?e.value:'';
+  if(!String(v).trim()){ if(e) e.focus(); return; }
+  const b=document.getElementById('gtnlb'); if(b){ b.disabled=true; b.textContent=t('enCours'); }
+  if(await gtNouvListeCreerVal(v)){ state.gtNouvL=false; state.gtNouvLBr=''; }
+  render();
+}
 /* L'etoile : « ⭐ » en tete du nom, dans Google Tasks (app/google/gtasks.js,
    basculerEtoile). Ecriture coupee : gtasks le dit, rien ne change. */
 function gtEtoile(id, veut){
@@ -5426,11 +5511,51 @@ function renderSecModal(){
   /* applyI18n() peut s'executer pendant une edition (changement de langue en
      cours de route) et reecrirait sinon le bouton avec le libelle « ajouter »
      — on remet le bon libelle a chaque redessin, dans la langue courante. */
+  renderListesModal();
   const gb=id=>document.getElementById(id);
   if(gb('sAddBtn')) gb('sAddBtn').textContent = editSecId ? t('secSave') : t('secAdd');
   if(gb('cAddBtn')) gb('cAddBtn').textContent = editSubId ? t('catSave') : t('catAdd');
 }
-function openSec(){ editSecId=null; editSubId=null; renderSecModal(); openModal('mSec'); }
+function openSec(){ editSecId=null; editSubId=null; state.gtRenM=null; renderSecModal(); openModal('mSec'); }
+/* Les listes Google Tasks dans la fenetre des sections : ce sont les
+   « sections » de « مهام Google Tasks » — renommer, supprimer, creer, ecrit
+   dans Google Tasks lui-meme (memes fonctions que la vue Tasks). */
+state.gtRenM=null;
+function renderListesModal(){
+  const gl=document.getElementById('gtListesModal'); if(!gl) return;
+  let listes=[], info=null; try{ info=AP.gtasks.info(); listes=info.listes||[]; }catch(e){}
+  if(!listes.length){ gl.innerHTML=''; return; }
+  const ecr=!!(info && info.ecritureAutorisee && info.ecrireVersGoogle);
+  gl.innerHTML='<label>'+esc(t('gtListesTitre'))+'</label><div class="chiplist">'+
+    listes.map(l=>{
+      const q='\''+esc(l.id)+'\'';
+      if(ecr && state.gtRenM===l.id){
+        return '<span class="seclab"><input class="mini" dir="auto" style="width:auto" id="gtlm_'+cssId(l.id)+'" value="'+esc(l.nom)+'" onkeydown="if(event.key===\'Enter\'){event.preventDefault();gtListeRenM('+q+')} if(event.key===\'Escape\'){state.gtRenM=null;renderSecModal()}">'+
+          '<button class="rm" title="'+esc(t('gtListeEnr'))+'" onclick="gtListeRenM('+q+')">✓</button><button class="rm" title="'+esc(t('cancel'))+'" onclick="state.gtRenM=null;renderSecModal()">↺</button></span>';
+      }
+      return '<span class="seclab">'+(l.suivi?'☑️ ':'◻️ ')+txtNa(l.nom)+(l.suivi?'':' <small style="color:var(--txt3)">('+esc(t('gtListeCachee'))+')</small>')+
+        (ecr ? '<button class="rm" title="'+esc(t('gtListeRen'))+'" onclick="state.gtRenM='+q+';renderSecModal();setTimeout(()=>{const e=document.getElementById(\'gtlm_'+cssId(l.id)+'\');if(e){e.focus();e.select();}},30)">✎</button>'+
+               '<button class="rm" title="'+esc(t('gtListeSuppr'))+'" onclick="gtListeSupprimer('+q+')">✕</button>' : '')+
+      '</span>';
+    }).join('')+'</div>'+
+    (ecr ? '<div class="addbox"><div class="row2"><div class="fld"><label>'+esc(t('gtListeNomPh'))+'</label><input id="gtlmNew" dir="auto" onkeydown="if(event.key===\'Enter\'){event.preventDefault();gtNouvListeM()}"></div>'+
+             '<div class="fld"><label>&nbsp;</label><button class="mb pri" style="width:100%" id="gtlmNewB" onclick="gtNouvListeM()">＋ '+esc(t('gtListeNouv'))+'</button></div></div></div>'
+         : '<div class="note-line">✏️ '+t('gtAllumer')+'</div>')+
+    '<div class="note-line">'+esc(t('gtListesNote'))+'</div>';
+}
+async function gtListeRenM(l){
+  const e=document.getElementById('gtlm_'+cssId(l)); const v=e?e.value:'';
+  if(!String(v).trim()){ if(e) e.focus(); return; }
+  if(await gtListeRenommerVal(l, v)) state.gtRenM=null;
+  renderSecModal(); render();
+}
+async function gtNouvListeM(){
+  const e=document.getElementById('gtlmNew'); const v=e?e.value:'';
+  if(!String(v).trim()){ if(e) e.focus(); return; }
+  const b=document.getElementById('gtlmNewB'); if(b){ b.disabled=true; }
+  await gtNouvListeCreerVal(v);
+  renderSecModal(); render();
+}
 function uiAddSection(){
   const g=id=>document.getElementById(id);
   if(!g('sNewAr').value.trim()){ g('sNewAr').focus(); return; }
