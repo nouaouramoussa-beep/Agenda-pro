@@ -1,5 +1,5 @@
 {
- "genere": "2026-10-01T16:00:28.321Z",
+ "genere": "2026-10-01T16:52:17.762Z",
  "fichiers": {
   ".nojekyll": {
    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -138,7 +138,7 @@
    "octets": 1650
   },
   "app/pwa/sw.js": {
-   "sha256": "c09fa4e959f621e4287eb60cff4ba6eb16c2592d7bc544ea2e5bc7548ca19b75",
+   "sha256": "d2bacdbe2a707e0e2213041df0bfb1bacd313dc4c2ae256e1b31e48224a98b4c",
    "octets": 30781
   },
   "app/setup/setup.css": {
@@ -170,8 +170,8 @@
    "octets": 23004
   },
   "index.html": {
-   "sha256": "298599c8402e8e585a6e82a634587d951942a7662e2c9317318fa999b7553ed4",
-   "octets": 424154
+   "sha256": "cf785d4ebbc1d9c57e64250e4de178b72cc359203817b6cc8674775084b7f19c",
+   "octets": 441993
   },
   "sw.js": {
    "sha256": "bdca343b03eb8d6eaed1c3eec1de2ab2ac9d94e351beed282ab563ca0635e8c7",
