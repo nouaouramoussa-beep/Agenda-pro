@@ -506,6 +506,13 @@ bdi.n{unicode-bidi:isolate-override;direction:ltr}
 .notes[data-lu]{resize:none}
 [data-lu][aria-disabled]{cursor:default;opacity:.75}
 .gtr-mere{font-size:11px;color:var(--txt3);font-weight:700;margin-bottom:2px;text-align:start}
+/* LA LIGNE D'UNE TACHE, COMME GOOGLE TASKS : le nom et ses details se
+   placent CONTRE le rond, du cote de l'interface (a droite en arabe, a
+   gauche en francais), quelle que soit la langue du texte — un nom
+   francais ne part plus a l'autre bout de la ligne. Chaque ligne garde son
+   propre sens de lecture (unicode-bidi:plaintext). */
+html[dir="rtl"] .gtr-t, html[dir="rtl"] .gtr-d{text-align:right}
+html[dir="ltr"] .gtr-t, html[dir="ltr"] .gtr-d{text-align:left}
 /* l'etoile, au bout de la ligne comme dans Google Tasks (ecrite dans le nom : « ⭐ ») */
 .gtr-e{flex:0 0 auto;width:30px;height:30px;margin-top:-4px;border-radius:50%;display:grid;place-items:center;font-size:19px;line-height:1;color:var(--txt3)}
 .gtr-e:hover{background:color-mix(in srgb,#f4b400 14%,transparent);color:#e3a008}
