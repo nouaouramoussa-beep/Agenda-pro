@@ -159,6 +159,55 @@
       classementActiver:'تفعيل تصنيف الأقسام',
       classementEnCours:'جارٍ الطلب من Google…',
       classementEchec:'رُفض الإذن أو أُغلقت النافذة — أعد المحاولة',
+      classementEnvoye:'أُرسل التصنيف إلى Drive: {n} سلسلة — {x}',
+      classementPret:'التصنيف جاهز على هذا الجهاز ({n} سلسلة) لكنه لم يُرسل بعد — اضغط «أرسل التصنيف الآن»',
+      classementEnvoyer:'أرسل التصنيف الآن',
+      classementEnvoiKo:'فشل إرسال التصنيف ({x}): {r}',
+      classementEnvoyeToast:'أُرسل التصنيف إلى Drive ✓',
+      classementRecu:'التصنيف وصل من الحاسوب: {n} سلسلة — استُلم {x}',
+      classementRecuKo:'لم يصل تصنيف الحاسوب بعد: {r}',
+      classementReessayer:'أعد المحاولة',
+      classementCasier:'{k} سلسلة مصنّفة داخل Google نفسه',
+      classementFrequence:'{k} سلسلة عُدّت روتيناً من تكرارها (لا تصنيف لها بعد)',
+      clR_api:'خدمة Google Drive API غير مفعّلة في مشروع Google Cloud — فعّلها ثم اضغط «أعد المحاولة»',
+      clR_portee:'إذن Drive غير ممنوح لهذا الجهاز',
+      clR_absent:'لا يوجد ملف تصنيف: الحاسوب لم يرسله بعد — على الحاسوب اضغط «أرسل التصنيف الآن»',
+      clR_auth:'الربط بـ Google غير جاهز — أعد الربط',
+      clR_reseau:'لا يوجد اتصال — ستُعاد المحاولة تلقائياً',
+      clR_quota:'Google يطلب التمهّل — ستُعاد المحاولة',
+      clR_autre:'رفضت Google الطلب — الرسالة أدناه',
+      clR_jamais:'لم تُجرَ أي محاولة بعد',
+      clR_vide:'لا شيء لإرساله',
+      bandeauClassement:'قسم المؤسسة فارغ لأن تصنيف الحاسوب لم يصل — {r}',
+      bandeauClassementBtn:'اعرض السبب والحل',
+      bandeauClassementTard:'لاحقاً',
+      ouvrirActivation:'فتح صفحة التفعيل',
+      canalRecu:'التصنيف وصل عبر Google: {c} سلسلة مصنّفة من {n}',
+      canalNonLivre:'{n} سلسلة لم تُكتب (مخزنها في Google تالف أو طويل جداً) — اضغط «تحقّق من الكل من جديد» بعد قليل',
+      canalExcAttente:'{n} موعداً معدّلاً وحده ينتظر إرسال تعديلاته — سيُكتب تصنيفه بعدها تلقائياً',
+      canalTitre:'الأقسام على الهاتف (عبر Google مباشرة)',
+      canalAide:'يكتب البرنامج لكل سلسلة من مواعيدك قسمَها وتصنيفها وهل هي روتين، في المنطقة الخاصة المخفية من الموعد في Google. لا يتغيّر العنوان ولا الوقت ولا الوصف ولا المدعوّون. ما اخترته على الهاتف لا يُمسّ.',
+      canalBouton:'اكتب التصنيف في Google ({n} سلسلة)',
+      canalConfirmer:'سيكتب البرنامج القسم والتصنيف والروتين لـ {n} سلسلة في المنطقة المخفية من مواعيدك في Google، ثم يُبقيها محدَّثة كلما غيّرت هنا تصنيف سلسلة. لا يتغيّر شيء مما تراه في Google Agenda. متابعة؟',
+      canalOui:'نعم، اكتب ({n})',
+      canalNon:'إلغاء',
+      canalOk:'الهاتف يتلقى التصنيف من Google: {ok} من {n} سلسلة — آخر تحقق {x}',
+      canalJamais:'لم يُكتب التصنيف في Google بعد — الهاتف يضع هذه المواعيد في «شخصي».',
+      canalAttente:'{n} سلسلة لم تُكتب بعد — اضغط الزر أدناه',
+      canalTropAuto:'{n} سلسلة تغيّر تصنيفها — كثيرة للكتابة التلقائية، اضغط الزر أدناه',
+      canalGarde:'{n} سلسلة لها تصنيف اخترته على الهاتف — تُركت كما هي',
+      canalRO:'{n} سلسلة في تقويم للقراءة فقط — لا يمكن الكتابة فيه',
+      canalHors:'{n} سلسلة غير محمّلة الآن (تقويم غير متابَع أو خارج الفترة)',
+      canalRefus:'{n} سلسلة رفضتها Google: {r}',
+      canalExc:'{n} موعداً معدّلاً وحده أُرسل أيضاً',
+      canalFini:'التصنيف في Google: كُتبت {e} سلسلة، {d} كانت صحيحة',
+      canalErreur:'توقفت الكتابة: {r} — ستُستأنف تلقائياً بعد قليل',
+      canalPermis:'لم يُمنح إذن الكتابة في Google — لم يُكتب شيء',
+      canalEnCours:'جارٍ الكتابة في Google… {i} / {n}',
+      canalVerifier:'تحقّق من الكل من جديد',
+      canalArreter:'إيقاف التحديث التلقائي',
+      canalReprendre:'استئناف التحديث التلقائي',
+      canalArrete:'التحديث التلقائي موقوف — تغييراتك هنا لا تُكتب في Google.',
       tNow:         'قبل لحظات',
       tMin:         'منذ {n} دقيقة',
       tHour:        'منذ {n} ساعة',
@@ -274,6 +323,55 @@
       classementActiver:'Activer le classement',
       classementEnCours:'Demande a Google…',
       classementEchec:'Permission refusee ou fenetre fermee — reessayez',
+      classementEnvoye:'Classement envoye sur le Drive : {n} serie(s) — {x}',
+      classementPret:'Classement pret sur cet appareil ({n} serie(s)) mais pas encore envoye — cliquez « Envoyer le classement maintenant »',
+      classementEnvoyer:'Envoyer le classement maintenant',
+      classementEnvoiKo:'L\'envoi du classement a echoue ({x}) : {r}',
+      classementEnvoyeToast:'Classement envoye sur le Drive ✓',
+      classementRecu:'Classement recu du bureau : {n} serie(s) — recu {x}',
+      classementRecuKo:'Le classement du bureau n\'est pas arrive : {r}',
+      classementReessayer:'Reessayer',
+      classementCasier:'{k} serie(s) deja classee(s) dans Google',
+      classementFrequence:'{k} serie(s) comptee(s) comme routine d\'apres leur frequence (pas encore de classement)',
+      clR_api:'Google Drive API n\'est pas activee dans le projet Google Cloud — activez-la puis « Reessayer »',
+      clR_portee:'la permission Drive manque sur cet appareil',
+      clR_absent:'aucun fichier de classement : le bureau ne l\'a pas encore envoye — sur le bureau, cliquez « Envoyer le classement maintenant »',
+      clR_auth:'la liaison Google n\'est pas prete — reliez a nouveau',
+      clR_reseau:'pas de connexion — nouvel essai automatique',
+      clR_quota:'Google demande de ralentir — nouvel essai',
+      clR_autre:'Google a refuse — voir le message ci-dessous',
+      clR_jamais:'aucune tentative pour l\'instant',
+      clR_vide:'rien a envoyer',
+      bandeauClassement:'La section Entreprise est vide : le classement du bureau n\'est pas arrive — {r}',
+      bandeauClassementBtn:'Voir la cause et la solution',
+      bandeauClassementTard:'Plus tard',
+      ouvrirActivation:'Ouvrir la page d\'activation',
+      canalRecu:'Classement recu par Google : {c} serie(s) classee(s) sur {n}',
+      canalNonLivre:'{n} serie(s) non ecrite(s) (casier Google abime ou trop long) — « Tout reverifier » un peu plus tard',
+      canalExcAttente:'{n} rendez-vous modifie(s) a part attend(ent) l\'envoi de leurs changements — leur classement suivra automatiquement',
+      canalTitre:'Sections sur le telephone (directement par Google)',
+      canalAide:'Pour chaque serie, le programme ecrit section, categorie et routine dans la zone privee invisible du rendez-vous Google. Ni titre, ni heure, ni description, ni invites ne changent. Ce que vous avez choisi sur le telephone n\'est pas touche.',
+      canalBouton:'Ecrire le classement dans Google ({n} serie(s))',
+      canalConfirmer:'Le programme va ecrire section, categorie et routine de {n} serie(s) dans la zone invisible de vos rendez-vous Google, puis les tenir a jour quand vous changerez ici le classement d\'une serie. Rien de visible ne change dans Google Agenda. Continuer ?',
+      canalOui:'Oui, ecrire ({n})',
+      canalNon:'Annuler',
+      canalOk:'Le telephone recoit le classement par Google : {ok} serie(s) sur {n} — verifie {x}',
+      canalJamais:'Le classement n\'est pas encore ecrit dans Google — le telephone range ces rendez-vous en « Personnel ».',
+      canalAttente:'{n} serie(s) pas encore ecrite(s) — cliquez le bouton ci-dessous',
+      canalTropAuto:'{n} serie(s) ont change de classement — trop pour l\'ecriture automatique, cliquez le bouton ci-dessous',
+      canalGarde:'{n} serie(s) ont un classement choisi sur le telephone — laissees telles quelles',
+      canalRO:'{n} serie(s) dans un agenda en lecture seule — impossible d\'y ecrire',
+      canalHors:'{n} serie(s) non chargees (agenda non suivi ou hors periode)',
+      canalRefus:'{n} serie(s) refusees par Google : {r}',
+      canalExc:'{n} rendez-vous modifie(s) a part, envoye(s) aussi',
+      canalFini:'Classement dans Google : {e} serie(s) ecrite(s), {d} deja juste(s)',
+      canalErreur:'Ecriture interrompue : {r} — reprise automatique bientot',
+      canalPermis:'Permission d\'ecrire dans Google refusee — rien n\'a ete ecrit',
+      canalEnCours:'Ecriture dans Google… {i} / {n}',
+      canalVerifier:'Tout reverifier',
+      canalArreter:'Arreter la mise a jour automatique',
+      canalReprendre:'Reprendre la mise a jour automatique',
+      canalArrete:'Mise a jour automatique arretee — vos changements ici ne sont pas ecrits dans Google.',
       tNow:         'a l\'instant',
       tMin:         'il y a {n} min',
       tHour:        'il y a {n} h',
@@ -1070,6 +1168,7 @@
     var neuf = function () {
       var r = orig.apply(this, arguments);
       try {
+        noterEnDur();
         PAQUET_ENTIER = paquetClassement() || PAQUET_ENTIER;
         if (AP.gsync && typeof AP.gsync.injecter === 'function') { AP.gsync.injecter(); }
         dedoublonner();
@@ -1100,6 +1199,7 @@
       var neufInterne = function () {
         var r = brut.apply(this, arguments);
         try {
+          noterEnDur();
           PAQUET_ENTIER = paquetClassement() || PAQUET_ENTIER;
           if (AP.gsync && typeof AP.gsync.injecter === 'function') { AP.gsync.injecter(); }
           dedoublonner();
@@ -1146,6 +1246,7 @@
       '.apg-etat{display:flex;align-items:center;gap:10px;font-size:13px}',
       '.apg-dot{width:10px;height:10px;border-radius:50%;background:var(--line2);flex:none}',
       '.apg-dot.on{background:var(--ok)}.apg-dot.warn{background:var(--warn)}.apg-dot.bad{background:var(--bad)}',
+      '.apg-confirmer{font-weight:700;color:var(--txt);padding:6px 0}.apg-st{font-weight:800;font-size:13px;margin-bottom:4px}.apg-note{font-size:12px;color:var(--txt2);padding:0 0 6px 18px}.apg-lien{display:inline-block;margin:2px 0 6px;font-size:12.5px;font-weight:700;color:var(--brand2);text-decoration:underline}.apg-vise{outline:2px solid var(--brand);outline-offset:3px;border-radius:8px}',
       '.apg-chif{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}',
       '.apg-ch{flex:1 1 90px;border:1px solid var(--line);border-radius:12px;padding:9px 10px;background:var(--surface);text-align:center}',
       '.apg-ch b{display:block;font-size:18px;font-weight:800;color:var(--txt)}',
@@ -1187,10 +1288,26 @@
     return d;
   }
 
-  function ouvrir() {
+  function ouvrir(opts) {
+    opts = (opts && opts.cible) ? opts : {};
     construire();
     dessiner();
     elPanneau.classList.add('show');
+    /* Le telephone qui n'a pas recu le classement : on va voir (une lecture,
+       jamais une ecriture) — ce qu'il trouve s'affiche aussitot. */
+    try {
+      var ecO = etatClassement();
+      if (ecO.role === 'recepteur' && ecO.drive && ecO.connecte && (!ecO.nb || ecO.code) && !ecO.enCours &&
+          AP.gsync && typeof AP.gsync.classementRecevoir === 'function') {
+        AP.gsync.classementRecevoir().then(function () { dessiner(); majBandeauClassement(); }, function () { });
+      }
+    } catch (e) { }
+    if (opts.cible === 'classement') {
+      setTimeout(function () {
+        var el = (enDurIci() && document.getElementById('apgCanal')) || document.getElementById('apgClassement');
+        if (el) { try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { } el.classList.add('apg-vise'); setTimeout(function () { el.classList.remove('apg-vise'); }, 2400); }
+      }, 80);
+    }
     /* Si on est lie mais qu'on n'a pas encore la liste des agendas, on va la
        chercher : l'artisan vient d'ouvrir le panneau pour choisir, autant
        qu'il trouve quelque chose a cocher. */
@@ -1207,7 +1324,7 @@
     }
     return true;
   }
-  function fermer() { if (elPanneau) { elPanneau.classList.remove('show'); } majBandeauTaches(); }
+  function fermer() { if (elPanneau) { elPanneau.classList.remove('show'); } majBandeauTaches(); majBandeauClassement(); }
 
   function bouton(txt, prim, fn, id) {
     var b = document.createElement('button');
@@ -1239,6 +1356,8 @@
 
     /* --- 2. L'etat de la liaison ---------------------------------------- */
     corps.appendChild(sectionEtat(i, c));
+    /* le classement par Google lui-meme : seulement la ou les donnees du bureau sont */
+    if (i.connecte && enDurIci()) { corps.appendChild(sectionCanal()); }
     if (i.connecte) { corps.appendChild(sectionDetailsVisibles()); }
 
     /* --- 3. Les agendas a suivre ---------------------------------------- */
@@ -1292,6 +1411,114 @@
   }
 
   /* --- 7.2 L'etat reel de la liaison ------------------------------------- */
+  /* CET APPAREIL FABRIQUE-T-IL LE CLASSEMENT ? (les donnees du bureau sont
+     la) — releve AVANT injecter/dedoublonner, qui peuvent retirer toutes les
+     taches en dur ; sur le site publie, toujours non. */
+  var EN_DUR_VU = false;
+  function noterEnDur() {
+    if (EN_DUR_VU) { return; }
+    var l0 = taches();
+    EN_DUR_VU = !!(l0 && l0.some(function (t) { return t && EN_DUR.indexOf(t.src) >= 0; }));
+  }
+  function enDurIci() { return !!PAQUET_ENTIER || EN_DUR_VU; }
+  /* UNE SEULE VERITE sur le classement, pour le panneau, le bandeau et
+     setup.js : le vert ne vient QUE d'un depot confirme (bureau) ou d'une
+     reception reussie / d'un casier deja classe chez Google (telephone). */
+  function etatClassement() {
+    var i = infoMoteur() || {}, d = i.driveEtat || {}, cv = i.couverture || {}, src = enDurIci();
+    var sansNoms = function (o) { return Object.keys(o || {}).filter(function (k) { return k.indexOf('#') < 0; }).length; };
+    var nbIci = 0;
+    try { nbIci = src ? sansNoms(PAQUET_ENTIER || paquetClassement()) : sansNoms(AP.gsync.classement().s); } catch (e) { }
+    var okLe = src ? (d.dernierEnvoi || 0) : (d.recuLe || 0);
+    var echec = !!(d.erreur && (d.dernierEchec || 0) >= okLe);
+    var code = !i.drive ? 'portee' : (echec ? d.erreur : (okLe ? null : 'jamais'));
+    var etat, alerte, recu = false;
+    if (src) {
+      etat = !i.drive ? 'warn' : (echec ? 'bad' : (okLe ? 'on' : 'warn'));
+      /* le canal par Google fait le travail meme quand le Drive manque */
+      var canalFait = false; try { canalFait = canalEtatResume().fait; } catch (e) { }
+      alerte = !!i.connecte && !d.enCours && etat !== 'on' && !canalFait;
+    } else {
+      /* seul un classement VENU DU BUREAU compte (un choix fait sur le telephone ne dit rien du reste) */
+      recu = nbIci > 0 || (cv.casierBureau || 0) > 0;
+      /* classe par le casier (le canal du bureau) : le fichier Drive absent n'est plus un souci */
+      etat = recu ? ((echec && !(cv.casierBureau > 0)) ? 'warn' : 'on') : ((echec && code !== 'absent') ? 'bad' : 'warn');
+      alerte = !!i.connecte && (i.taches || 0) > 0 && !recu;
+    }
+    return { role: src ? 'source' : 'recepteur', etat: etat, alerte: alerte, code: code, nb: nbIci, quand: okLe,
+             recu: recu, cv: cv, d: d, drive: !!i.drive, connecte: !!i.connecte, enCours: d.enCours || '' };
+  }
+  function nbBdi(n) { return '<bdi dir="ltr">' + (+n || 0) + '</bdi>'; }
+  function sectionClassement(s) {
+    var ec = etatClassement();
+    var lc = document.createElement('div');
+    lc.className = 'apg-etat apg-classement';
+    lc.id = 'apgClassement';
+    var pc = document.createElement('span');
+    pc.className = 'apg-dot ' + ec.etat;
+    var tc = document.createElement('div');
+    var h, raison = M('clR_' + (ec.code || 'jamais'));
+    if (ec.role === 'source') {
+      if (ec.code === null) { h = M('classementEnvoye', { n: nbBdi(ec.nb), x: propre(depuis(ec.quand)) }); }
+      else if (ec.code === 'jamais') { h = M('classementPret', { n: nbBdi(ec.nb) }); }
+      else { h = M('classementEnvoiKo', { x: propre(depuis(ec.d.dernierEchec || 0)), r: propre(raison) }); }
+    } else {
+      if (ec.nb) {
+        h = M('classementRecu', { n: nbBdi(ec.nb), x: propre(depuis(ec.d.recuLe || 0)) });
+        if (ec.code && ec.code !== 'jamais') { h += ' — ' + propre(raison); }
+      } else if (ec.cv.casierBureau) {
+        h = M('canalRecu', { c: nbBdi(ec.cv.casierBureau), n: nbBdi(Math.max(ec.cv.casierBureau, (ec.cv.series || 0) - (ec.cv.lectureSeule || 0))) });
+      } else {
+        h = M('classementRecuKo', { r: propre(raison) });
+      }
+      if (ec.cv.casierBureau && ec.nb) { h += ' · ' + M('classementCasier', { k: nbBdi(ec.cv.casierBureau) }); }
+    }
+    tc.innerHTML = h;
+    lc.appendChild(pc); lc.appendChild(tc);
+    s.appendChild(lc);
+    if (ec.cv.rtFrequence) {
+      var lf = document.createElement('div');
+      lf.className = 'apg-note';
+      lf.innerHTML = M('classementFrequence', { k: nbBdi(ec.cv.rtFrequence) });
+      s.appendChild(lf);
+    }
+    /* Google Drive API non activee : le lien d'activation que Google donne */
+    if (ec.code === 'api' && ec.d.lien && /^https:\/\/console\.(developers|cloud)\.google\.com\//.test(ec.d.lien)) {
+      var la = document.createElement('a');
+      la.setAttribute('href', ec.d.lien); la.setAttribute('target', '_blank'); la.setAttribute('rel', 'noopener');
+      la.textContent = M('ouvrirActivation');
+      la.className = 'apg-lien';
+      s.appendChild(la);
+    }
+    if (ec.code === 'autre' && ec.d.detail) { s.appendChild(bloc_erreur(ec.d.detail)); }
+    var lb = document.createElement('div');
+    lb.className = 'apg-bas';
+    if (!ec.drive && AP.gsync && typeof AP.gsync.demanderDrive === 'function') {
+      lb.appendChild(bouton(M('classementActiver'), false, function (ev) {
+        var btn = ev.currentTarget; btn.disabled = true; btn.textContent = M('classementEnCours');
+        AP.gsync.demanderDrive().then(function (ok) {
+          if (!ok) { btn.disabled = false; btn.textContent = M('classementEchec'); setTimeout(function () { dessiner(); }, 1800); }
+          else if (enDurIci()) { deposerClassement({ force: true }).then(function () { dessiner(); }); }
+          else { dessiner(); }
+        }).catch(function () { btn.disabled = false; btn.textContent = M('classementEchec'); });
+      }));
+    } else if (ec.role === 'source') {
+      var be = bouton(M('classementEnvoyer'), false, function (ev) {
+        var btn = ev.currentTarget; btn.disabled = true; btn.textContent = M('classementEnCours');
+        deposerClassement({ force: true, geste: true }).then(function () { dessiner(); }, function () { dessiner(); });
+      });
+      if (ec.enCours) { be.disabled = true; }
+      lb.appendChild(be);
+    } else {
+      var br = bouton(M('classementReessayer'), false, function (ev) {
+        var btn = ev.currentTarget; btn.disabled = true; btn.textContent = M('classementEnCours');
+        AP.gsync.classementRecevoir().then(function () { dessiner(); majBandeauClassement(); }, function () { dessiner(); });
+      });
+      if (ec.enCours) { br.disabled = true; }
+      lb.appendChild(br);
+    }
+    s.appendChild(lb);
+  }
   function sectionEtat(i, c) {
     var s = document.createElement('div');
     s.className = 'apg-sec';
@@ -1324,48 +1551,10 @@
       ch.appendChild(chiffre(DERNIER_MASQUE, M('masques')));
       s.appendChild(ch);
 
-      /* D'ou vient le classement des sections ? Sans cette ligne, un
-         telephone qui range tout dans « personnel » ne dit pas pourquoi. */
-      if (AP.gsync && typeof AP.gsync.classement === 'function') {
-        var cl = AP.gsync.classement();
-        var enDur = (taches() || []).some(function (t) { return t && EN_DUR.indexOf(t.src) >= 0; });
-        /* l appareil source compte ce qu il ENVOIE (photo vivante), l autre ce qu il a RECU */
-        var sansNoms = function (o) { return Object.keys(o || {}).filter(function (k) { return k.indexOf('#') < 0; }).length; };
-        var nbCl = enDur ? sansNoms(PAQUET_ENTIER || paquetClassement()) : sansNoms(cl.s);
-        /* « i.drive » vient du dernier jeton EFFECTIVEMENT obtenu, pas
-           seulement du reglage local — un renouvellement silencieux qui
-           echoue doit aussi se voir ici. */
-        /* AUCUN role n'echappe a la regle : sans le droit Drive, l'appareil
-           SOURCE ne peut pas ECRIRE le fichier (ecrireNuage echoue en
-           silence), l'appareil qui REÇOIT ne peut pas le LIRE. Avant ce
-           correctif, un appareil source sans ce droit affichait quand meme
-           « envoye : N series » — un faux succes qui cachait le vrai blocage. */
-        var manqueDrive = !i.drive;
-        var lc = document.createElement('div');
-        lc.className = 'apg-etat apg-classement';
-        var pc = document.createElement('span');
-        pc.className = 'apg-dot' + (manqueDrive ? ' warn' : ((enDur || nbCl) ? ' on' : ' warn'));
-        var tc = document.createElement('div');
-        tc.textContent = manqueDrive ? (enDur ? M('classementDriveManqueIci') : M('classementDriveManque'))
-                       : enDur ? M('classementIci', { n: nbCl })
-                       : (nbCl ? M('classementOk', { n: nbCl, x: depuis(cl.q || 0) }) : M('classementNon'));
-        lc.appendChild(pc); lc.appendChild(tc);
-        s.appendChild(lc);
-        /* Le geste qui manque, a portee de main — pas une explication qu'il
-           faut aller retraduire en clic ailleurs. */
-        if (manqueDrive && AP.gsync && typeof AP.gsync.demanderDrive === 'function') {
-          var lb = document.createElement('div');
-          lb.className = 'apg-bas';
-          lb.appendChild(bouton(M('classementActiver'), false, function (ev) {
-            var btn = ev.currentTarget; btn.disabled = true; var avant = btn.textContent; btn.textContent = M('classementEnCours');
-            AP.gsync.demanderDrive().then(function (ok) {
-              if (!ok) { btn.disabled = false; btn.textContent = M('classementEchec'); setTimeout(function () { dessiner(); }, 1800); }
-              else { dessiner(); }
-            }).catch(function () { btn.disabled = false; btn.textContent = M('classementEchec'); });
-          }));
-          s.appendChild(lb);
-        }
-      }
+      /* D'ou vient le classement des sections, et a-t-il VRAIMENT voyage ?
+         Sans cette ligne, un telephone qui range tout dans « personnel » ne
+         dit pas pourquoi — et un bureau affichait « envoye » sans l'etre. */
+      if (AP.gsync && typeof AP.gsync.classement === 'function') { sectionClassement(s); }
     }
 
     if (i.erreur) { s.appendChild(bloc_erreur(i.erreur)); }
@@ -2037,6 +2226,48 @@
      - 'erreur' : permise, des listes suivies, mais AUCUNE tache n'est
        arrivee a cause d'une erreur (API non activee, par exemple) — le
        bandeau le dit au lieu de disparaitre en silence, et ouvre le panneau. */
+  /* LE BANDEAU DU TELEPHONE : la section Entreprise est vide parce que le
+     classement du bureau n'est pas arrive — on le dit, avec la cause, et un
+     bouton qui ouvre la bonne ligne du panneau. « لاحقاً » le range pour
+     cette session seulement : il revient tant que la cause demeure. */
+  var bandeauCl = null, bandeauClRange = false;
+  function textesBandeauClassement() {
+    if (!bandeauCl) { return; }
+    var e = bandeauCl.children, ec = etatClassement();
+    e[0].textContent = M('bandeauClassement', { r: M('clR_' + (ec.code || 'jamais')) });
+    e[1].textContent = M('bandeauClassementBtn');
+    e[2].textContent = M('bandeauClassementTard');
+  }
+  function majBandeauClassement() {
+    try {
+      var g = (AP.gauth && typeof AP.gauth.etat === 'function') ? AP.gauth.etat() : null;
+      var ec = etatClassement();
+      var voir = !!(g && g.connecte && !g.besoinReconnexion && ec.role === 'recepteur' && ec.alerte && !bandeauClRange &&
+                    !(elPanneau && elPanneau.classList.contains('show')));
+      if (!voir) { if (bandeauCl) { bandeauCl.classList.remove('on'); } return; }
+      if (!document.body) { return; }
+      if (!bandeauCl) {
+        bandeauCl = document.createElement('div');
+        bandeauCl.className = 'ap-g-bandeau';
+        bandeauCl.style.borderColor = 'var(--warn)';
+        bandeauCl.setAttribute('role', 'status');
+        var txt = document.createElement('span');
+        txt.className = 'ap-g-bandeau-txt';
+        var ok = document.createElement('button');
+        ok.className = 'ap-g-btn primaire';
+        ok.onclick = function () { bandeauCl.classList.remove('on'); ouvrir({ cible: 'classement' }); };
+        var tard = document.createElement('button');
+        tard.className = 'ap-g-btn';
+        tard.onclick = function () { bandeauClRange = true; bandeauCl.classList.remove('on'); };
+        bandeauCl.appendChild(txt); bandeauCl.appendChild(ok); bandeauCl.appendChild(tard);
+        if (AP.bandeaux && typeof AP.bandeaux.poser === 'function') { AP.bandeaux.poser(bandeauCl); }
+        else { document.body.appendChild(bandeauCl); }
+        if (AP.ui && typeof AP.ui.onLang === 'function') { AP.ui.onLang(textesBandeauClassement); }
+      }
+      textesBandeauClassement();
+      bandeauCl.classList.add('on');
+    } catch (e) { avert('bandeau du classement : ' + e.message); }
+  }
   function majBandeauTaches() {
     try {
       var g = (AP.gauth && typeof AP.gauth.etat === 'function') ? AP.gauth.etat() : null;
@@ -2104,6 +2335,7 @@
     } catch (e) { avert('render : ' + e.message); }
     ECRIVABLE_PEINT = ecrivableMaintenant();
     majBandeauTaches();
+    majBandeauClassement();
   }
 
 
@@ -2131,9 +2363,12 @@
     for (var i = 0; i < str.length; i++) { x ^= str.charCodeAt(i); x = (x * 16777619) >>> 0; }
     return x.toString(36);
   }
+  /* serie Google -> {sk de la tache en dur, unique ?} : pour savoir QUAND
+     l'artisan a choisi sur le bureau la section de toute la serie */
+  var META_PAQUET = null;
   function paquetClassement() {
     var liste = taches(); if (!liste) { return null; }
-    var s = {}, n = 0;
+    var s = {}, n = 0, meta = {};
     liste.forEach(function (t) {
       if (!t || EN_DUR.indexOf(t.src) < 0) { return; }
       var id = t.gid || eidDe(t.link); if (!id) { return; }
@@ -2175,35 +2410,292 @@
       var trad = !!brut && ((ar && ar !== brut) || (fr && fr !== brut));
       s[serie] = trad ? [cat || 'perso', sub || 'perso', t.routine ? 1 : 0, ar || brut, fr || brut, brut]
                       : [cat || 'perso', sub || 'perso', t.routine ? 1 : 0]; n++;
+      meta[serie] = { sk: t.sk || '', seul: seul };
     });
+    if (n) { META_PAQUET = meta; }
     return n ? s : null;
   }
-  function deposerClassement() {
+
+  /* =========================================================================
+     LE CANAL PAR GOOGLE : le classement ecrit dans le casier de chaque serie
+     -------------------------------------------------------------------------
+     Le chemin par le Drive depend d'une permission, d'une API a activer, d'un
+     depot reussi : il n'est jamais arrive sur le telephone de l'artisan. Le
+     canal ecrit la section, la categorie et la routine de chaque serie en dur
+     dans la zone privee de son rendez-vous Google (AP.gsync.classerDepuisBureau).
+     - La PREMIERE fois : un geste confirme de l'artisan (deux clics dans le
+       panneau), la permission d'ecrire demandee sur ce clic.
+     - Ensuite, tout seul : reprendre un lot interrompu, et propager un geste
+       de classement fait sur le bureau (series deja ecrites) — au plus 20
+       series sans clic, jamais de fenetre de permission en arriere-plan, un
+       interrupteur « إيقاف ». Une serie jamais ecrite attend le bouton.
+     ========================================================================= */
+  var CANAL_EN_COURS = false, CANAL_PROG = null, CONFIRMER_CANAL = false;
+  function canal() { return Object.assign({ registre: {}, aFaire: [] }, reglagesPont().canal || {}); }
+  function poserCanal(c) { poserReglagesPont({ canal: c }); }
+  function pauseMs(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function canalCibles() {
+    var out = { cibles: [], hors: 0, ro: 0, n: 0 };
+    var paq = PAQUET_ENTIER || paquetClassement();
+    if (!paq || !AP.gsync || typeof AP.gsync.indexSeries !== 'function') { return out; }
+    var idx = AP.gsync.indexSeries(), st = P.store || {}, meta = META_PAQUET || {};
+    Object.keys(paq).forEach(function (serie) {
+      if (serie.indexOf('#') >= 0) { return; }
+      out.n++;
+      var v = paq[serie], m = meta[serie] || {};
+      /* l'heure du choix de serie fait sur le bureau (0 = donnees figees :
+         elles ne battent jamais un choix fait ailleurs) */
+      var qsc = (m.sk && st.catSk && st.catSk[m.sk] && st.catSkQ && st.catSkQ[m.sk]) || 0;
+      var qsb = (m.sk && st.subSk && st.subSk[m.sk] && st.subSkQ && st.subSkQ[m.sk]) || 0;
+      var j = idx[serie];
+      if (!j) { out.hors++; return; }
+      Object.keys(j).forEach(function (k) {
+        var c = j[k];
+        if (c.ro) { out.ro++; return; }
+        out.cibles.push({ cle: c.reel + '|' + serie, cal: c.calEv, serie: serie,
+          voulu: { sc: v[0], sb: v[1], rt: v[2] ? 1 : 0, rec: !!c.rec, q: { sc: qsc, sb: qsb } } });
+      });
+    });
+    return out;
+  }
+  function memeV(a, b) { return !!a && !!b && a.sc === b.sc && a.sb === b.sb && (+a.rt || 0) === (+b.rt || 0); }
+  /* ce qui reste a ecrire : jamais ecrit, ou change depuis */
+  function canalEcart(cibles, c) {
+    return cibles.filter(function (x) { var r = c.registre[x.cle]; return !r || !memeV(r.v, x.voulu) || r.etat === 'attente'; });
+  }
+  function canalDefinitif(e) {
+    if (e && (e.auth || e.jeton || e.name === 'AP_SANS_JETON')) { return false; }
+    if (e && e.gone) { return true; }
+    var cd = e && e.code; if (cd === 'ro' || cd === 'disparu' || cd === 'serie' || cd === 'trop' || cd === 'illisible' || cd === 'origine') { return true; }
+    var st = e && e.statut; if (st === 400 || st === 404 || st === 410) { return true; }
+    if (st === 403 && !/ratelimit|quota|dailylimit|usagelimit/i.test(JSON.stringify((e && e.data) || {}))) { return true; }
+    return false;
+  }
+  function canalLancer(o) {
+    o = o || {};
+    if (CANAL_EN_COURS) { return Promise.resolve({ code: 'enCours' }); }
+    var c = canal();
+    if (!c.accord && !o.explicite) { return Promise.resolve({ code: 'sansAccord' }); }
+    if (!o.explicite) {
+      if (c.arret || Date.now() < (c.prochain || 0)) { return Promise.resolve({ code: 'attente' }); }
+      var g = (AP.gauth && typeof AP.gauth.etat === 'function') ? AP.gauth.etat() : null;
+      if (!g || !g.peutEcrire || g.besoinReconnexion) { return Promise.resolve({ code: 'permis' }); }
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) { return Promise.resolve({ code: 'reseau' }); }
+    }
+    var tout = canalCibles(), parCle = {};
+    tout.cibles.forEach(function (x) { parCle[x.cle] = x; });
+    var ecart = canalEcart(tout.cibles, c);
+    var cles, nChange = 0;
+    if (o.tout) { cles = tout.cibles.map(function (x) { return x.cle; }); }
+    else {
+      /* en automatique : le lot interrompu (deja confirme) + les series DEJA
+         ecrites qui ont change ici ; une serie jamais ecrite attend le bouton */
+      var vus = {}; cles = [];
+      (c.aFaire || []).forEach(function (k) { if (parCle[k] && !vus[k]) { vus[k] = 1; cles.push(k); } });
+      ecart.forEach(function (x) { if (vus[x.cle]) { return; } if (o.explicite || c.registre[x.cle]) { vus[x.cle] = 1; cles.push(x.cle); nChange++; } });
+    }
+    if (!o.explicite && nChange > 20) {
+      c.tropAuto = nChange; poserCanal(c);
+      if (elPanneau && elPanneau.classList.contains('show')) { dessiner(); }
+      return Promise.resolve({ code: 'trop' });
+    }
+    if (!cles.length) {
+      if (o.explicite) { c.dernier = { q: Date.now(), ecrits: 0, deja: 0, gardes: 0, exc: 0, refus: 0, attente: 0, erreur: '', n: 0 }; c.tropAuto = 0; poserCanal(c); toast(M('canalFini', { e: 0, d: tout.cibles.length })); }
+      return Promise.resolve({ code: 'rien' });
+    }
+    /* la permission d'ecrire : demandee SUR le clic (geste explicite seulement) */
+    var permis = o.explicite && typeof W.permisAgenda === 'function' ? W.permisAgenda() : Promise.resolve(true);
+    CANAL_EN_COURS = true;
+    CANAL_PROG = { i: 0, n: cles.length };
+    var R = { ecrits: 0, deja: 0, gardes: 0, exc: 0, refus: 0, refusMsg: '', attente: 0, autres: 0, erreur: '', n: cles.length };
+    if (elPanneau && elPanneau.classList.contains('show')) { dessiner(); }
+    return permis.then(function (ok) {
+      if (!ok) { R.erreur = 'permis'; toast(M('canalPermis')); return null; }
+      var c1 = canal();
+      if (o.explicite) { c1.accord = c1.accord || Date.now(); }
+      c1.aFaire = cles.slice(); c1.tropAuto = 0; poserCanal(c1);
+      return Promise.resolve(AP.gsync.vider ? AP.gsync.vider() : null).then(function () {
+        var i = 0;
+        function suivant() {
+          if (i >= cles.length) { return null; }
+          var cle = cles[i++], cib = parCle[cle];
+          CANAL_PROG.i = i - 1;
+          if (elPanneau && elPanneau.classList.contains('show')) { dessiner(); }
+          var cA = canal();
+          if (!cib) { cA.aFaire = (cA.aFaire || []).filter(function (k) { return k !== cle; }); poserCanal(cA); return suivant(); }
+          var reg = cA.registre[cle] || {};
+          return AP.gsync.classerDepuisBureau(cib.cal, cib.serie, cib.voulu, reg, {
+            par: 'artisan', sansRendu: true,
+            /* chaque champ ecrit est inscrit tout de suite (une coupure ne
+               fait jamais oublier ce qui est deja chez Google) */
+            surEcrit: function (evId, ecrits) {
+              var c3 = canal(), rg = c3.registre[cle] = c3.registre[cle] || {};
+              var cible = evId ? ((rg.ex = rg.ex || {})[evId] = rg.ex[evId] || {}) : rg;
+              Object.keys(ecrits || {}).forEach(function (fch) { cible[fch] = ecrits[fch]; });
+              poserCanal(c3);
+            }
+          }).then(function (res) {
+            var c4 = canal(), rg = c4.registre[cle] = c4.registre[cle] || {};
+            /* une exception sautee parce qu'elle attendait dans la file : la serie
+               repassera (canalEcart reprend l'etat « attente ») */
+            var nAtt = (res.ex && res.ex.attente) || 0;
+            rg.v = { sc: cib.voulu.sc, sb: cib.voulu.sb, rt: cib.voulu.rt }; rg.etat = nAtt ? 'attente' : res.maitre; rg.ok = Date.now();
+            c4.aFaire = (c4.aFaire || []).filter(function (k) { return k !== cle; }); poserCanal(c4);
+            if (res.maitre === 'ecrit') { R.ecrits++; } else if (res.maitre === 'deja') { R.deja++; } else if (res.maitre === 'garde') { R.gardes++; } else { R.autres++; }
+            R.exc += (res.ex && res.ex.ecrites) || 0; R.attente += (res.ex && res.ex.attente) || 0;
+            return pauseMs(250).then(suivant);
+          }, function (e) {
+            if (canalDefinitif(e)) {
+              var c5 = canal(), rg5 = c5.registre[cle] = c5.registre[cle] || {};
+              rg5.etat = 'refus'; rg5.msg = String((e && e.message) || '').slice(0, 160); rg5.v = { sc: cib.voulu.sc, sb: cib.voulu.sb, rt: cib.voulu.rt };
+              c5.aFaire = (c5.aFaire || []).filter(function (k) { return k !== cle; }); poserCanal(c5);
+              R.refus++; R.refusMsg = rg5.msg;
+              return suivant();
+            }
+            /* passager (reseau, jeton, quota) : on s'arrete, le reste attend */
+            var c6 = canal(); c6.prochain = Date.now() + 15 * 60 * 1000; poserCanal(c6);
+            R.erreur = String((e && e.message) || 'reseau').slice(0, 160);
+            return null;
+          });
+        }
+        return suivant();
+      });
+    }).then(function () { return R; }, function (e) { R.erreur = String((e && e.message) || e).slice(0, 160); return R; })
+      .then(function (R2) {
+        CANAL_EN_COURS = false; CANAL_PROG = null;
+        if (CANAL_REDEMANDE) { CANAL_REDEMANDE = false; setTimeout(canalApresGeste, 0); }
+        try { if (AP.gsync && AP.gsync.rafraichir) { AP.gsync.rafraichir(); } } catch (e) { }
+        var c7 = canal(); c7.dernier = Object.assign({ q: Date.now() }, R2); poserCanal(c7);
+        try { if (AP.gsync && AP.gsync.noterJournal) { AP.gsync.noterJournal('canal', 'classement par Google : ' + R2.ecrits + ' ecrit(s), ' + R2.deja + ' deja juste(s), ' + R2.gardes + ' garde(s), ' + R2.refus + ' refus' + (R2.erreur ? ', arret : ' + R2.erreur : '')); } } catch (e) { }
+        if (elPanneau && elPanneau.classList.contains('show')) { dessiner(); }
+        majBandeauClassement();
+        if (R2.erreur && R2.erreur !== 'permis') { toast(M('canalErreur', { r: R2.erreur })); }
+        else if (!R2.erreur && (o.explicite || R2.ecrits || R2.refus)) { toast(M('canalFini', { e: R2.ecrits, d: R2.deja })); }
+        return R2;
+      });
+  }
+  /* apres un geste de classement de serie fait sur le bureau (index.html a
+     deja reconstruit la liste : PAQUET_ENTIER porte la nouvelle valeur) */
+  var CANAL_REDEMANDE = false;
+  function canalApresGeste() {
+    var c = canal();
+    if (!c.accord || c.arret) { return; }
+    if (CANAL_EN_COURS) { CANAL_REDEMANDE = true; return; }
+    setTimeout(function () { canalLancer({}); }, 1200);
+  }
+  function canalReprendre() {
+    var c = canal();
+    if (c.accord && !c.arret) { canalLancer({}); }
+  }
+  function canalEtatResume() {
+    var c = canal(), tout = canalCibles(), ecart = canalEcart(tout.cibles, c);
+    var LIVRE = { ecrit: 1, deja: 1, garde: 1 };
+    var nonLivres = tout.cibles.filter(function (x) { var r = c.registre[x.cle]; return r && memeV(r.v, x.voulu) && r.etat !== 'attente' && !LIVRE[r.etat]; }).length;
+    var ok = tout.cibles.length - ecart.length - nonLivres;
+    var refus = Object.keys(c.registre || {}).filter(function (k) { return c.registre[k].etat === 'refus'; }).length;
+    var gardes = Object.keys(c.registre || {}).filter(function (k) { return c.registre[k].etat === 'garde'; }).length;
+    return { accord: !!c.accord, arret: !!c.arret, n: tout.cibles.length, ok: ok, ecart: ecart.length, aFaire: (c.aFaire || []).length,
+             ro: tout.ro, hors: tout.hors, refus: refus, gardes: gardes, tropAuto: c.tropAuto || 0, dernier: c.dernier || null,
+             nonLivres: nonLivres, fait: !!c.accord && !ecart.length && !nonLivres && ok > 0 };
+  }
+  function sectionCanal() {
+    var s = document.createElement('div');
+    s.className = 'apg-sec';
+    s.id = 'apgCanal';
+    var t = document.createElement('div'); t.className = 'apg-st'; t.textContent = M('canalTitre'); s.appendChild(t);
+    var a = document.createElement('div'); a.className = 'apg-note'; a.textContent = M('canalAide'); s.appendChild(a);
+    var e = canalEtatResume();
+    var ligne = function (html, dot) {
+      var l = document.createElement('div'); l.className = 'apg-etat';
+      var p = document.createElement('span'); p.className = 'apg-dot ' + (dot || 'warn');
+      var x = document.createElement('div'); x.innerHTML = html;
+      l.appendChild(p); l.appendChild(x); s.appendChild(l);
+    };
+    if (CANAL_PROG) {
+      ligne(M('canalEnCours', { i: nbBdi(CANAL_PROG.i), n: nbBdi(CANAL_PROG.n) }), 'warn');
+      var pr = document.createElement('div'); pr.className = 'progress';
+      var b = document.createElement('i'); b.style.width = Math.round(100 * CANAL_PROG.i / Math.max(1, CANAL_PROG.n)) + '%';
+      pr.appendChild(b); s.appendChild(pr);
+      return s;
+    }
+    if (!e.accord) { ligne(propre(M('canalJamais')), 'warn'); }
+    else {
+      ligne(M('canalOk', { ok: nbBdi(e.ok), n: nbBdi(e.n), x: propre(depuis((e.dernier && e.dernier.q) || 0)) }), (e.ecart || e.nonLivres) ? 'warn' : 'on');
+      if (e.arret) { ligne(propre(M('canalArrete')), 'warn'); }
+    }
+    if (e.accord && e.ecart && !e.tropAuto) { ligne(M('canalAttente', { n: nbBdi(e.ecart) }), 'warn'); }
+    if (e.tropAuto) { ligne(M('canalTropAuto', { n: nbBdi(e.tropAuto) }), 'warn'); }
+    if (e.gardes) { ligne(M('canalGarde', { n: nbBdi(e.gardes) }), 'on'); }
+    if (e.ro) { ligne(M('canalRO', { n: nbBdi(e.ro) }), 'warn'); }
+    if (e.hors) { ligne(M('canalHors', { n: nbBdi(e.hors) }), 'warn'); }
+    if (e.refus) { ligne(M('canalRefus', { n: nbBdi(e.refus), r: propre((e.dernier && e.dernier.refusMsg) || '') }), 'bad'); }
+    if (e.nonLivres > e.refus) { ligne(M('canalNonLivre', { n: nbBdi(e.nonLivres - e.refus) }), 'bad'); }
+    if (e.dernier && e.dernier.attente) { ligne(M('canalExcAttente', { n: nbBdi(e.dernier.attente) }), 'warn'); }
+    if (e.dernier && e.dernier.exc) { ligne(M('canalExc', { n: nbBdi(e.dernier.exc) }), 'on'); }
+    if (e.dernier && e.dernier.erreur && e.dernier.erreur !== 'permis') { s.appendChild(bloc_erreur(e.dernier.erreur)); }
+    var bas = document.createElement('div'); bas.className = 'apg-bas';
+    var aEcrire = e.accord ? e.ecart : e.n;
+    if (CONFIRMER_CANAL) {
+      var q = document.createElement('div'); q.className = 'apg-note apg-confirmer'; q.innerHTML = M('canalConfirmer', { n: nbBdi(aEcrire) });
+      s.appendChild(q);
+      bas.appendChild(bouton(M('canalOui', { n: aEcrire }), true, function () {
+        CONFIRMER_CANAL = false;
+        canalLancer({ explicite: true });           // la permission est demandee sur CE clic
+      }));
+      bas.appendChild(bouton(M('canalNon'), false, function () { CONFIRMER_CANAL = false; dessiner(); }));
+    } else {
+      if (aEcrire > 0) {
+        bas.appendChild(bouton(M('canalBouton', { n: aEcrire }), true, function () { CONFIRMER_CANAL = true; dessiner(); }));
+      }
+      if (e.accord) {
+        bas.appendChild(bouton(M('canalVerifier'), false, function () { canalLancer({ explicite: true, tout: true }); }));
+        bas.appendChild(bouton(M(e.arret ? 'canalReprendre' : 'canalArreter'), false, function () {
+          var c = canal(); c.arret = !c.arret; if (!c.arret) { c.prochain = 0; } poserCanal(c); dessiner();
+          if (!c.arret) { canalReprendre(); }
+        }));
+      }
+    }
+    s.appendChild(bas);
+    return s;
+  }
+  /* Le depot du classement. opts.force : outre l'empreinte et les 24 h (le
+     bouton « أرسل التصنيف الآن ») ; opts.geste : un message a l'artisan.
+     Rend le resultat TYPE ({ok, code}) — l'empreinte n'est posee que sur un
+     depot reussi. */
+  function deposerClassement(opts) {
+    opts = opts || {};
     try {
-      if (!AP.gsync || typeof AP.gsync.classementMonter !== 'function') { return; }
+      if (!AP.gsync || typeof AP.gsync.classementMonter !== 'function') { return Promise.resolve(null); }
       var i = infoMoteur();
+      var s = PAQUET_ENTIER || paquetClassement();
       /* Sans la permission Drive, rien ne peut monter : on le dit UNE fois
          par appareil, pas a chaque lecture. */
       if (!i || !i.drive) {
-        var s0 = PAQUET_ENTIER || paquetClassement();
-        if (s0) { AP.gsync.classementMonter({ s: s0 }, { sansDrive: true }); }
+        if (s) { AP.gsync.classementMonter({ s: s }, { sansDrive: true }); }
         if (!reglagesPont().driveDit) { poserReglagesPont({ driveDit: 1 }); dire('classement : la permission Drive manque, il reste local.'); }
-        return;
+        if (opts.geste) { toast(M('classementEnvoiKo', { x: '', r: M('clR_portee') })); }
+        return Promise.resolve({ ok: false, code: 'portee' });
       }
-      var s = PAQUET_ENTIER || paquetClassement(); if (!s) { return; }
+      if (!s) { return Promise.resolve({ ok: false, code: 'vide' }); }
       var empreinte = h32(JSON.stringify(s));
       var r = reglagesPont();
       var recent = (Date.now() - (r.classementQuand || 0)) < 24 * 60 * 60 * 1000;
-      if (r.classementEmpreinte === empreinte && recent) {
-        /* Deja depose : on ne remonte pas, mais la copie LOCALE est remise a
-           jour (les jumeaux Google du bureau en dependent). */
-        AP.gsync.classementMonter({ s: s }, { sansDrive: true });
-        return;
+      /* la copie LOCALE est toujours remise a jour (les jumeaux Google du bureau en dependent) */
+      AP.gsync.classementMonter({ s: s }, { sansDrive: true });
+      var dEtat = (infoMoteur() || {}).driveEtat || {};
+      if (!opts.force && r.classementEmpreinte === empreinte && recent && dEtat.dernierEnvoi && !dEtat.erreur) {
+        return Promise.resolve({ ok: true, code: null, deja: true });
       }
-      AP.gsync.classementMonter({ s: s }).then(function (ok) {
-        if (ok) { poserReglagesPont({ classementEmpreinte: empreinte, classementQuand: Date.now() }); }
-      }).catch(function () { });
-    } catch (e) { avert('classement : ' + e.message); }
+      return AP.gsync.classementEnvoyer().then(function (res) {
+        if (res && res.ok) { poserReglagesPont({ classementEmpreinte: empreinte, classementQuand: Date.now() }); }
+        if (opts.geste) {
+          toast(res && res.ok ? M('classementEnvoyeToast') : M('classementEnvoiKo', { x: '', r: M('clR_' + ((res && res.code) || 'autre')) }));
+        }
+        if (elPanneau && elPanneau.classList.contains('show')) { dessiner(); }
+        majBandeauClassement();
+        return res;
+      }, function () { return { ok: false, code: 'autre' }; });
+    } catch (e) { avert('classement : ' + e.message); return Promise.resolve(null); }
   }
 
   var ecoutePosee = false;
@@ -2219,7 +2711,7 @@
            Refaire rendre() ici doublait tout le travail — c etait le gel a la
            liaison. On ne rafraichit que le panneau, s il est ouvert. */
         if (elPanneau && elPanneau.classList.contains('show')) { dessiner(); }
-        if (d && d.fin) { setTimeout(deposerClassement, 1500); }
+        if (d && d.fin) { majBandeauClassement(); setTimeout(deposerClassement, 1500); if (enDurIci()) { setTimeout(canalReprendre, 2500); } }
       });
       AP.gsync.on('envoye', function (d) {
         ENVOI_SESSION += (d && d.total) || 0;
@@ -2231,11 +2723,36 @@
       AP.gsync.on('agendas', function () {
         if (elPanneau && elPanneau.classList.contains('show')) { dessiner(); }
       });
+      /* le Drive a parle (reussite ou echec) : le panneau et le bandeau suivent */
+      AP.gsync.on('drive', function () {
+        if (elPanneau && elPanneau.classList.contains('show')) { dessiner(); }
+        majBandeauClassement();
+      });
     }
 
     if (AP.gauth && typeof AP.gauth.onChange === 'function') {
-      AP.gauth.onChange(function () {
+      var portees0 = null, drive0 = null;
+      AP.gauth.onChange(function (g) {
         if (elPanneau && elPanneau.classList.contains('show')) { dessiner(); }
+        try {
+          /* sans jeton (demarrage, refus) les portees sont vides par
+             construction : ce n'est ni un changement ni « Drive retire » */
+          if (!(g && g.connecte && g.expireDans > 0)) { majBandeauClassement(); return; }
+          var pts = ((g && g.portees) || []).slice().sort().join(' ');
+          /* les permissions ont change : le jeton garde par le moteur ne les porte pas encore */
+          if (portees0 !== null && pts !== portees0 && AP.gsync && AP.gsync.oublierJeton) { AP.gsync.oublierJeton(); }
+          var dr = !!(g && g.drive);
+          /* Drive vient d'etre accorde (un geste de l'artisan) : on regarde,
+             puis le bureau depose, le telephone recoit */
+          if (drive0 === false && dr && AP.gsync && AP.gsync.sonderDrive) {
+            AP.gsync.sonderDrive().then(function () {
+              if (enDurIci()) { return deposerClassement({ force: true }); }
+              return AP.gsync.classementRecevoir();
+            }).then(function () { majBandeauClassement(); if (elPanneau && elPanneau.classList.contains('show')) { dessiner(); } }, function () { });
+          }
+          portees0 = pts; drive0 = dr;
+        } catch (e) { }
+        majBandeauClassement();
       });
     }
   }
@@ -2369,9 +2886,14 @@
         depuis:     depuis(i.derniereLecture || 0),
         masques:    DERNIER_MASQUE,
         erreur:     i.erreur || null,
-        enCours:    enTrain
+        enCours:    enTrain,
+        classement: (function () { try { var ec = etatClassement(); return { role: ec.role, etat: ec.etat, alerte: ec.alerte, code: ec.code, texte: M('clR_' + (ec.code || 'jamais')), nb: ec.nb, quand: ec.quand }; } catch (e) { return null; } })()
       };
     },
+    ouvrirClassement: function () { return ouvrir({ cible: 'classement' }); },
+    canalLancer: canalLancer,
+    canalApresGeste: canalApresGeste,
+    canalEtat: function () { try { return canalEtatResume(); } catch (e) { return null; } },
 
     /* Le dictionnaire, pour que setup.js n'ecrive pas ses propres phrases
        arabes a cote des notres : deux formulations du meme etat, c'est la

@@ -288,6 +288,7 @@
       refuse:         'تم إلغاء الربط. البرنامج يواصل العمل محليًا كالمعتاد.',
       refusSupplement:'لم يُمنح الإذن الإضافي — ربط التقويم باقٍ كما هو.',
       fenetreOuverte: 'نافذة Google مفتوحة بالفعل في المتصفح — أكمل هناك أو أغلقها ثم أعد المحاولة.',
+      driveDecoche: 'في نافذة Google أُلغي تحديد خانة «Google Drive»، فلن يمرّ تصنيف الأقسام عبر Drive. أعد الربط واترك الخانة محدَّدة، أو استعمل «اكتب التصنيف في Google» على الحاسوب.',
       autreCompte:    'اخترت حساب Google آخر — لم يتغيّر الربط. لتغيير الحساب: افصل أولاً ثم اربط من جديد.',
       erreur:         'تعذّر الربط مع Google. حاول مرة أخرى لاحقًا.',
       lecture:        'قراءة فقط',
@@ -311,6 +312,7 @@
       refuse:         'Connexion annulee. Le programme continue en local, comme avant.',
       refusSupplement:'Autorisation supplementaire non accordee — votre agenda reste lie.',
       fenetreOuverte: 'Une fenetre Google est deja ouverte dans le navigateur — terminez-la ou fermez-la, puis reessayez.',
+      driveDecoche: 'Dans la fenetre Google, la case « Google Drive » a ete decochee : le classement ne passera pas par le Drive. Reliez de nouveau en la laissant cochee, ou utilisez « Ecrire le classement dans Google » sur l\'ordinateur.',
       autreCompte:    'Vous avez choisi un autre compte Google — la liaison n\'a pas change. Pour changer de compte : deliez d\'abord, puis reliez.',
       erreur:         'Connexion a Google impossible. Reessayez plus tard.',
       lecture:        'lecture seule',
@@ -682,6 +684,7 @@
     if (!(secondes > 0)) { secondes = 3600; }
     S._expireA = Date.now() + secondes * 1000;
     S.portees = String(reponse.scope || '').split(/\s+/).filter(Boolean);
+    if (S.portees.indexOf(PORTEE.reglages) >= 0) { S.driveDecoche = false; }
     S.connecte = true;
     S.besoinReconnexion = false;
     /* On note que cet appareil a ete relie au moins une fois. C'est ce
@@ -909,6 +912,12 @@
        Seulement quand l'artisan coche la case d'ecriture (demanderTachesEcriture
        -> avecEcritureTaches), ou si elle est deja accordee. */
     if (PORTEE.tachesEcriture && (avecEcritureTaches || aLaPortee(PORTEE.tachesEcriture))) { l.push(PORTEE.tachesEcriture); }
+    /* drive.appdata (le classement des sections passe du bureau au
+       telephone par la) : a chaque liaison INTERACTIVE — le bouton, la
+       pastille, le bandeau, une permission en plus —, ou s'il est deja
+       accorde. Jamais dans un renouvellement silencieux qui ne l'a jamais eu
+       (meme regle que « taches » ci-dessus). */
+    if (PORTEE.reglages && (interactif || aLaPortee(PORTEE.reglages))) { l.push(PORTEE.reglages); }
     l.push(niveau === 'ecriture' ? PORTEE.ecriture : PORTEE.lecture);
     return l;
   }
@@ -1162,7 +1171,7 @@
 
     var niveau = opts.ecriture ? 'ecriture' : 'lecture';
     var portees = porteesVoulues(niveau, opts.interactif !== false, !!opts.tachesEcriture);
-    if (opts.drive) { portees.push(PORTEE.reglages); }
+    if (opts.drive && portees.indexOf(PORTEE.reglages) < 0) { portees.push(PORTEE.reglages); }
 
     /* L'application de bureau sans le pont : on le DIT, une fois, au lieu
        d'ouvrir une fenetre Google qui finirait sur « origine non autorisee ».
@@ -1212,6 +1221,14 @@
           poserJeton(r);
           if (r.email) { S.courriel = r.email; }
           S.dernierRefus = null;
+          /* Drive demande mais pas accorde : la case « Google Drive » a ete
+             decochee — le classement des sections ne passera pas. On le dit
+             (apres le « تم الربط » du moteur). */
+          S.driveDecoche = portees.indexOf(PORTEE.reglages) >= 0 && !aLaPortee(PORTEE.reglages);
+          if (S.driveDecoche) {
+            journal('la case Google Drive a ete decochee dans la fenetre Google');
+            setTimeout(function () { toast(M('driveDecoche')); }, 2800);
+          }
           return lireLeCompte().then(function () { return true; });
         });
       }
@@ -1403,7 +1420,10 @@
          cocher un document ; la demande de Google arrive donc en reponse a un
          geste qu'il vient de faire, et non a froid. */
       var manqueEcriture = veutEcriture && !aLaPortee(PORTEE.ecriture);
-      var manqueDrive = veutDrive && !aLaPortee(PORTEE.reglages);
+      /* Drive seul qui manque : une fenetre seulement sur un geste
+         (interactif). En arriere-plan, on rend le jeton tel qu'il est — le
+         moteur voit alors que Drive n'y est pas, et cesse de le demander. */
+      var manqueDrive = veutDrive && !aLaPortee(PORTEE.reglages) && !!opts.interactif;
 
       if (j && !manqueEcriture && !manqueDrive) { return enveloppe(j); }
 
@@ -1599,6 +1619,8 @@
          passe : le dire autrement serait mentir a l'ecran qui s'y fie. */
       peutLire: S.connecte && !S.besoinReconnexion && (aLaPortee(PORTEE.lecture) || aLaPortee(PORTEE.ecriture)),
       peutEcrire: S.connecte && !S.besoinReconnexion && aLaPortee(PORTEE.ecriture),
+      drive: aLaPortee(PORTEE.reglages),
+      driveDecoche: !!S.driveDecoche,
       expireDans: S._expireA ? Math.max(0, S._expireA - Date.now()) : 0
     };
   }

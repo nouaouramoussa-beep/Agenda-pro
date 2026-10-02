@@ -1,5 +1,5 @@
 {
- "genere": "2026-10-02T20:33:01.477Z",
+ "genere": "2026-10-02T22:35:14.587Z",
  "fichiers": {
   ".nojekyll": {
    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -38,16 +38,16 @@
    "octets": 9452
   },
   "app/google/gauth.js": {
-   "sha256": "ebcfe848225a6bfe40977da0420a9541bda38a0621bed8ea0fcbbda4ae0cb91e",
-   "octets": 83805
+   "sha256": "6d7d264ee7528ab598b2695e0c655d89eec4217af46e9a8c901057cd63fd1389",
+   "octets": 85743
   },
   "app/google/gbridge.js": {
-   "sha256": "2a88b94ff641c916f2306d970f105cfce4e35bf5f734e80f621fba9408d3e6ea",
-   "octets": 118522
+   "sha256": "a2a7e08c0d0680030efc45eb8b4cfd87045896815576bbbc7ba8ba13aac451bb",
+   "octets": 154104
   },
   "app/google/gsync.js": {
-   "sha256": "46a82cae4370017858c862431895ea4aa46cbf2d9d99d30e0b49214c80035ea6",
-   "octets": 167540
+   "sha256": "35262f4caab7596b932f57f5de843999228a9472b0c69e8a1b509bf68c82a0b3",
+   "octets": 189406
   },
   "app/google/gtasks.js": {
    "sha256": "5aea49afe7e289df5f92fcb7de7307036e373c686d5ef59d0983ac9244a124a6",
@@ -138,7 +138,7 @@
    "octets": 1650
   },
   "app/pwa/sw.js": {
-   "sha256": "c19a9e86c5a03822bd4d3943916cae9c5d417f40b2f91b9a62e6109748468a8c",
+   "sha256": "fd7f28a8bfe4a31e5d89e7fe9d88d4c9cf970c124776d759f2d692d5b3a1ba50",
    "octets": 30781
   },
   "app/setup/setup.css": {
@@ -146,8 +146,8 @@
    "octets": 10903
   },
   "app/setup/setup.js": {
-   "sha256": "18903ac5303018468f3389a5ab691f56d85d2f48ca6275315407979499f7ea0c",
-   "octets": 71928
+   "sha256": "7bfcae749a0ab492a9387d04a65696a584f6d66125a3d0ac2e66da88160c8b34",
+   "octets": 73275
   },
   "app/supabase-client.js": {
    "sha256": "052b16e0fa2dca2ca3a00490ba26c9d1824ff8b5e48202ce9286f2d5a1b921ce",
@@ -166,12 +166,12 @@
    "octets": 10994
   },
   "confidentialite.html": {
-   "sha256": "cab2913f8cfecb54056aa786899e4ac1e7ce77483b6e962bc02b1de5120333d5",
-   "octets": 23369
+   "sha256": "b6a8b0bf3cc9237302470c3d995030c678553680153478518aaec5787e7f408d",
+   "octets": 24151
   },
   "index.html": {
-   "sha256": "94f4b5f09752a8ce714b7ef21068a48f26a06a63e5aeace43cb3f4e8a115a97d",
-   "octets": 481895
+   "sha256": "90de11743af92c0a470df15f2a9e2d91ac4932f21adbb60a923b8a5fd52e8599",
+   "octets": 485973
   },
   "sw.js": {
    "sha256": "bdca343b03eb8d6eaed1c3eec1de2ab2ac9d94e351beed282ab563ca0635e8c7",

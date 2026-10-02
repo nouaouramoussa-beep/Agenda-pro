@@ -698,6 +698,8 @@ html[dir="ltr"] .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
   .idx-col-h{padding:5px 10px}
 }
 /* ⇄ نقل التصنيف كاملاً : le bouton a cote de l'en-tete d'un groupe (jamais dedans) */
+.alert-plus{cursor:pointer}
+.alert-plus:hover{filter:brightness(.97)}
 .cg-hw{display:flex;align-items:center}
 .cg-hw > .cg-h{flex:1 1 auto;min-width:0;width:auto}
 .cg-mv{flex:0 0 auto;width:32px;height:32px;margin-inline-end:6px;border-radius:50%;color:var(--txt3);font-size:14px;opacity:.55;transition:.15s}
@@ -3390,12 +3392,12 @@ function delSection(id){
      pas encore relue, par exemple) : sinon elles reviendraient vers une
      section qui n'existe plus, invisibles mais comptees partout. */
   Object.keys(store.cat||{}).forEach(k=>{ if(store.cat[k]===id) store.cat[k]='ent'; });
-  Object.keys(store.catSk||{}).forEach(k=>{ if(store.catSk[k]===id) store.catSk[k]='ent'; });
+  Object.keys(store.catSk||{}).forEach(k=>{ if(store.catSk[k]===id){ store.catSk[k]='ent'; if(store.catSkQ) delete store.catSkQ[k]; } });
   (store.custom||[]).forEach(c=>{ if(c.cat===id) c.cat='ent'; });
   store.sections=(store.sections||[]).filter(x=>x.id!==id);
   delete state.boards[id];
   const el=document.getElementById('pan_b_'+id); if(el) el.remove();
-  lsSet(); prefSet(); buildBoardsDOM(); applyI18n(); applyPanels(); render();
+  lsSet(); canalApres(); prefSet(); buildBoardsDOM(); applyI18n(); applyPanels(); render();
 }
 /* Les ecritures de serie demandees par une suppression : apres la permission
    (demandee une fois), l'une apres l'autre, et un echec se DIT (au lieu d'une
@@ -3469,7 +3471,7 @@ function delSub(id){
   store.subs=(store.subs||[]).filter(x=>x.id!==id);
   delete SUBS[id];
   if(state.sub===id) state.sub='all';
-  lsSet(); applyI18n(); render();
+  lsSet(); canalApres(); applyI18n(); render();
 }
 
 const LS_KEY = 'agendapro_v1';
@@ -3478,6 +3480,10 @@ let store = {status:{}, checks:{}, notes:{}, cat:{}, custom:[], contact:{}, plac
      serie, section par serie, nom garde dans le programme (par tache et par
      serie) — voir catOf/subOf/appliquerNoms */
   subOf:{}, catSk:{}, subSk:{}, titleOf:{}, titleSk:{},
+  /* l'heure de chaque choix de SERIE fait sur ce bureau (section, categorie) :
+     le classement ecrit dans Google ne bat un choix fait sur le telephone que
+     s'il est plus recent */
+  catSkQ:{}, subSkQ:{},
   /* 📚 الفهرس : deux elements que l'artisan a dits identiques (fusion a la
      main) — identite d'un element (section|nom brut) -> identite de l'autre */
   idxFusion:{}};
@@ -3767,9 +3773,17 @@ function statusOf(it){
   if(it.gFait) return 'done';
   if(it.sansDate) return 'pending';
   const dd = diffDays(it.date);
-  if(dd < 0) return it.routine ? 'passed' : 'overdue';
+  if(dd < 0) return (it.routine || horsSuivi(it)) ? 'passed' : 'overdue';
   return 'pending';
 }
+/* Ce qui ne se « rattrape » pas : un anniversaire, un jour ferie. Passe, il
+   est passe — jamais « en retard ». (Les agendas en lecture seule restent
+   suivis tant que l'artisan n'a pas dit le contraire.) */
+const HORS_SUIVI_LECTURE=false;
+function horsSuivi(it){ return !!(it.fete || it.src==='feries' || (HORS_SUIVI_LECTURE && it.gRO && !it.gtache)); }
+/* La regle du retard, la meme partout (indicateur, resume, alertes) : en
+   retard, et dans les 60 derniers jours (une tache Google Tasks : toujours). */
+function retardCompte(it,T0){ return statusOf(it)==='overdue' && (it.gtache || parse(it.date)>=addDays(T0||today(),-60)); }
 /* --- check-list --------------------------------------------------------- */
 /* Une fois une case cochee, la liste etait figee dans la langue du moment :
    on passait en francais et les documents restaient en arabe. On retraduit
@@ -3956,7 +3970,7 @@ function renderKPI(){
   const curM = iso(T0).slice(0,7);
   TASKS.forEach(it=>{
     const s = statusOf(it), c = catOf(it), d = parse(it.date);
-    if(s==='overdue' && (it.gtache || d>=addDays(T0,-60))) k1++;
+    if(retardCompte(it,T0)) k1++;
     if(c==='ent' && !it.routine && !it.sansDate && d>=T0 && d<=W && notDone(s)) k2++;
     if(c==='perso' && !it.routine && !it.sansDate && d>=T0 && d<=addDays(T0,31) && notDone(s)) k3++;
     if(s==='waiting') k4++;
@@ -4024,7 +4038,7 @@ function renderBrief(vis){
   const busy = Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]||a.localeCompare(b))[0];
   let free=null;
   for(let i=0;i<30;i++){ const s=iso(addDays(today(),i)); if(!cnt[s]){ free=s; break; } }
-  const late = TASKS.filter(i=>statusOf(i)==='overdue' && (i.gtache || parse(i.date)>=addDays(today(),-60))).length;
+  const late = TASKS.filter(i=>retardCompte(i,today())).length;
   let ins='';
   if(busy) ins += '<button class="ins" onclick="pickDay(\''+busy+'\')">🔥 '+t('busiest')+' : <b>'+fmtDayName(busy)+' '+parse(busy).getDate()+' '+T[state.lang].months[parse(busy).getMonth()]+'</b> · '+cnt[busy]+'</button>';
   if(free) ins += '<button class="ins" onclick="pickDay(\''+free+'\')">🌿 '+t('freeDay')+' : <b>'+fmtDayName(free)+' '+parse(free).getDate()+'</b></button>';
@@ -4050,54 +4064,82 @@ function montrerFiltres(){ state.status='all'; state.sub='all'; state.selDay=nul
 
 /* --- Alertes ------------------------------------------------------------ */
 function renderAlerts(){
-  const A=[], T0=today();
+  const T0=today(), ar=state.lang==='ar', G=new Map();
+  /* une alerte par (sorte, serie) : une routine quotidienne oubliee ne fait
+     plus des centaines de lignes, mais une seule, avec son nombre */
+  const ranger=(sorte,it)=>{ const k=sorte+'|'+(it.sk||it.id); let g=G.get(k); if(!g){ g={sorte:sorte, items:[]}; G.set(k,g); } g.items.push(it); };
   TASKS.forEach(it=>{
     if(it.routine) return;
     /* Sans date = sans echeance : rien a annoncer « pour aujourd'hui ». Mais
        un drapeau pose A LA MAIN (urgent, en attente) ne depend d'aucune date :
        il merite son alerte, sans le « en retard de N jours » qui n'a pas de sens. */
     if(it.sansDate){
-      const s0=statusOf(it), nm0=txtNa(it.title[state.lang]);
-      if(s0==='overdue') A.push({p:0,k:'a-bad',ic:'🔴',h:state.lang==='ar'
-        ? '<b>'+nm0+'</b> معلّمة كعاجلة (بدون تاريخ) — أنجزها أو حدّد لها موعداً.'
-        : '<b>'+nm0+'</b> marquée urgente (sans date) — terminez-la ou fixez-lui une date.'});
-      else if(s0==='waiting') A.push({p:3,k:'a-info',ic:'⏳',h:state.lang==='ar'
-        ? '<b>'+nm0+'</b> تحت المتابعة — تحقق من الرد.'
-        : '<b>'+nm0+'</b> en suivi — vérifiez la réponse.'});
+      const s0=statusOf(it);
+      if(s0==='overdue') ranger('sd',it); else if(s0==='waiting') ranger('w',it);
       return;
     }
-    const s=statusOf(it), d=parse(it.date), dd=diffDays(it.date);
-    const nm = txtNa(it.title[state.lang]);
+    const s=statusOf(it), dd=diffDays(it.date);
     const list = clOf(it), done = clDone(it);
-    if(s==='overdue' && (it.gtache || d>=addDays(T0,-60))){
-      A.push({p:0,k:'a-bad',ic:'🔴',h:state.lang==='ar'
-        ? '<b>'+nm+'</b> متأخرة منذ '+duree(Math.abs(dd),'j')+' — سجّلها كمكتملة أو أعد برمجتها.'
-        : '<b>'+nm+'</b> en retard de '+duree(Math.abs(dd),'j')+' — marquez-la terminée ou reprogrammez-la.'});
-    } else if(dd>=0 && dd<=2 && s!=='done'){
-      A.push({p:1,k:'a-warn',ic:'⏰',h:state.lang==='ar'
+    if(retardCompte(it,T0)) ranger(dd<0 ? 'r' : 'u', it);
+    else if(dd>=0 && dd<=2 && s!=='done') ranger('p', it);
+    else if(catOf(it)==='ent' && dd>2 && dd<=7 && s!=='done' && list.length && done.length<list.length) ranger('d', it);
+    else if(s==='waiting') ranger('w', it);
+  });
+  const fois = n => ar ? arCnt(n,'مرة واحدة','مرتين','مرات','مرة','') : '<b>'+n+'</b> fois';
+  const A=[];
+  G.forEach(g=>{
+    const its=g.items.slice().sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));
+    const it=its[0], n=its.length, nm=txtNa(it.title[state.lang]);
+    if(g.sorte==='sd'){
+      A.push({p:0,k:'a-bad',ic:'🔴',h:ar
+        ? '<b>'+nm+'</b> معلّمة كعاجلة (بدون تاريخ) — أنجزها أو حدّد لها موعداً.'
+        : '<b>'+nm+'</b> marquée urgente (sans date) — terminez-la ou fixez-lui une date.'});
+    } else if(g.sorte==='r'){
+      const j=Math.abs(diffDays(it.date));
+      A.push({p:0,k:'a-bad',ic:'🔴',h: n===1
+        ? (ar ? '<b>'+nm+'</b> متأخرة منذ '+duree(j,'j')+' — سجّلها كمكتملة أو أعد برمجتها.'
+              : '<b>'+nm+'</b> en retard de '+duree(j,'j')+' — marquez-la terminée ou reprogrammez-la.')
+        : (ar ? '<b>'+nm+'</b> — '+fois(n)+' متأخرة، أقدمها منذ '+duree(j,'j')+' — سجّلها كمكتملة أو أعد برمجتها.'
+              : '<b>'+nm+'</b> — '+fois(n)+' en retard, la plus ancienne depuis '+duree(j,'j')+' — marquez-les terminées ou reprogrammez-les.')});
+    } else if(g.sorte==='u'){
+      const dd=diffDays(it.date);
+      A.push({p:0,k:'a-bad',ic:'🔴',h:(ar
+        ? '<b>'+nm+'</b> معلّمة كعاجلة — '+T.ar.inDays(dd)+' ('+fmtDate(it.date)+')'
+        : '<b>'+nm+'</b> marquée urgente — '+T.fr.inDays(dd)+' ('+fmtDate(it.date)+')')+(n>1 ? ' — '+fois(n) : '')});
+    } else if(g.sorte==='p'){
+      const dd=diffDays(it.date), list=clOf(it), done=clDone(it);
+      A.push({p:1,k:'a-warn',ic:'⏰',h:(ar
         ? '<b>'+nm+'</b> '+T.ar.inDays(dd)+' ('+fmtDate(it.date)+')'+(list.length? ' — الوثائق الجاهزة: '+done.length+'/'+list.length:'')
-        : '<b>'+nm+'</b> '+T.fr.inDays(dd)+' ('+fmtDate(it.date)+')'+(list.length? ' — documents prêts : '+done.length+'/'+list.length:'')});
-    } else if(catOf(it)==='ent' && dd>2 && dd<=7 && s!=='done' && list.length && done.length<list.length){
-      A.push({p:2,k:'a-info',ic:'📂',h:state.lang==='ar'
+        : '<b>'+nm+'</b> '+T.fr.inDays(dd)+' ('+fmtDate(it.date)+')'+(list.length? ' — documents prêts : '+done.length+'/'+list.length:''))+
+        (n>1 ? (ar ? ' — '+fois(n)+' قريباً' : ' — '+fois(n)+' prochainement') : '')});
+    } else if(g.sorte==='d'){
+      const dd=diffDays(it.date), list=clOf(it), done=clDone(it);
+      A.push({p:2,k:'a-info',ic:'📂',h:ar
         ? 'موعد <b>'+nm+'</b> بعد '+duree(dd,'j')+' — هل جهّزت الأوراق؟ ('+done.length+'/'+list.length+')'
         : '<b>'+nm+'</b> dans '+duree(dd,'j')+' — les pièces sont-elles prêtes ? ('+done.length+'/'+list.length+')'});
-    } else if(s==='waiting'){
-      A.push({p:3,k:'a-info',ic:'⏳',h:state.lang==='ar'
+    } else if(g.sorte==='w'){
+      A.push({p:3,k:'a-info',ic:'⏳',h:(ar
         ? '<b>'+nm+'</b> تحت المتابعة — تحقق من الرد.'
-        : '<b>'+nm+'</b> en suivi — vérifiez la réponse.'});
+        : '<b>'+nm+'</b> en suivi — vérifiez la réponse.')+(n>1 ? ' — '+fois(n) : '')});
     }
   });
   A.sort((a,b)=>a.p-b.p);
-  const urgent = A.filter(a=>a.p<=1).length;
+  const urgent = A.filter(a=>a.p<=1).length, nb = urgent || A.length;
   const cntEl = document.getElementById('alertCnt');
-  cntEl.textContent = urgent || A.length;
+  cntEl.textContent = nb>99 ? '99+' : String(nb);
   cntEl.classList.toggle('zero', !A.length);
   document.getElementById('pan_alerts').classList.toggle('lit', A.length>0 && !!state.pan.alerts);
   const box = document.getElementById('alertList');
+  const reste = A.length-7, tout = !!state.alTout;
   box.innerHTML = A.length
-    ? A.slice(0,7).map(a=>'<div class="alert '+a.k+'"><span class="ic">'+a.ic+'</span><div>'+a.h+'</div></div>').join('')
+    ? (tout ? A : A.slice(0,7)).map(a=>'<div class="alert '+a.k+'"><span class="ic">'+a.ic+'</span><div>'+a.h+'</div></div>').join('')+
+      (reste>0 ? '<div class="alert a-info alert-plus" role="button" tabindex="0" onclick="alertesToutes()" onkeydown="if(event.key===\'Enter\')alertesToutes()"><span class="ic">'+(tout?'➖':'➕')+'</span><div>'+
+        (tout ? (ar ? 'اطوِ القائمة' : 'Replier la liste')
+              : (ar ? 'و'+arCnt(reste,'تنبيه آخر','تنبيهان آخران','تنبيهات أخرى','تنبيهاً آخر','')+' — اعرضها كلها' : '+<b>'+reste+'</b> autres alertes — tout afficher'))+'</div></div>' : '')
     : '<div class="alert a-ok"><span class="ic">✅</span><div>'+t('noAlerts')+'</div></div>';
 }
+/* « +N » : la liste se deplie sur place (toutes les alertes comptees), puis se replie */
+function alertesToutes(){ state.alTout=!state.alTout; renderAlerts(); }
 
 /* --- Bande agenda 14 jours --------------------------------------------- */
 /* La bande des jours suit EXACTEMENT la periode choisie — y compris vers le
@@ -5121,9 +5163,9 @@ async function secSerie(id, v){
     finally{ SERIE_EN_COURS=false; }
     return;
   }
-  store.catSk = store.catSk||{}; store.catSk[it.sk]=v;
+  store.catSk = store.catSk||{}; store.catSk[it.sk]=v; horodaterSerie('sc', it.sk);
   serieDe(it).forEach(x=>{ if(store.cat[x.id]!==undefined) moveCat(x.id,'',true); });
-  lsSet(); state.boards[v]=1; state.open[id]=true; applyPanels(); prefSet(); render();
+  lsSet(); canalApres(); state.boards[v]=1; state.open[id]=true; applyPanels(); prefSet(); render();
   toast(t('toastSerie')+' — '+secName(secById(v)));
 }
 async function subSerie(id, v){
@@ -5140,11 +5182,16 @@ async function subSerie(id, v){
     finally{ SERIE_EN_COURS=false; }
     return;
   }
-  store.subSk = store.subSk||{}; store.subSk[it.sk]=v;
+  store.subSk = store.subSk||{}; store.subSk[it.sk]=v; horodaterSerie('sb', it.sk);
   serieDe(it).forEach(x=>{ if(store.subOf && store.subOf[x.id]!==undefined) setSub(x.id,'',true); });
-  lsSet(); render(); toast(t('toastSerie'));
+  lsSet(); canalApres(); render(); toast(t('toastSerie'));
 }
 function choisirSection(id, v){ if(serieCochee(id)) secSerie(id, v); else moveCat(id, v); }
+/* l'horloge corrigee par Google (la meme que les heures du casier) */
+function heureG(){ try{ return (window.AP&&AP.gsync&&AP.gsync.heure) ? AP.gsync.heure() : Date.now(); }catch(e){ return Date.now(); } }
+function horodaterSerie(quoi, sk){ if(!sk) return; const k=quoi==='sc'?'catSkQ':'subSkQ'; store[k]=store[k]||{}; store[k][sk]=heureG(); }
+/* un classement de serie a change sur le bureau : le canal par Google suit (s'il a ete accepte) */
+function canalApres(){ try{ buildTasks(); }catch(e){} try{ if(window.AP&&AP.gbridge&&AP.gbridge.canalApresGeste) setTimeout(()=>AP.gbridge.canalApresGeste(),0); }catch(e){} }
 function choisirCategorie(id, v){ if(serieCochee(id)) subSerie(id, v); else setSub(id, v); }
 /* La case « toutes les repetitions » : son etat est garde (state.serieCase),
    il survit aux redessins de la carte, et la cocher N'ECRIT RIEN — c'est le
@@ -6137,8 +6184,8 @@ async function deplLancer(){
     store.catSk=store.catSk||{}; store.subSk=store.subSk||{};
     Object.keys(p.locSer).forEach(sk=>{
       const it=TID(p.locSer[sk][0]); if(!it) return;
-      if(p.tSec) store.catSk[sk]=B;
-      if(p.tSub) store.subSk[sk]=Y;
+      if(p.tSec){ store.catSk[sk]=B; horodaterSerie('sc', sk); }
+      if(p.tSub){ store.subSk[sk]=Y; horodaterSerie('sb', sk); }
       serieDe(it).forEach(x=>{
         /* agenda Google en lecture seule : la valeur est posee sur chaque
            occurrence (l'effacer la laisserait revenir de la reserve gsync) */
@@ -6174,6 +6221,7 @@ async function deplLancer(){
   finally{ DEPL_EN_COURS=false; SERIE_EN_COURS=false; }
   /* ce qui attend dans la file d'envoi part maintenant (sans attendre la prochaine lecture) */
   try{ if(window.AP && AP.gsync && AP.gsync.vider) AP.gsync.vider(); }catch(e){}
+  if(Object.keys(p.locSer).length) canalApres();
   /* 2e passage des fusions : les repetitions Google, apres leur ecriture */
   try{ fusionsSuivent([].concat(...Object.keys(p.gSer).map(k=>p.gSer[k]))); }catch(e){ try{ console.warn('[Agenda Pro] fusions 📚 :', e); }catch(x){} }
   /* ce qui est VRAIMENT a sa nouvelle place */
@@ -6674,6 +6722,8 @@ function restoreState(inp){
     /* une sauvegarde d'avant ces choix n'en porte pas : on les remet a vide,
        sinon ils survivraient a la restauration qui devait les annuler */
     ['subOf','catSk','subSk','titleOf','titleSk','idxFusion'].forEach(k=>{ if(!b || typeof b[k]!=='object' || !b[k]) b[k]={}; });
+    /* une valeur restauree d'une sauvegarde n'est pas un geste recent */
+    if(b){ b.catSkQ={}; b.subSkQ={}; }
     store=Object.assign(store,b);
     const ids=new Set((store.subs||[]).map(x=>x.id));
     Object.keys(SUBS).forEach(k=>{ if(SUBS[k].custom && !ids.has(k)) delete SUBS[k]; });

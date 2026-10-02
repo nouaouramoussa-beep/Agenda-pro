@@ -216,6 +216,11 @@
     gdCals:     { ar: 'التقاويم والمهام',           fr: 'Agendas et taches' },
     gdSync:     { ar: 'زامن الآن',                 fr: 'Synchroniser' },
     gdForget:   { ar: 'افصل',                      fr: 'Delier' },
+    gdClManque: { ar: 'مربوط — لكن تصنيف الأقسام لم يصل من الحاسوب ({r})، لذلك قسم المؤسسة فارغ',
+                  fr: 'Lie — mais le classement des sections n\u2019est pas arrive du bureau ({r}) : la section Entreprise reste vide' },
+    gdClEnvoiKo: { ar: 'مربوط — لكن تصنيف الأقسام لا يصل إلى الهاتف ({r})',
+                  fr: 'Lie — mais le classement des sections ne part pas vers le telephone ({r})' },
+    gdClBtn:    { ar: 'إصلاح التصنيف',              fr: 'Reparer le classement' },
 
     /* --- agenda Microsoft (Outlook), le jumeau de la ligne Google ci-dessus,
        par app/microsoft/. Meme principe : lecture directe, sans serveur,
@@ -681,9 +686,15 @@
     var errG = (G.suivis ? G.erreur : null) || G.tachesErreur;
     var derniere = G.derniereTout !== undefined ? G.derniereTout : G.derniere;
     var depuisTxt = G.depuisTout !== undefined ? G.depuisTout : G.depuis;
+    var cl = G.classement || null;
     if (errG) {
       pastille = 'bad';
       say = T('gdErr', { x: esc(errG) });
+    } else if (cl && cl.alerte) {
+      /* lie, mais le classement des sections ne voyage pas : on le dit ici
+         aussi (c'est la que l'artisan regarde), avec le bouton qui y mene */
+      pastille = 'warn';
+      say = T(cl.role === 'source' ? 'gdClEnvoiKo' : 'gdClManque', { r: esc(cl.texte || '') });
     } else if (G.enAttente) {
       pastille = 'warn';
       say = T('gdWait', { n: compte(G.enAttente, 'modif') });
@@ -694,14 +705,19 @@
       say = T('gdOn', { m: esc(G.courriel || "—"), n: gCompte(G), x: esc(depuisTxt) });
     }
 
+    var acts = [
+      { lbl: G.enCours ? T('gSyncing') : T('gdSync'), fn: synchroniserGoogle, pri: true, id: 'apsGSyncBtn' },
+      { lbl: T('gdCals'),   fn: ouvrirGoogle },
+      { lbl: T('gdForget'), fn: delierGoogleDirect }
+    ];
+    if (cl && cl.alerte && !errG && AP.gbridge && typeof AP.gbridge.ouvrirClassement === 'function') {
+      acts[0].pri = false;
+      acts.unshift({ lbl: T('gdClBtn'), fn: function () { fermer(); AP.gbridge.ouvrirClassement(); }, pri: true });
+    }
     return {
       dot: pastille,
       say: say,
-      act: [
-        { lbl: G.enCours ? T('gSyncing') : T('gdSync'), fn: synchroniserGoogle, pri: true, id: 'apsGSyncBtn' },
-        { lbl: T('gdCals'),   fn: ouvrirGoogle },
-        { lbl: T('gdForget'), fn: delierGoogleDirect }
-      ]
+      act: acts
     };
   }
 
@@ -878,7 +894,8 @@
                         || !!(E.gdirect && E.gdirect.connecte && !gActif(E.gdirect))
                         || !!(E.mdirect && E.mdirect.configure && !E.mdirect.connecte)
                         || !!(E.mdirect && E.mdirect.connecte && !E.mdirect.suivis);
-    d.className = 'aps-dot' + (E.liaison ? ' on' : (aFaire ? ' warn' : ''));
+    var clKo = !!(E.gdirect && E.gdirect.connecte && E.gdirect.classement && E.gdirect.classement.alerte);
+    d.className = 'aps-dot' + (clKo ? ' warn' : (E.liaison ? ' on' : (aFaire ? ' warn' : '')));
   }
 
 
@@ -1372,7 +1389,7 @@
        qui passe par deux intermediaires est un abonnement qu'on oublie de
        defaire. */
     if (AP.gsync && typeof AP.gsync.on === 'function') {
-      ['lecture', 'envoye', 'file', 'agendas', 'jeton'].forEach(function (evt) {
+      ['lecture', 'envoye', 'file', 'agendas', 'jeton', 'drive'].forEach(function (evt) {
         try {
           AP.gsync.on(evt, function () {
             if (elModal && elModal.classList.contains('show')) { dessinerLignes(); }

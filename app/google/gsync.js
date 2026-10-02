@@ -114,7 +114,8 @@
     ombre:   'agendapro_g_ombre_v1',      // dernier etat connu + horodatages
     file:    'agendapro_g_file_v1',       // la file d'attente hors ligne
     journal: 'agendapro_g_journal_v1',    // conflits, refus, avertissements
-    classement: 'agendapro_g_classement_v1' // section / sous-categorie / routine par serie, venus du bureau
+    classement: 'agendapro_g_classement_v1', // section / sous-categorie / routine par serie, venus du bureau
+    drive:   'agendapro_g_drive_v1'       // ce qui s'est passe avec le Drive : dates, nombres, code d'erreur (jamais le contenu)
   };
 
   /* LES PERMISSIONS DEMANDEES A GOOGLE — le strict minimum, pas une de plus.
@@ -513,6 +514,9 @@
       JETON.valeur = r.token;
       JETON.finit  = Date.now() + ((r.expires_in || 3600) * 1000);
       JETON.permsDrive = String(r.scope || '').indexOf('drive.appdata') >= 0;
+      /* le reglage suit ce que Google a REELLEMENT accorde (une case decochee,
+         un acces retire) : sinon on redemandait Drive a chaque lecture */
+      if (!!reglages().driveOk !== JETON.permsDrive) { poserReglages({ driveOk: JETON.permsDrive }); emettre('drive', etatDrive()); }
       emettre('jeton', { ok: true, drive: JETON.permsDrive });
       return JETON.valeur;
     }, function (e) {
@@ -609,6 +613,19 @@
             var msg = (data && data.error && (data.error.message || data.error)) || ('HTTP ' + r.status);
 
             if (r.status === 410) throw ErreurGone(msg);
+
+            /* LE DRIVE : « API non activee dans le projet Google Cloud », ou
+               « cette permission manque » — ni un jeton refuse (le jeter n'y
+               changerait rien), ni un « ralentis ». On le nomme. */
+            if (url.indexOf('/drive/v3/') >= 0 && (r.status === 400 || r.status === 403)) {
+              var rz = (raisonsDe(data) + ' ' + (txt || '')).toLowerCase();
+              if (/accessnotconfigured|service_disabled|has not been used in project|is disabled/.test(rz)) {
+                var eA = new Error(msg); eA.statut = r.status; eA.data = data; eA.driveCode = 'api'; eA.lien = lienConsole(txt); throw eA;
+              }
+              if (r.status === 403 && /insufficientpermissions|access_token_scope_insufficient|insufficient authentication scopes|insufficientscopes/.test(rz)) {
+                var eP = new Error(msg); eP.statut = 403; eP.data = data; eP.driveCode = 'portee'; throw eP;
+              }
+            }
 
             if (refusAuth(r.status, data)) {
               /* LE JETON EST REFUSE. On ne se contente pas de l'oublier de
@@ -1103,7 +1120,31 @@
     return { ar: titre, fr: titre };
   }
 
-  function tacheDe(idTache, regl) {
+  /* LA ROUTINE D'APRES LA FREQUENCE. Sans classement du bureau ni choix de
+     l'artisan, une repetition qui revient souvent (au moins 3 jours dans la
+     fenetre, ecart median de 7 jours au plus : quotidienne, jours ouvres,
+     hebdomadaire) est une routine — sinon chacune de ses occurrences passees
+     comptait « en retard » sur le telephone. Calcul pur, jamais ecrit nulle
+     part (ni casier, ni classement, ni ombre). */
+  var RT_ECART_MAX = 7, RT_JOURS_MIN = 3;
+  function frequences() {
+    var jours = {};
+    Object.keys(EVENEMENTS).forEach(function (id) {
+      var x = EVENEMENTS[id], r = x && x.ev && x.ev.recurringEventId;
+      if (r && x.jour) { (jours[r] = jours[r] || {})[x.jour] = 1; }
+    });
+    var out = {};
+    Object.keys(jours).forEach(function (r) {
+      var d = Object.keys(jours[r]).sort();
+      if (d.length < RT_JOURS_MIN) { out[r] = false; return; }
+      var e = [];
+      for (var i = 1; i < d.length; i++) e.push(Math.round((Date.parse(d[i] + 'T00:00:00Z') - Date.parse(d[i - 1] + 'T00:00:00Z')) / 864e5));
+      e.sort(function (a, b) { return a - b; });
+      out[r] = e[Math.floor(e.length / 2)] <= RT_ECART_MAX;
+    });
+    return out;
+  }
+  function tacheDe(idTache, regl, freq) {
     var e = EVENEMENTS[idTache];
     if (!e) return null;
     var ev = e.ev;
@@ -1129,6 +1170,14 @@
        cette serie — voir classementDescendre(). L'ombre (ce que l'artisan a
        choisi lui-meme) passe toujours devant. */
     var cl = (classement().s || {})[ev.recurringEventId || ev.id] || null;
+    /* la routine : le choix de l'artisan (ombre), puis le classement du
+       bureau, puis la frequence de la serie */
+    var rt = { v: false, src: '' };
+    if (ev.recurringEventId) {
+      if (etat.rt !== undefined && etat.rt !== null && etat.rt !== '') rt = { v: !!Number(etat.rt), src: 'choix' };
+      else if (cl) rt = { v: !!cl[2], src: 'bureau' };
+      else rt = { v: !!(freq || frequences())[ev.recurringEventId], src: 'frequence' };
+    }
 
     return {
       id:     idTache,
@@ -1152,11 +1201,12 @@
       rap:    rap,
       inv:    inv.length ? inv : null,
       pj:     pj.length ? pj : null,
-      fete:   ev.eventType === 'birthday',
+      fete:   ev.eventType === 'birthday' || /#holiday@group[.]v[.]calendar[.]google[.]com$/.test(String(e.cal)),
       /* « routine » masque la tache quand l'artisan a decoche les routines.
          Une repetition tres frequente en est une ; un rendez-vous unique, non.
          Le choix de l'artisan (ombre) d'abord, puis le classement du bureau. */
-      routine: !!ev.recurringEventId && ((etat.rt !== undefined && etat.rt !== null) ? !!etat.rt : !!(cl && cl[2])),
+      routine: rt.v,
+      gRtSrc: rt.src,
       link:   ev.htmlLink || lienJour(e.jour),
       /* Reperes internes, ignores par index.html mais precieux ici. */
       gcal:   e.cal,
@@ -1196,7 +1246,7 @@
 
   /* La liste complete, triee comme index.html trie la sienne. */
   function tasks() {
-    var out = [], regl = reglages();
+    var out = [], regl = reglages(), freq = frequences();
     /* Le meme evenement lu sous deux noms d'agenda (« primary » et l'adresse
        reelle) : une seule tache, celle de l'adresse reelle. */
     var vus = {};
@@ -1207,7 +1257,7 @@
       var ev = EVENEMENTS[id] && EVENEMENTS[id].ev; if (!ev || !ev.id) return;
       if (vus[ev.id]) return;
       vus[ev.id] = 1;
-      var t = tacheDe(id, regl); if (t) out.push(t);
+      var t = tacheDe(id, regl, freq); if (t) out.push(t);
     });
     return out.sort(function (a, b) {
       return a.date === b.date ? (a.start || '').localeCompare(b.start || '') : a.date.localeCompare(b.date);
@@ -1246,8 +1296,9 @@
     if (etat.pl) p.pl = etat.pl;
     if (etat.sb) p.sb = etat.sb;
     if (etat.sc) p.sc = etat.sc;
-    if (etat.rt) p.rt = 1;
+    if (etat.rt !== undefined && etat.rt !== null && etat.rt !== '') p.rt = Number(etat.rt) ? 1 : 0;
     if (etat.ow) p.ow = 1;
+    if (etat.cb) p.cb = 1;
     if (etat.ck && ((etat.ck.l || []).length || (etat.ck.d || []).length)) {
       p.ck = { l: etat.ck.l || [], d: etat.ck.d || [] };
       if (etat.ck.a && Object.keys(etat.ck.a).length) p.ck.a = etat.ck.a;
@@ -1407,6 +1458,8 @@
       if (out[f] === undefined || out[f] === null || out[f] === '') delete out[f];
     });
     if (local.ow || distant.ow) out.ow = 1;
+    /* classe par le canal du bureau : la marque reste (voir deciderCl) */
+    if (local.cb || distant.cb) out.cb = 1;
 
     /* --- la check-list --------------------------------------------------- */
     var clL = (local.ck   && local.ck.l)   || [];
@@ -1976,45 +2029,111 @@
   var FICHIER_CLASSEMENT = 'agendapro-classement.json';
   var idFichiers = {};      // nom de fichier -> id Drive, une fois trouve
 
-  function driveDisponible() { return JETON.permsDrive || reglages().driveOk; }
+  function driveDisponible() { return JETON.valeur ? !!JETON.permsDrive : !!reglages().driveOk; }
 
-  function trouverFichier(nom) {
+  /* ---- CE QUI S'EST PASSE AVEC LE DRIVE -----------------------------------
+     Avant, toute panne du Drive etait avalee (une ligne de console) : le
+     bureau affichait « envoye » sur la foi de son paquet local, le telephone
+     ne disait rien, et l'artisan voyait « قسم المؤسسة = 0 » sans savoir
+     pourquoi. On garde maintenant, sur chaque appareil, la derniere reussite
+     et le dernier echec, avec un code : portee (permission absente), api
+     (Google Drive API non activee), absent (aucun fichier depose), auth,
+     reseau, quota, autre. Jamais le contenu du classement. */
+  function lienConsole(t) {
+    var m = String(t || '').match(/https:\/\/console\.(developers|cloud)\.google\.com\/[^\s"'<>\\]+/);
+    return m ? m[0] : '';
+  }
+  function codeDrive(e) {
+    if (!e) return 'autre';
+    if (e.driveCode) return e.driveCode;
+    if (e.jeton || e.auth || e.name === 'AP_SANS_JETON' || e.statut === 401) return 'auth';
+    if (e.statut === 404) return 'absent';
+    if (e.statut === 429 || e.statut >= 500) return 'quota';
+    if (e instanceof TypeError || (typeof navigator !== 'undefined' && navigator.onLine === false)) return 'reseau';
+    return 'autre';
+  }
+  var ETAT_DRIVE = null;
+  function etatDrive() {
+    if (ETAT_DRIVE === null) { ETAT_DRIVE = jget(K.drive, null) || {}; ETAT_DRIVE.enCours = ''; }
+    return Object.assign({}, ETAT_DRIVE);
+  }
+  function poserEtatDrive(p) {
+    var avant = etatDrive();
+    ETAT_DRIVE = Object.assign({}, avant, p || {});
+    jset(K.drive, ETAT_DRIVE);
+    if ((p && 'erreur' in p) && p.erreur !== avant.erreur) {
+      noter('drive', p.erreur ? ('Drive : ' + p.erreur + (p.detail ? ' — ' + String(p.detail).slice(0, 160) : '')) : 'Drive : de nouveau en ordre');
+    }
+    emettre('drive', etatDrive());
+  }
+  function echecDrive(e, sens) {
+    var code = codeDrive(e);
+    if (code === 'portee') {
+      /* la permission n'est pas la : on cesse de la croire presente (sinon
+         chaque lecture redemanderait Drive en arriere-plan) */
+      JETON.permsDrive = false; poserReglages({ driveOk: false });
+    }
+    poserEtatDrive({ erreur: code, detail: String((e && e.message) || '').slice(0, 300), lien: (e && e.lien) || '', dernierEchec: maintenant(), sens: sens || '' });
+    return code;
+  }
+
+  function trouverFichier(nom, o) {
     nom = nom || FICHIER_REGLAGES;
     if (idFichiers[nom]) return Promise.resolve(idFichiers[nom]);
     return api(DRIVE + '/files', {
-      absolu: true,
-      params: { spaces: 'appDataFolder', q: "name='" + nom + "'", fields: 'files(id,name,modifiedTime)', pageSize: 10 }
+      absolu: true, attendre: o && o.attendre,
+      /* le plus recent d'abord : si deux depots se sont croises, lecteur et
+         ecrivain prennent le meme fichier */
+      params: { spaces: 'appDataFolder', q: "name='" + nom + "'", fields: 'files(id,name,modifiedTime)', pageSize: 10, orderBy: 'modifiedTime desc' }
     }).then(function (d) {
       var f = (d && d.files && d.files[0]) || null;
       idFichiers[nom] = f ? f.id : null;
+      var pr = Object.assign({}, etatDrive().presents || {}); pr[nom] = !!f;
+      poserEtatDrive({ presents: pr });
       return idFichiers[nom];
     });
   }
 
+  /* Lecture typee : {ok, code, data} ; un identifiant mort (404) est oublie
+     et cherche de nouveau, une fois. */
+  function lireNuageT(nom, o, deux) {
+    if (!driveDisponible()) return Promise.resolve({ ok: false, code: 'portee' });
+    return trouverFichier(nom, o).then(function (id) {
+      if (!id) return { ok: false, code: 'absent' };
+      return api(DRIVE + '/files/' + id, { absolu: true, params: { alt: 'media' }, attendre: o && o.attendre })
+        .then(function (d) { return { ok: true, code: null, data: d }; });
+    }).catch(function (e) {
+      if (!deux && e && e.statut === 404) { idFichiers[nom] = null; return lireNuageT(nom, o, true); }
+      avert('lecture de ' + nom + ' : ' + (e && e.message));
+      return { ok: false, code: codeDrive(e), err: e };
+    });
+  }
   function lireNuage(nom) {
-    if (!driveDisponible()) return Promise.resolve(null);
-    return trouverFichier(nom).then(function (id) {
-      if (!id) return null;
-      return api(DRIVE + '/files/' + id, { absolu: true, params: { alt: 'media' } });
-    }).catch(function (e) { avert('lecture de ' + nom + ' : ' + (e && e.message)); return null; });
+    return lireNuageT(nom).then(function (r) { return r.ok ? r.data : null; });
   }
   function lireReglagesNuage() { return lireNuage(FICHIER_REGLAGES); }
   function ecrireReglagesNuage(objet) { return ecrireNuage(FICHIER_REGLAGES, objet); }
 
-  function ecrireNuage(nom, objet, deuxieme) {
-    if (!driveDisponible()) { say('reglagesLocaux'); return Promise.resolve(false); }
+  /* Ecriture typee : {ok, code, err} — c'est elle qui dit si un depot a
+     VRAIMENT eu lieu */
+  function ecrireNuageT(nom, objet, o) {
+    if (!driveDisponible()) return Promise.resolve({ ok: false, code: 'portee' });
+    return ecrireNuage(nom, objet, false, true).then(function (r) { return r; });
+  }
+  function ecrireNuage(nom, objet, deuxieme, type) {
+    if (!driveDisponible()) { say('reglagesLocaux'); return Promise.resolve(type ? { ok: false, code: 'portee' } : false); }
     var contenu = JSON.stringify(Object.assign({ v: 1, q: maintenant() }, objet || {}));
     return trouverFichier(nom).then(function (id) {
       if (id) {
         return api(DRIVE_UP + '/files/' + id, {
           absolu: true, methode: 'PATCH', params: { uploadType: 'media' },
           entetes: { 'Content-Type': 'application/json; charset=UTF-8' }, corps: contenu
-        }).then(function () { return true; }).catch(function (e) {
+        }).then(function () { return type ? { ok: true, code: null } : true; }).catch(function (e) {
           /* Le fichier a ete supprime du Drive entre-temps : son identifiant
              est mort. On l'oublie et on recree le fichier — une fois. */
           if (!deuxieme && e && (e.statut === 404 || /404|not found/i.test(String(e.message || '')))) {
             idFichiers[nom] = null;
-            return ecrireNuage(nom, objet, true);
+            return ecrireNuage(nom, objet, true, type);
           }
           throw e;
         });
@@ -2030,8 +2149,8 @@
       return api(DRIVE_UP + '/files', {
         absolu: true, methode: 'POST', params: { uploadType: 'multipart', fields: 'id' },
         entetes: { 'Content-Type': 'multipart/related; boundary=' + f }, corps: corps
-      }).then(function (d) { idFichiers[nom] = d && d.id; return true; });
-    }).catch(function (e) { avert('ecriture de ' + nom + ' : ' + (e && e.message)); return false; });
+      }).then(function (d) { idFichiers[nom] = d && d.id; return type ? { ok: true, code: null } : true; });
+    }).catch(function (e) { avert('ecriture de ' + nom + ' : ' + (e && e.message)); return type ? { ok: false, code: codeDrive(e), err: e } : false; });
   }
 
   /* ==========================================================================
@@ -2054,12 +2173,73 @@
     }
     return CLASSEMENT;
   }
+  /* LE DEPOT, TYPE : un seul envoi a la fois (les appels qui arrivent pendant
+     qu'il vole recoivent son resultat). La reussite ET l'echec sont gardes. */
+  var ENVOI_CL = null;
+  function classementEnvoyer() {
+    if (ENVOI_CL) return ENVOI_CL;
+    var c = classement(), n = Object.keys(c.s || {}).filter(function (k) { return k.indexOf('#') < 0; }).length;
+    if (!n) return Promise.resolve({ ok: false, code: 'vide' });
+    if (!driveDisponible()) { echecDrive({ driveCode: 'portee', message: '' }, 'envoi'); return Promise.resolve({ ok: false, code: 'portee' }); }
+    poserEtatDrive({ enCours: 'envoi' });
+    ENVOI_CL = ecrireNuage(FICHIER_CLASSEMENT, { s: c.s }, false, true).then(function (r) {
+      if (r.ok) {
+        poserEtatDrive({ dernierEnvoi: maintenant(), nbEnvoye: n, erreur: null, detail: '', lien: '', enCours: '' });
+        dire('classement depose sur le Drive : ' + n + ' serie(s).');
+      } else {
+        poserEtatDrive({ enCours: '' });
+        r.code = echecDrive(r.err || { driveCode: r.code }, 'envoi');
+      }
+      return { ok: r.ok, code: r.code || null };
+    }, function (e) { poserEtatDrive({ enCours: '' }); return { ok: false, code: echecDrive(e, 'envoi') }; });
+    ENVOI_CL.then(function () { ENVOI_CL = null; }, function () { ENVOI_CL = null; });
+    return ENVOI_CL;
+  }
+  /* LA RECEPTION, TYPEE : sur l'appareil qui fabrique le classement (le
+     bureau), on ne relit jamais le fichier — son classement vivant passerait
+     sous une copie plus ancienne. */
+  var LECTURE_CL = null;
+  function classementRecevoir() {
+    if (etatDrive().role === 'source') return Promise.resolve({ ok: false, code: 'source' });
+    if (LECTURE_CL) return LECTURE_CL;
+    if (!driveDisponible()) { echecDrive({ driveCode: 'portee', message: '' }, 'reception'); return Promise.resolve({ ok: false, code: 'portee' }); }
+    poserEtatDrive({ enCours: 'reception' });
+    LECTURE_CL = lireNuageT(FICHIER_CLASSEMENT, { attendre: false }).then(function (r) {
+      poserEtatDrive({ enCours: '' });
+      if (!r.ok) { var code = echecDrive(r.err || { driveCode: r.code }, 'reception'); return { ok: false, code: code }; }
+      var d = r.data;
+      if (!d || !d.s || typeof d.s !== 'object' || !Object.keys(d.s).length) { echecDrive({ driveCode: 'absent', message: '' }, 'reception'); return { ok: false, code: 'absent' }; }
+      var avant = JSON.stringify(classement().s);
+      CLASSEMENT = { v: 1, q: maintenant(), s: d.s };
+      jset(K.classement, CLASSEMENT);
+      var n = Object.keys(d.s).filter(function (k) { return k.indexOf('#') < 0; }).length;
+      poserEtatDrive({ recuLe: maintenant(), deposeLe: +d.q || 0, nbRecu: n, erreur: null, detail: '', lien: '' });
+      dire('classement repris du Drive : ' + n + ' serie(s).');
+      if (JSON.stringify(d.s) !== avant) rendre();
+      return { ok: true, code: null, n: n };
+    }, function (e) { poserEtatDrive({ enCours: '' }); return { ok: false, code: echecDrive(e, 'reception') }; });
+    LECTURE_CL.then(function () { LECTURE_CL = null; }, function () { LECTURE_CL = null; });
+    return LECTURE_CL;
+  }
+  /* Un simple coup d'oeil au Drive (une recherche de fichier, aucune
+     ecriture) : dit si l'API repond, si la permission est la, si le fichier
+     existe. */
+  function sonderDrive() {
+    if (!driveDisponible()) return Promise.resolve({ ok: false, code: 'portee' });
+    idFichiers[FICHIER_CLASSEMENT] = null;
+    return trouverFichier(FICHIER_CLASSEMENT, { attendre: false }).then(function (id) {
+      if (etatDrive().erreur === 'api' || etatDrive().erreur === 'portee') poserEtatDrive({ erreur: null, detail: '', lien: '' });
+      return { ok: true, code: id ? null : 'absent' };
+    }, function (e) { return { ok: false, code: echecDrive(e, 'sonde') }; });
+  }
   function classementMonter(paquet, opts) {
     opts = opts || {};
     if (paquet && paquet.s && typeof paquet.s === 'object' && Object.keys(paquet.s).length) {
       var avant = JSON.stringify(classement().s);
       CLASSEMENT = { v: 1, q: maintenant(), s: paquet.s };
       jset(K.classement, CLASSEMENT);
+      /* cet appareil FABRIQUE le classement (donnees du bureau) */
+      if (etatDrive().role !== 'source') poserEtatDrive({ role: 'source' });
       /* les jumeaux Google du bureau prennent leur section sans attendre */
       if (JSON.stringify(paquet.s) !== avant) rendre();
     }
@@ -2068,22 +2248,11 @@
     /* Sans la permission Drive : le classement reste local, et on ne le
        repete pas a chaque lecture — le pont le dit une fois. */
     if (opts.sansDrive || !driveDisponible()) return Promise.resolve(false);
-    return ecrireNuage(FICHIER_CLASSEMENT, { s: c.s }).then(function (ok) {
-      if (ok) dire('classement depose sur le Drive : ' + Object.keys(c.s).length + ' serie(s).');
-      return ok;
-    });
+    return classementEnvoyer().then(function (r) { return !!r.ok; });
   }
   function classementDescendre() {
     if (!driveDisponible()) return Promise.resolve(false);
-    return lireNuage(FICHIER_CLASSEMENT).then(function (d) {
-      if (!d || !d.s || typeof d.s !== 'object') return false;
-      var avant = JSON.stringify(classement().s);
-      CLASSEMENT = { v: 1, q: maintenant(), s: d.s };
-      jset(K.classement, CLASSEMENT);
-      dire('classement repris du Drive : ' + Object.keys(d.s).length + ' serie(s).');
-      if (JSON.stringify(d.s) !== avant) rendre();
-      return true;
-    });
+    return classementRecevoir().then(function (r) { return !!r.ok; });
   }
   /* A la fin d'une lecture : on reprend le classement s'il manque ou s'il
      date de plus d'un jour. Sans reseau ni Drive, rien ne se passe. */
@@ -2099,8 +2268,10 @@
     });
   }
   function classementRafraichir() {
-    var c = classement();
+    var c = classement(), d = etatDrive();
     if (Object.keys(c.s).length && (maintenant() - (c.q || 0)) < 24 * 60 * 60 * 1000) return;
+    /* API non activee : inutile de reessayer a chaque lecture (30 min) */
+    if (d.erreur === 'api' && (maintenant() - (d.dernierEchec || 0)) < 30 * 60 * 1000) return;
     classementDescendre().catch(function () { });
   }
 
@@ -2730,6 +2901,168 @@
       });
     });
   }
+  /* ==========================================================================
+     LE CLASSEMENT ECRIT DANS GOOGLE LUI-MEME (sans Drive)
+     --------------------------------------------------------------------------
+     Le bureau connait la section, la categorie et la routine de chaque serie
+     (ses donnees). Le telephone lit d'abord le casier prive de chaque
+     rendez-vous (tacheDe : etat.sc / sb / rt). Ecrire ces trois champs dans le
+     casier du MAITRE d'une serie suffit donc : toutes ses occurrences en
+     heritent, chez Google, et le telephone les range comme le bureau — sans
+     Drive, sans permission en plus. Rien de visible ne change dans Google
+     Agenda (zone privee, sendUpdates=none).
+     Regles : champ par champ ; un champ libre est pose ; un champ que NOUS
+     avons pose (meme heure que dans le registre du bureau) est mis a jour ;
+     un choix fait AILLEURS (telephone, carte) est garde, sauf geste de serie
+     du bureau plus recent ; un casier illisible n'est jamais ecrase ; If-Match
+     (etag) : un changement fait entre la lecture et l'ecriture n'est pas
+     perdu. Seulement sur un geste de l'artisan (opts.par === 'artisan').
+     ========================================================================== */
+  var CHAMPS_CL = ['sc', 'sb', 'rt'];
+  function valCl(f, v) { return f === 'rt' ? ((v === undefined || v === null || v === '') ? null : (Number(v) ? 1 : 0)) : (v ? String(v) : null); }
+  function deciderCl(c, voulu, reg) {
+    var et = Object.assign({}, c || {}); et.at = Object.assign({}, (c && c.at) || {});
+    var q = maintenant(), ecrits = {}, gardes = {}, ch = false;
+    CHAMPS_CL.forEach(function (f) {
+      if (f === 'rt' && !voulu.rec) return;
+      var d = valCl(f, voulu[f]); if (d === null) return;
+      var vG = valCl(f, et[f]), tG = Number(et.at[f] || 0);
+      if (vG === d) return;
+      var r = reg && reg[f];
+      var libre = !tG && vG === null, notre = !!r && tG === r[1], plusRecent = ((voulu.q || {})[f] || 0) > tG;
+      if (libre || notre || plusRecent) {
+        /* l'heure du geste du bureau quand il y en a un (un choix fait
+           ailleurs APRES ce geste, encore en file, gagnera a la fusion),
+           toujours au-dessus de l'heure lue */
+        var qf = (voulu.q || {})[f] || 0;
+        var a = qf ? Math.max(qf, tG + 1) : q;
+        et[f] = d; et.at[f] = a; ecrits[f] = [d, a]; ch = true;
+      }
+      else gardes[f] = vG;
+    });
+    /* ce casier a recu le classement du bureau */
+    if (ch) et.cb = 1;
+    return { etat: et, ecrits: ecrits, gardes: gardes, change: ch };
+  }
+  /* le casier BRUT d'un evenement, morceaux compris (comparer maitre et occurrence) */
+  function apBrut(x) {
+    var pv = x && x.extendedProperties && x.extendedProperties.private;
+    if (!pv || pv[CLE] == null || pv[CLE] === '') return '';
+    var t = String(pv[CLE]);
+    if (t.charAt(0) !== '#') return t;
+    var n = parseInt(t.slice(1), 10) || 0, b = t;
+    for (var i = 1; i <= n; i++) b += '\u0001' + (pv[CLE + i] == null ? '' : String(pv[CLE + i]));
+    return b;
+  }
+  function instancesFenetre(cal, idMaitre) {
+    var w = fenetre(), recus = [];
+    var chemin = '/calendars/' + encodeURIComponent(cal) + '/events/' + encodeURIComponent(idMaitre) + '/instances';
+    var params = { timeMin: new Date(w.debut + 'T00:00:00').toISOString(), timeMax: new Date(w.fin + 'T23:59:59').toISOString(), maxResults: 250 };
+    function page(tok) {
+      var pp = Object.assign({}, params); if (tok) pp.pageToken = tok;
+      return api(chemin, { params: pp, attendre: false }).then(function (d) {
+        ((d && d.items) || []).forEach(function (x) { recus.push(x); });
+        return (d && d.nextPageToken) ? page(d.nextPageToken) : null;
+      });
+    }
+    return page(null).then(function () { return recus; });
+  }
+  /* Un evenement : relire, decider, ecrire (If-Match), une relecture si
+     quelqu'un a ecrit entre-temps (412). */
+  function poserCasier(cal, idEv, voulu, reg, essai) {
+    var chemin = '/calendars/' + encodeURIComponent(cal) + '/events/' + encodeURIComponent(idEv);
+    return api(chemin, { params: { fields: 'id,etag,status,recurrence,recurringEventId,extendedProperties' }, attendre: false }).then(function (m) {
+      if (!m || m.status === 'cancelled') return { r: 'disparu' };
+      var priv = (m.extendedProperties && m.extendedProperties.private) || null;
+      var brut = priv && priv[CLE];
+      var c = lireCasier(m);
+      if (brut != null && brut !== '' && !c) return { r: 'illisible', m: m };
+      var dc = deciderCl(c || { at: {} }, voulu, reg);
+      if (!dc.change) return { r: Object.keys(dc.gardes).length ? 'garde' : 'deja', m: m, gardes: dc.gardes };
+      var p = proprietes(priv, dc.etat);
+      if (p.trop) return { r: 'trop', m: m };
+      return api(chemin, { methode: 'PATCH', corps: corpsSur({ extendedProperties: { private: p.props } }, null),
+        params: { sendUpdates: 'none' }, entetes: m.etag ? { 'If-Match': m.etag } : {}, attendre: false })
+        .then(function (rep) { return { r: 'ecrit', m: rep || m, ecrits: dc.ecrits, gardes: dc.gardes }; },
+              function (e) { if (e && e.statut === 412 && !essai) return poserCasier(cal, idEv, voulu, reg, true); throw e; });
+    });
+  }
+  /* Une serie (ou un rendez-vous unique) : le maitre, puis les exceptions de
+     la fenetre qui ne portent pas encore la valeur. Verrou par serie (le meme
+     que les autres ecritures de serie). Rend un compte rendu. */
+  function classerDepuisBureau(calEv, idSerie, voulu, registre, opts) {
+    opts = opts || {}; registre = registre || {};
+    if (opts.par !== 'artisan') {
+      noter('refus', 'classement par le casier refuse : origine inconnue');
+      return Promise.reject(Object.assign(new Error('origine'), { code: 'origine' }));
+    }
+    if (agendaEnLecture(calEv)) return Promise.reject(Object.assign(new Error('agenda en lecture seule'), { code: 'ro' }));
+    var cle = calEv + '|' + idSerie;
+    function travail() {
+      var res = { maitre: '', ecrits: {}, gardes: {}, ex: { ecrites: 0, deja: 0, gardees: 0, attente: 0, autres: 0 }, occurrences: 0 };
+      return poserCasier(calEv, idSerie, voulu, registre).then(function (r) {
+        res.maitre = r.r; res.ecrits = r.ecrits || {}; res.gardes = r.gardes || {};
+        if (r.r === 'ecrit' && opts.surEcrit) { try { opts.surEcrit(null, r.ecrits); } catch (e) { } }
+        var m = r.m;
+        if (r.r === 'trop' || r.r === 'illisible') {
+          return Promise.reject(Object.assign(new Error(r.r === 'trop' ? 'casier trop long' : 'casier illisible'), { code: r.r }));
+        }
+        if (!m || r.r === 'disparu') return res;
+        if (m.recurringEventId) { res.maitre = 'pasMaitre'; return res; }
+        var regl = reglages();
+        if (!m.recurrence) {
+          /* un rendez-vous unique : il est sa propre « serie » */
+          var idU = idDe(calEv, m);
+          if (r.r === 'ecrit' && EVENEMENTS[idU]) { absorber(calEv, Object.assign({}, EVENEMENTS[idU].ev, { extendedProperties: m.extendedProperties }), regl); ecrireOmbres(); ranger(); if (!opts.sansRendu) rendre(); }
+          return res;
+        }
+        var apM = apBrut(m);
+        return instancesFenetre(calEv, idSerie).then(function (recus) {
+          var suite = Promise.resolve();
+          recus.forEach(function (x) {
+            if (x.status === 'cancelled') return;
+            res.occurrences++;
+            absorber(calEv, x, regl);
+            if (apBrut(x) === apM) return;                  // herite du maitre : deja a jour
+            if (dansLaFile(calEv, x.id)) { res.ex.attente++; return; }
+            suite = suite.then(function () {
+              var rex = Object.assign({ sc: registre.sc, sb: registre.sb, rt: registre.rt }, (registre.ex || {})[x.id] || {});
+              return poserCasier(calEv, x.id, voulu, rex).then(function (rx) {
+                if (rx.r === 'ecrit') {
+                  res.ex.ecrites++;
+                  if (opts.surEcrit) { try { opts.surEcrit(x.id, rx.ecrits); } catch (e) { } }
+                  if (rx.m) absorber(calEv, Object.assign({}, x, { extendedProperties: rx.m.extendedProperties }), regl);
+                } else if (rx.r === 'deja') res.ex.deja++;
+                else if (rx.r === 'garde') res.ex.gardees++;
+                else res.ex.autres++;
+              }, function () { res.ex.autres++; });
+            });
+          });
+          return suite.then(function () { ecrireOmbres(); ranger(); if (!opts.sansRendu) rendre(); return res; });
+        });
+      });
+    }
+    var p = (FILE_SERIE[cle] || Promise.resolve()).then(travail, travail);
+    FILE_SERIE[cle] = p.then(function () { }, function () { });
+    return p;
+  }
+  /* serie (recurringEventId || id) -> agendas ou elle est lue (l'alias
+     « primary » ecarte quand la vraie adresse est la aussi) */
+  function indexSeries() {
+    var out = {}, prin = idPrincipal();
+    Object.keys(EVENEMENTS).forEach(function (id) {
+      var x = EVENEMENTS[id], ev = x && x.ev; if (!ev) return;
+      var serie = ev.recurringEventId || ev.id;
+      var o = out[serie] = out[serie] || {};
+      var c = o[x.cal] = o[x.cal] || { calEv: x.cal, reel: (x.cal === 'primary' && prin) || x.cal, n: 0, rec: !!ev.recurringEventId, ro: agendaEnLecture(x.cal) };
+      c.n++;
+    });
+    Object.keys(out).forEach(function (serie) {
+      var o = out[serie];
+      if (o.primary && Object.keys(o).some(function (k) { return k !== 'primary' && o[k].reel === o.primary.reel; })) delete o.primary;
+    });
+    return out;
+  }
   function sectionSerie(idTache, v, ancien) { return enSerie(idTache, function () { return ecrireSerie(idTache, 'sc', v, ancien); }); }
   function sousCatSerie(idTache, v, ancien) { return enSerie(idTache, function () { return ecrireSerie(idTache, 'sb', v, ancien); }); }
   function metaSerie(idTache, champ, v) { return enSerie(idTache, function () { return ecrireSerie(idTache, champ, v); }); }
@@ -2931,7 +3264,32 @@
   }
 
   /* Reconstruire et reafficher, dans le bon ordre. */
+  /* LA COUVERTURE, recalculee a chaque rendu (jamais dans info(), appele
+     sans cesse) : par serie, d'ou vient sa section — casier Google, classement
+     du Drive — et combien sont des routines deduites de leur frequence. */
+  var COUVERTURE = { series: 0, casierSc: 0, casierBureau: 0, classees: 0, lectureSeule: 0, rtFrequence: 0 };
+  function calculerCouverture() {
+    try {
+      var vus = {}, o = ombres(), cl = classement().s || {}, freq = null, cv = { series: 0, casierSc: 0, casierBureau: 0, classees: 0, lectureSeule: 0, rtFrequence: 0 };
+      Object.keys(EVENEMENTS).forEach(function (id) {
+        var x = EVENEMENTS[id], ev = x && x.ev; if (!ev) return;
+        var cleS = x.cal + '|' + (ev.recurringEventId || ev.id); if (vus[cleS]) return; vus[cleS] = 1;
+        cv.series++;
+        if (agendaEnLecture(x.cal)) cv.lectureSeule++;
+        var et = (o[id] || {}).e || {}, c = cl[ev.recurringEventId || ev.id];
+        if (et.sc) cv.casierSc++;
+        if (et.sc && et.cb) cv.casierBureau++;
+        if (c) cv.classees++;
+        if (ev.recurringEventId && (et.rt === undefined || et.rt === null || et.rt === '') && !c) {
+          freq = freq || frequences();
+          if (freq[ev.recurringEventId]) cv.rtFrequence++;
+        }
+      });
+      COUVERTURE = cv;
+    } catch (e) { }
+  }
   function rendre() {
+    calculerCouverture();
     try {
       if (P.buildTasks) P.buildTasks();     // recalcule la liste de index.html
       /* Si buildTasks est celui que le pont a enveloppe, il vient DEJA
@@ -3156,7 +3514,9 @@
       derniereComplete: ETAT.derniereComplete || 0,
       ecartHorloge: ECART,
       erreur: ETAT.erreur,
-      fenetre: { passe: reglages().joursPasses, futur: reglages().joursFuturs }
+      fenetre: { passe: reglages().joursPasses, futur: reglages().joursFuturs },
+      driveEtat: etatDrive(),
+      couverture: Object.assign({}, COUVERTURE)
     };
   }
 
@@ -3211,6 +3571,11 @@
     sousCatSerie: sousCatSerie,
     classerSerie: classerSerie,
     enLot: enLot,
+    classerDepuisBureau: classerDepuisBureau,
+    indexSeries: indexSeries,
+    rafraichir: function () { ecrireOmbres(); ranger(); rendre(); },
+    heure: function () { return maintenant(); },
+    noterJournal: function (g, t) { noter(g, String(t).slice(0, 200)); },
     /* Apres une permission d'ecriture accordee : le jeton garde en memoire
        ne la porte pas encore ; le suivant, si. */
     oublierJeton: oublierJeton,
@@ -3225,6 +3590,10 @@
     classement: classement,
     classementMonter: classementMonter,
     classementDescendre: classementDescendre,
+    classementEnvoyer: classementEnvoyer,
+    classementRecevoir: classementRecevoir,
+    etatDrive: etatDrive,
+    sonderDrive: sonderDrive,
     demanderDrive: demanderDrive,
 
     journal: function () { return jget(K.journal, []); },
