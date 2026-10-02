@@ -697,6 +697,21 @@ html[dir="ltr"] .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
   .idx-in.cote .idx-aide{display:none}
   .idx-col-h{padding:5px 10px}
 }
+/* ⇄ نقل التصنيف كاملاً : le bouton a cote de l'en-tete d'un groupe (jamais dedans) */
+.cg-hw{display:flex;align-items:center}
+.cg-hw > .cg-h{flex:1 1 auto;min-width:0;width:auto}
+.cg-mv{flex:0 0 auto;width:32px;height:32px;margin-inline-end:6px;border-radius:50%;color:var(--txt3);font-size:14px;opacity:.55;transition:.15s}
+.cg-mv:hover,.cg-mv:focus-visible{opacity:1;color:var(--txt);background:var(--bg2)}
+.idx-ghw{display:flex;align-items:center;background:var(--surface2)}
+.idx-ghw > .idx-gh{flex:1 1 auto;min-width:0;width:auto}
+.idx-mv{opacity:.55;margin-inline-end:6px}
+.idx-mv:hover,.idx-mv:focus-visible{opacity:1}
+.depl-de{font-size:13px;font-weight:700;color:var(--txt)}
+.depl-res{display:flex;flex-direction:column;gap:7px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface2);font-size:12.5px;color:var(--txt2);line-height:1.6}
+.depl-l b{color:var(--txt)}
+.depl-warn{color:var(--bad)}
+.depl-enc{font-size:12.5px;font-weight:700;color:var(--txt2);margin-inline-end:auto}
+#mDepl .mb:disabled{opacity:.45;cursor:not-allowed}
 .collapsed > .p-in{display:none}
 .collapsed .p-tog{transform:rotate(-90deg)}
 html[dir="rtl"] .collapsed .p-tog{transform:rotate(90deg)}
@@ -1112,7 +1127,7 @@ input[type="color"]{height:40px;padding:3px;cursor:pointer}
 @media print{
   .topbar,.toolbar,.strip,.strip-h,.acts,.btn-add,.tools,.foot .src{display:none!important}
   body{background:#fff}.card-body{display:block!important}
-  .board-orb,.pan-orb,.hdr-orb,.p-tog,.gsw,.orb,.orb-cap,.orb-hint,#pets{display:none!important}
+  .board-orb,.pan-orb,.hdr-orb,.p-tog,.gsw,.orb,.orb-cap,.orb-hint,#pets,.cg-mv,.idx-mv{display:none!important}
   .pan.collapsed .pan-h{display:flex!important}
   .foot.collapsed .foot-in{display:flex!important}
   .brief.collapsed > h2{display:block!important}
@@ -1525,6 +1540,15 @@ input[type="color"]{height:40px;padding:3px;cursor:pointer}
     <div class="idx-tabs" id="idxTabs"></div>
     <div class="idx-rech"><input type="search" id="idxQ" dir="auto" autocomplete="off" oninput="idxChercher(this.value)"></div>
     <div class="modal-b" id="idxCorps"></div>
+  </div>
+</div>
+
+<!-- MODAL : ⇄ نقل التصنيف كاملاً (placee apres #mIdx : elle passe au-dessus du fonds) -->
+<div class="modal" id="mDepl">
+  <div class="modal-in">
+    <div class="modal-h"><h3 id="deplTitre"></h3><button class="tbtn" onclick="deplFermer()">✕</button></div>
+    <div class="modal-b" id="deplCorps"></div>
+    <div class="modal-f" id="deplPied"></div>
   </div>
 </div>
 
@@ -2962,7 +2986,12 @@ ar:{
   gtAjouter:'إضافة مهمة', gtAjouterBtn:'إضافة', gtTitrePh:'عنوان المهمة', gtDetailsPh:'التفاصيل', gtSousPh:'إضافة مهمة فرعية…',
   gtTerminer:'وضع علامة «مكتملة»', gtRouvrir:'إرجاعها غير مكتملة', gtListe:'القائمة', gtSectionProg:'القسم في البرنامج',
   gtFermer:'إغلاق', gtDeplacee:'نُقلت المهمة إلى القائمة الأخرى في Google Tasks ✓',
-  gtDeplKo:'لم تُنقل المهمة: %1', gtDeplEnCours:'جارٍ نقل المهمة إلى القائمة الأخرى…', idxBtn:'الفهرس', idxBtnT:'كل ما في هذا القسم، دون تكرار', idxTitre:'كل ما في «%1»', idxRechPh:'ابحث في الفهرس…', idxResume:'البنود المختلفة: %1 · التصنيفات: %2 · كل المواعيد والمهام: %3', idxResumeL:'المهام المختلفة: %1 · القوائم: %2 · المجموع: %3', idxDepuis:'منذ %1', idxAide:'كل بند يظهر مرة واحدة. اضغط عليه لتذهب إليه في يومه وشهره، أو ▾ لترى كل مواعيده.', idxAideFus:'كل بند يظهر مرة واحدة. اضغط عليه لتذهب إليه في يومه وشهره، أو ▾ لترى كل مواعيده، أو 🔗 لتدمجه مع بند آخر هو نفسه.', idxVueT:'طريقة العرض', idxVueUn:'قسم واحد', idxVueCote:'جنباً إلى جنب', idxTitreTous:'كل الأقسام جنباً إلى جنب', idxColFermer:'إغلاق هذه النافذة', idxFusMontrer:'إظهار الدمج', idxFusCacher:'إخفاء الدمج', idxFusVoirT:'إظهار أزرار الدمج 🔗 أو إخفاؤها', idxProchain:'القادم: %1', idxDernier:'آخر مرة: %1', idxRetard:'%1 متأخرة', idxRoutine:'روتين', idxUrgent:'عاجلة', idxFusBtn:'دمج مع بند آخر هو نفسه', idxFusChoisir:'اضغط على البند الذي هو نفس «%1» — سيصيران سطراً واحداً.', idxFusAnnuler:'إلغاء', idxFusOk:'دُمج البندان في سطر واحد ✓', idxFusDeja:'لم يتم الدمج: أحد السطرين بند أعدت تسمية بعض مواعيده فقط داخل البرنامج، فظهر في سطرين. ادمج في السطر الذي يحمل اسمه الآخر، أو وحّد اسمه أولاً — لم يتغير شيء.', idxFusN:'مدموج ×%1', idxFusDef:'فك الدمج', idxFusIci:'⇄ دمج هنا', idxToutes:'كل المواعيد', idxVide:'لا شيء في هذا القسم.', idxRienTrouve:'لا شيء يطابق بحثك.', idxIntrouvable:'لم يظهر هذا البند في العرض الحالي — جرّب «تحديث البيانات».', gtListeNouv:'قائمة جديدة', gtListeNomPh:'اسم القائمة', gtListeCreer:'إنشاء', gtListeEnr:'حفظ', gtListeMenu:'خيارات القائمة', gtListeRen:'إعادة تسمية القائمة', gtListeSuppr:'حذف القائمة', gtListeSupprQ:'حذف القائمة «%1» من Google Tasks؟\nستُحذف معها %2 مهمة نهائياً، ولا يمكن التراجع.', gtListeSupprVideQ:'حذف القائمة «%1» من Google Tasks؟ (لا مهام فيها)', gtListeSupprInconnuQ:'حذف القائمة «%1» من Google Tasks؟\nستُحذف معها كل مهامها نهائياً (حتى التي لا تظهر هنا)، ولا يمكن التراجع.', gtListeHorsLigne:'لا اتصال الآن — لا يمكن حذف القائمة.', gtListeCachee:'غير معروضة', gtListeOk:'أُنشئت القائمة في Google Tasks ✓', gtListeRenOk:'تغيّر اسم القائمة في Google Tasks ✓', gtListeSupprOk:'حُذفت القائمة من Google Tasks.', gtListesTitre:'قوائم Google Tasks (أقسام «مهام Google Tasks»)', gtListesNote:'هذه قوائمك في Google Tasks نفسه: ما تنشئه أو تسمّيه أو تحذفه هنا يحدث هناك أيضاً، وما تضيفه على الهاتف يظهر هنا وحده. التصنيفات أعلاه خاصة بالبرنامج.', gtEtoileMettre:'تمييز بنجمة', gtEtoileRetirer:'إزالة النجمة', gtEtoiles:'المهام المميَّزة بنجمة', gtHeureIci:'الوقت والتنبيه يُضبطان في تطبيق Google Tasks أو في Google Agenda — Google لا تسمح للبرامج بهما.', openHint:'اضغط للفتح', orbHint:'اضغط لتشغيل المساعد',
+  gtDeplKo:'لم تُنقل المهمة: %1', gtDeplEnCours:'جارٍ نقل المهمة إلى القائمة الأخرى…', idxBtn:'الفهرس', idxBtnT:'كل ما في هذا القسم، دون تكرار', idxTitre:'كل ما في «%1»', idxRechPh:'ابحث في الفهرس…', idxResume:'البنود المختلفة: %1 · التصنيفات: %2 · كل المواعيد والمهام: %3', idxResumeL:'المهام المختلفة: %1 · القوائم: %2 · المجموع: %3', idxDepuis:'منذ %1', idxAide:'كل بند يظهر مرة واحدة. اضغط عليه لتذهب إليه في يومه وشهره، أو ▾ لترى كل مواعيده.', idxAideFus:'كل بند يظهر مرة واحدة. اضغط عليه لتذهب إليه في يومه وشهره، أو ▾ لترى كل مواعيده، أو 🔗 لتدمجه مع بند آخر هو نفسه.',
+  idxVueT:'طريقة العرض', idxVueUn:'قسم واحد', idxVueCote:'جنباً إلى جنب', idxTitreTous:'كل الأقسام جنباً إلى جنب', idxColFermer:'إغلاق هذه النافذة', idxFusMontrer:'إظهار الدمج', idxFusCacher:'إخفاء الدمج', idxFusVoirT:'إظهار أزرار الدمج 🔗 أو إخفاؤها',
+  deplBtn:'نقل هذا التصنيف كاملاً إلى قسم أو تصنيف آخر', deplTitre:'⇄ نقل التصنيف كاملاً', deplDe:'كل ما في «%1» داخل «%2»', deplSecL:'إلى القسم', deplSubL:'وإلى التصنيف', deplTotal:'عدد البنود في هذا التصنيف: %1 — في كل الفترات، لا ما يظهر الآن فقط.', deplVers:'سيُنقل إلى «%2» / «%3» — عدد البنود: %1', deplGSer:'سلاسل Google متكررة: %1 — كتابة واحدة في Google لكل سلسلة.', deplG1:'مواعيد Google أخرى: %1 — تُرسل إلى Google في الخلفية.',
+  deplLoc:'على هذا الجهاز فقط: %1 (بيانات الحاسوب، تقويمات للقراءة فقط، Microsoft، مهام Google Tasks، ما أضفته يدوياً).', deplDeja:'في الوجهة أصلاً: %1 — ستختلط بها، والنقل العكسي لاحقاً سيأخذها معها.', deplIgn:'لن يُنقل: %1 (تصنيفه الأصلي غير معروف على هذا الجهاز، أو لا يُسمح به في الوجهة، أو قيد النقل بين القوائم).', deplMeme:'اختر قسماً أو تصنيفاً غير الحالي.', deplVide:'لا شيء يمكن نقله من هذا التصنيف.', deplGo:'⇄ انقل', deplEnCours:'جارٍ النقل… %1 / %2',
+  deplROk:'✓ في مكانه الجديد: %1 من %2', deplRSer:'سلاسل Google كُتبت: %1', deplRExc:'استثناءات من هذه السلاسل أُرسلت وحدها: %1', deplRG1:'مواعيد Google في قائمة الإرسال: %1 — تُرسل في الخلفية.', deplRLoc:'نُقل على هذا الجهاز فقط: %1', deplRAtt:'لم تُكتب الآن (لا اتصال أو انشغال Google): %1 سلسلة — بقيت في مكانها، أعد «نقل التصنيف» لاحقاً.', deplRRef:'رفضتها Google: %1 سلسلة — %2', deplRIgn:'لم يُنقل: %1', deplRReste:'لم يتغير بعد: %1', deplOkBtn:'حسناً',
+  deplRMi:'سلاسل كُتبت في Google ثم انقطع الاتصال قبل إكمال استثناءاتها: %1 — أعد «نقل التصنيف» لإكمالها.', deplAttente:'في انتظار إذن Google…', idxProchain:'القادم: %1', idxDernier:'آخر مرة: %1', idxRetard:'%1 متأخرة', idxRoutine:'روتين', idxUrgent:'عاجلة', idxFusBtn:'دمج مع بند آخر هو نفسه', idxFusChoisir:'اضغط على البند الذي هو نفس «%1» — سيصيران سطراً واحداً.', idxFusAnnuler:'إلغاء', idxFusOk:'دُمج البندان في سطر واحد ✓', idxFusDeja:'لم يتم الدمج: أحد السطرين بند أعدت تسمية بعض مواعيده فقط داخل البرنامج، فظهر في سطرين. ادمج في السطر الذي يحمل اسمه الآخر، أو وحّد اسمه أولاً — لم يتغير شيء.', idxFusN:'مدموج ×%1', idxFusDef:'فك الدمج', idxFusIci:'⇄ دمج هنا', idxToutes:'كل المواعيد', idxVide:'لا شيء في هذا القسم.', idxRienTrouve:'لا شيء يطابق بحثك.', idxIntrouvable:'لم يظهر هذا البند في العرض الحالي — جرّب «تحديث البيانات».', gtListeNouv:'قائمة جديدة', gtListeNomPh:'اسم القائمة', gtListeCreer:'إنشاء', gtListeEnr:'حفظ', gtListeMenu:'خيارات القائمة', gtListeRen:'إعادة تسمية القائمة', gtListeSuppr:'حذف القائمة', gtListeSupprQ:'حذف القائمة «%1» من Google Tasks؟\nستُحذف معها %2 مهمة نهائياً، ولا يمكن التراجع.', gtListeSupprVideQ:'حذف القائمة «%1» من Google Tasks؟ (لا مهام فيها)', gtListeSupprInconnuQ:'حذف القائمة «%1» من Google Tasks؟\nستُحذف معها كل مهامها نهائياً (حتى التي لا تظهر هنا)، ولا يمكن التراجع.', gtListeHorsLigne:'لا اتصال الآن — لا يمكن حذف القائمة.', gtListeCachee:'غير معروضة', gtListeOk:'أُنشئت القائمة في Google Tasks ✓', gtListeRenOk:'تغيّر اسم القائمة في Google Tasks ✓', gtListeSupprOk:'حُذفت القائمة من Google Tasks.', gtListesTitre:'قوائم Google Tasks (أقسام «مهام Google Tasks»)', gtListesNote:'هذه قوائمك في Google Tasks نفسه: ما تنشئه أو تسمّيه أو تحذفه هنا يحدث هناك أيضاً، وما تضيفه على الهاتف يظهر هنا وحده. التصنيفات أعلاه خاصة بالبرنامج.', gtEtoileMettre:'تمييز بنجمة', gtEtoileRetirer:'إزالة النجمة', gtEtoiles:'المهام المميَّزة بنجمة', gtHeureIci:'الوقت والتنبيه يُضبطان في تطبيق Google Tasks أو في Google Agenda — Google لا تسمح للبرامج بهما.', openHint:'اضغط للفتح', orbHint:'اضغط لتشغيل المساعد',
   loadTitle:'توزيع الحمل', busiest:'أثقل يوم', freeDay:'أول يوم فارغ', lateLbl:'متأخرة', noneOpen:'لا عناصر مفتوحة في هذا النطاق',
   nextUpT:'القادم', noAlerts:'كل شيء تحت السيطرة — لا يوجد ما يستدعي التدخل العاجل ✅',
   checklist:'قائمة الوثائق والمهام الفرعية', notes:'ملاحظات', details:'التفاصيل',
@@ -3093,7 +3122,12 @@ fr:{
   gtAjouter:'Ajouter une tâche', gtAjouterBtn:'Ajouter', gtTitrePh:'Titre de la tâche', gtDetailsPh:'Détails', gtSousPh:'Ajouter une sous-tâche…',
   gtTerminer:'Marquer comme terminée', gtRouvrir:'Marquer comme non terminée', gtListe:'Liste', gtSectionProg:'Section dans le programme',
   gtFermer:'Fermer', gtDeplacee:'Tâche déplacée vers l\'autre liste dans Google Tasks ✓',
-  gtDeplKo:'Tâche non déplacée : %1', gtDeplEnCours:'Déplacement vers l\'autre liste en cours…', idxBtn:'Index', idxBtnT:'Tout le contenu de cette section, sans doublon', idxTitre:'Tout le contenu de « %1 »', idxRechPh:'Chercher dans l’index…', idxResume:'Éléments différents : %1 · Catégories : %2 · Rendez-vous et tâches en tout : %3', idxResumeL:'Tâches différentes : %1 · Listes : %2 · En tout : %3', idxDepuis:'depuis le %1', idxAide:'Chaque élément n’apparaît qu’une fois. Cliquez pour y aller, à son jour et son mois, ou ▾ pour voir toutes ses dates.', idxAideFus:'Chaque élément n’apparaît qu’une fois. Cliquez pour y aller, à son jour et son mois, ▾ pour voir toutes ses dates, ou 🔗 pour le fusionner avec un autre élément identique.', idxVueT:'Affichage', idxVueUn:'Une section', idxVueCote:'Côte à côte', idxTitreTous:'Toutes les sections côte à côte', idxColFermer:'Fermer cette fenêtre', idxFusMontrer:'Afficher la fusion', idxFusCacher:'Masquer la fusion', idxFusVoirT:'Afficher ou masquer les boutons de fusion 🔗', idxProchain:'Prochain : %1', idxDernier:'Dernière fois : %1', idxRetard:'%1 en retard', idxRoutine:'routine', idxUrgent:'urgent', idxFusBtn:'Fusionner avec un autre élément identique', idxFusChoisir:'Cliquez sur l’élément identique à « %1 » — ils ne feront plus qu’une ligne.', idxFusAnnuler:'Annuler', idxFusOk:'Éléments fusionnés en une seule ligne ✓', idxFusDeja:'Fusion impossible : l’une des deux lignes est un élément dont seules certaines dates ont été renommées dans le programme, il apparaît donc sur deux lignes. Fusionnez dans la ligne qui porte son autre nom, ou unifiez d’abord son nom — rien n’a changé.', idxFusN:'fusionné ×%1', idxFusDef:'Séparer', idxFusIci:'⇄ Fusionner ici', idxToutes:'Toutes les dates', idxVide:'Rien dans cette section.', idxRienTrouve:'Rien ne correspond à votre recherche.', idxIntrouvable:'Cet élément n’apparaît pas dans l’affichage actuel — essayez « Actualiser ».', gtListeNouv:'Nouvelle liste', gtListeNomPh:'Nom de la liste', gtListeCreer:'Créer', gtListeEnr:'Enregistrer', gtListeMenu:'Options de la liste', gtListeRen:'Renommer la liste', gtListeSuppr:'Supprimer la liste', gtListeSupprQ:'Supprimer la liste « %1 » de Google Tasks ?\nSes %2 tâche(s) seront supprimées définitivement, sans retour possible.', gtListeSupprVideQ:'Supprimer la liste « %1 » de Google Tasks ? (elle ne contient aucune tâche)', gtListeSupprInconnuQ:'Supprimer la liste « %1 » de Google Tasks ?\nToutes ses tâches seront supprimées définitivement (même celles qui ne s\'affichent pas ici), sans retour possible.', gtListeHorsLigne:'Pas de connexion — impossible de supprimer la liste.', gtListeCachee:'non affichée', gtListeOk:'Liste créée dans Google Tasks ✓', gtListeRenOk:'Liste renommée dans Google Tasks ✓', gtListeSupprOk:'Liste supprimée de Google Tasks.', gtListesTitre:'Listes Google Tasks (sections de « Tâches Google Tasks »)', gtListesNote:'Ce sont vos listes dans Google Tasks même : ce que vous créez, renommez ou supprimez ici s\'y fait aussi, et ce que vous ajoutez sur le téléphone apparaît ici tout seul. Les catégories ci-dessus sont propres au programme.', gtEtoileMettre:'Ajouter une étoile', gtEtoileRetirer:'Retirer l\'étoile', gtEtoiles:'Tâches suivies (étoile)', gtHeureIci:'L\'heure et le rappel se règlent dans Google Tasks ou Google Agenda — Google ne les ouvre pas aux programmes.', openHint:'Cliquez pour ouvrir', orbHint:"Cliquez pour activer l'assistant",
+  gtDeplKo:'Tâche non déplacée : %1', gtDeplEnCours:'Déplacement vers l\'autre liste en cours…', idxBtn:'Index', idxBtnT:'Tout le contenu de cette section, sans doublon', idxTitre:'Tout le contenu de « %1 »', idxRechPh:'Chercher dans l’index…', idxResume:'Éléments différents : %1 · Catégories : %2 · Rendez-vous et tâches en tout : %3', idxResumeL:'Tâches différentes : %1 · Listes : %2 · En tout : %3', idxDepuis:'depuis le %1', idxAide:'Chaque élément n’apparaît qu’une fois. Cliquez pour y aller, à son jour et son mois, ou ▾ pour voir toutes ses dates.', idxAideFus:'Chaque élément n’apparaît qu’une fois. Cliquez pour y aller, à son jour et son mois, ▾ pour voir toutes ses dates, ou 🔗 pour le fusionner avec un autre élément identique.',
+  idxVueT:'Affichage', idxVueUn:'Une section', idxVueCote:'Côte à côte', idxTitreTous:'Toutes les sections côte à côte', idxColFermer:'Fermer cette fenêtre', idxFusMontrer:'Afficher la fusion', idxFusCacher:'Masquer la fusion', idxFusVoirT:'Afficher ou masquer les boutons de fusion 🔗',
+  deplBtn:'Déplacer toute cette catégorie vers une autre section ou catégorie', deplTitre:'⇄ Déplacer toute la catégorie', deplDe:'Tout le contenu de « %1 » dans « %2 »', deplSecL:'Vers la section', deplSubL:'Et la catégorie', deplTotal:'Éléments dans cette catégorie : %1 — toutes périodes, pas seulement ce qui est affiché.', deplVers:'Destination « %2 » / « %3 » — éléments : %1', deplGSer:'Séries Google répétées : %1 — une seule écriture Google par série.', deplG1:'Autres rendez-vous Google : %1 — envoyés à Google en arrière-plan.',
+  deplLoc:'Sur cet appareil seulement : %1 (données du bureau, agendas en lecture seule, Microsoft, Google Tasks, ajouts à la main).', deplDeja:'Déjà dans la destination : %1 — ils seront mêlés ; un déplacement inverse les emporterait aussi.', deplIgn:'Non déplacés : %1 (catégorie d’origine inconnue sur cet appareil, destination non permise, ou changement de liste en cours).', deplMeme:'Choisissez une autre section ou une autre catégorie.', deplVide:'Rien à déplacer dans cette catégorie.', deplGo:'⇄ Déplacer', deplEnCours:'Déplacement… %1 / %2',
+  deplROk:'✓ À leur nouvelle place : %1 sur %2', deplRSer:'Séries Google écrites : %1', deplRExc:'Exceptions de ces séries envoyées à part : %1', deplRG1:'Rendez-vous Google dans la file d’envoi : %1 — envoyés en arrière-plan.', deplRLoc:'Déplacés sur cet appareil seulement : %1', deplRAtt:'Non écrites pour l’instant (pas de connexion ou Google occupé) : %1 série(s) — restées en place, refaites « déplacer la catégorie » plus tard.', deplRRef:'Refusées par Google : %1 série(s) — %2', deplRIgn:'Non déplacés : %1', deplRReste:'Pas encore changés : %1', deplOkBtn:'OK',
+  deplRMi:'Séries écrites chez Google, puis connexion coupée avant leurs exceptions : %1 — refaites « déplacer la catégorie » pour terminer.', deplAttente:'En attente de l’autorisation Google…', idxProchain:'Prochain : %1', idxDernier:'Dernière fois : %1', idxRetard:'%1 en retard', idxRoutine:'routine', idxUrgent:'urgent', idxFusBtn:'Fusionner avec un autre élément identique', idxFusChoisir:'Cliquez sur l’élément identique à « %1 » — ils ne feront plus qu’une ligne.', idxFusAnnuler:'Annuler', idxFusOk:'Éléments fusionnés en une seule ligne ✓', idxFusDeja:'Fusion impossible : l’une des deux lignes est un élément dont seules certaines dates ont été renommées dans le programme, il apparaît donc sur deux lignes. Fusionnez dans la ligne qui porte son autre nom, ou unifiez d’abord son nom — rien n’a changé.', idxFusN:'fusionné ×%1', idxFusDef:'Séparer', idxFusIci:'⇄ Fusionner ici', idxToutes:'Toutes les dates', idxVide:'Rien dans cette section.', idxRienTrouve:'Rien ne correspond à votre recherche.', idxIntrouvable:'Cet élément n’apparaît pas dans l’affichage actuel — essayez « Actualiser ».', gtListeNouv:'Nouvelle liste', gtListeNomPh:'Nom de la liste', gtListeCreer:'Créer', gtListeEnr:'Enregistrer', gtListeMenu:'Options de la liste', gtListeRen:'Renommer la liste', gtListeSuppr:'Supprimer la liste', gtListeSupprQ:'Supprimer la liste « %1 » de Google Tasks ?\nSes %2 tâche(s) seront supprimées définitivement, sans retour possible.', gtListeSupprVideQ:'Supprimer la liste « %1 » de Google Tasks ? (elle ne contient aucune tâche)', gtListeSupprInconnuQ:'Supprimer la liste « %1 » de Google Tasks ?\nToutes ses tâches seront supprimées définitivement (même celles qui ne s\'affichent pas ici), sans retour possible.', gtListeHorsLigne:'Pas de connexion — impossible de supprimer la liste.', gtListeCachee:'non affichée', gtListeOk:'Liste créée dans Google Tasks ✓', gtListeRenOk:'Liste renommée dans Google Tasks ✓', gtListeSupprOk:'Liste supprimée de Google Tasks.', gtListesTitre:'Listes Google Tasks (sections de « Tâches Google Tasks »)', gtListesNote:'Ce sont vos listes dans Google Tasks même : ce que vous créez, renommez ou supprimez ici s\'y fait aussi, et ce que vous ajoutez sur le téléphone apparaît ici tout seul. Les catégories ci-dessus sont propres au programme.', gtEtoileMettre:'Ajouter une étoile', gtEtoileRetirer:'Retirer l\'étoile', gtEtoiles:'Tâches suivies (étoile)', gtHeureIci:'L\'heure et le rappel se règlent dans Google Tasks ou Google Agenda — Google ne les ouvre pas aux programmes.', openHint:'Cliquez pour ouvrir', orbHint:"Cliquez pour activer l'assistant",
   loadTitle:'Répartition de la charge', busiest:'Jour le plus chargé', freeDay:'Premier jour libre', lateLbl:'en retard', noneOpen:'Aucun élément ouvert dans cette période',
   nextUpT:'À venir', noAlerts:'Tout est sous contrôle — aucune urgence ✅',
   checklist:'Documents et sous-tâches', notes:'Notes', details:'Détails',
@@ -4234,12 +4268,13 @@ function groupByCat(cat, items){
     const next = list.find(i=>!i.sansDate && statusOf(i)!=='done' && diffDays(i.date)>=0);
     const sub = (next ? T[state.lang].inDays(diffDays(next.date))+' · '+txtNa(next.title[state.lang]) : '')
               + (late ? ' · ⚠️ '+late+' '+t('lateLbl') : '');
-    return '<div class="cgroup'+(isOpen?' open':'')+'">'+
+    return '<div class="cgroup'+(isOpen?' open':'')+'"><div class="cg-hw">'+
       '<button class="cg-h" onclick="togGroup(\''+key+'\')">'+
         '<span class="cg-ic" style="background:'+hex(S.c,.14)+'">'+esc(S.ic)+'</span>'+
         '<span class="cg-n">'+esc(S[state.lang])+'<div class="cg-sub">'+sub+'</div></span>'+
         '<span class="cg-c">'+list.length+'</span><span class="cg-ch">▼</span>'+
       '</button>'+
+      '<button class="cg-mv" title="'+esc(t('deplBtn'))+'" aria-label="'+esc(t('deplBtn'))+'" onclick="deplOuvrir(\''+cat+'\',\''+k+'\')">⇄</button></div>'+
       '<div class="cg-b">'+(isOpen ? tranche(list, key) : '')+'</div></div>';
   }).join('');
 }
@@ -5533,6 +5568,7 @@ function applyI18n(){
   document.querySelectorAll('[data-t]').forEach(e=>{ e.textContent = t(e.dataset.t); });
   document.querySelectorAll('[data-t-title]').forEach(e=>{ e.title = t('idxBtn')+' — '+t(e.dataset.tTitle); e.setAttribute('aria-label', t('idxBtn')); });
   if(document.getElementById('mIdx') && document.getElementById('mIdx').classList.contains('show')){ const q=document.getElementById('idxQ'); if(q) q.placeholder=t('idxRechPh'); idxRendre(); }
+  if(document.getElementById('mDepl') && document.getElementById('mDepl').classList.contains('show')) deplRendre();
   document.querySelectorAll('[data-sec-name]').forEach(e=>{ e.textContent = secName(secById(e.dataset.secName)); });
   if(document.getElementById('mSec') && document.getElementById('mSec').classList.contains('show')) renderSecModal();
   document.querySelectorAll('[data-sec-sub]').forEach(e=>{ e.textContent = secSub(secById(e.dataset.secSub)); });
@@ -5754,9 +5790,10 @@ function idxTout(n){ const k=IDX_CLES[n]; if(k==null) return; state.idxDet[k]='t
    Rien ne change ailleurs — ni chez Google, ni sur les cartes. */
 state.idxFus=null;
 function idxTrouver(cat, cle){ let r=null; idxDonnees(cat).forEach(g=>g.liste.forEach(e=>{ if(e.k===cle) r=e; })); return r; }
-function idxFusDebut(n, c){ const k=IDX_CLES[n], cat=(c==null) ? state.idxCat : IDX_CLES[c]; if(k==null || cat==null) return; const e=idxTrouver(cat, k); if(!e) return; state.idxFus={cat:cat, k:k, titre:e.titre}; idxRendre(); }
+function idxFusDebut(n, c){ if(DEPL_EN_COURS){ toast(t('serieEnCours')); return; } const k=IDX_CLES[n], cat=(c==null) ? state.idxCat : IDX_CLES[c]; if(k==null || cat==null) return; const e=idxTrouver(cat, k); if(!e) return; state.idxFus={cat:cat, k:k, titre:e.titre}; idxRendre(); }
 function idxFusAnnuler(){ state.idxFus=null; idxRendre(); }
 function idxFusionner(n){
+  if(DEPL_EN_COURS){ state.idxFus=null; idxRendre(); toast(t('serieEnCours')); return; }
   const tk=IDX_CLES[n], F=state.idxFus; if(tk==null || !F) return;
   const src=idxTrouver(F.cat, F.k), tgt=idxTrouver(F.cat, tk);
   if(!src || !tgt || src.k===tgt.k){ state.idxFus=null; idxRendre(); return; }
@@ -5779,7 +5816,7 @@ function idxFusionner(n){
   }
   idxRendre();
 }
-function idxDefusionner(n){ const id=IDX_CLES[n]; if(id==null || !store.idxFusion) return; delete store.idxFusion[id]; lsSet(); idxRendre(); }
+function idxDefusionner(n){ if(DEPL_EN_COURS){ toast(t('serieEnCours')); return; } const id=IDX_CLES[n]; if(id==null || !store.idxFusion) return; delete store.idxFusion[id]; lsSet(); idxRendre(); }
 /* Le fonds d'UN cadre, en HTML : l'onglet de la vue « قسم واحد », ou une
    fenetre de la vue « جنباً إلى جنب ». */
 function idxCadreHTML(cat, q, cle, aide){
@@ -5799,8 +5836,10 @@ function idxCadreHTML(cat, q, cle, aide){
         (aide||'');
   h+=groupes.map(g=>{
     const gk=cat+'|'+g.k, ouvert = q ? true : state.idxOuv[gk]!==false, ng=idxNomGroupe(g.k);
-    let s='<div class="idx-g'+(ouvert?' open':'')+'"><button class="idx-gh" aria-expanded="'+ouvert+'" onclick="idxTogG('+cle(gk)+')">'+
-      '<span class="idx-gi">'+esc(ng.ic)+'</span><span class="idx-gn">'+txtNa(ng.nom)+'</span><span class="idx-gc">'+g.liste.length+'</span><span class="cg-ch">▼</span></button>';
+    const mv = g.k.indexOf('S:')===0 && !FUS;
+    let s='<div class="idx-g'+(ouvert?' open':'')+'">'+(mv?'<div class="idx-ghw">':'')+'<button class="idx-gh" aria-expanded="'+ouvert+'" onclick="idxTogG('+cle(gk)+')">'+
+      '<span class="idx-gi">'+esc(ng.ic)+'</span><span class="idx-gn">'+txtNa(ng.nom)+'</span><span class="idx-gc">'+g.liste.length+'</span><span class="cg-ch">▼</span></button>'+
+      (mv ? '<button class="idx-plus idx-mv" title="'+esc(t('deplBtn'))+'" aria-label="'+esc(t('deplBtn'))+'" onclick="deplOuvrirIdx('+cle([cat, g.k.slice(2)])+')">⇄</button></div>' : '');
     if(ouvert){
       s+='<div class="idx-gb">'+g.liste.map(e=>{
         const meta=[];
@@ -5899,6 +5938,255 @@ function idxPeriodePour(d){
   const rb=document.getElementById('rangeBox'); if(rb) rb.classList.toggle('show', state.win==='custom');
 }
 function idxClignoter(el){ if(!el) return; el.classList.remove('idx-flash'); void el.offsetWidth; el.classList.add('idx-flash'); setTimeout(()=>el.classList.remove('idx-flash'),2600); }
+/* ============================================================================
+   ⇄ « نقل التصنيف كاملاً » : tout ce qui est dans la categorie X de la
+   section A — toutes periodes, pas seulement ce qui est affiche — passe d'un
+   geste dans la section B et/ou la categorie Y.
+   - Repetition Google ENTIEREMENT dans le groupe : UNE ecriture sur le maitre,
+     section et categorie ensemble (AP.gsync.classerSerie), puis ses
+     exceptions du groupe.
+   - Rendez-vous Google unique, ou repetition dont une partie seulement est
+     dans le groupe : par occurrence, par la file d'envoi (moveCat/setSub, que
+     gsync enveloppe) — part en arriere-plan et survit a une coupure.
+   - Le reste (donnees du bureau, agendas en lecture seule, Microsoft, Google
+     Tasks, ajouts a la main) : sur cet appareil ; une serie entiere par son
+     choix de serie (catSk/subSk), sinon element par element.
+   - Exclu, et dit : ce qui n'est en A/X que par repli (identifiant inconnu
+     ici), une destination interdite, une tache Google Tasks qui change de
+     liste.
+   Un refus de permission n'ecrit RIEN. Une coupure arrete les series
+   restantes, qui restent a leur place : on refait le geste plus tard. Rapport
+   honnete a la fin, compte sur ce qui est vraiment a sa nouvelle place.
+   ============================================================================ */
+let DEPL=null, DEPL_EN_COURS=false;
+function deplBrutSec(it){ return store.cat[it.id] || (it.sk && store.catSk && store.catSk[it.sk]) || it.cat; }
+function deplBrutSub(it){ return (store.subOf && store.subOf[it.id]) || (it.sk && store.subSk && store.subSk[it.sk]) || it.sub; }
+function deplPlan(A, X, B, Y){
+  const tSec=B!==A, tSub=Y!==X, avecSerie=!!(window.AP && AP.gsync && AP.gsync.classerSerie);
+  const p={tSec:tSec, tSub:tSub, total:0, inclus:[], ign:0, gSer:{}, g1:[], locSer:{}, loc:[], nLoc:0, deja:0};
+  const E=TASKS.filter(it=>catOf(it)===A && subOf(it)===X), pris={}, parSk={};
+  p.total=E.length;
+  E.forEach(it=>{
+    if(deplBrutSec(it)!==A || deplBrutSub(it)!==X){ p.ign++; return; }
+    if(tSec && secsPour(it).map(x=>x.id).indexOf(B)<0){ p.ign++; return; }
+    if(it.gtache && deplEnCours(it.id)){ p.ign++; return; }
+    pris[it.id]=1; p.inclus.push(it.id);
+  });
+  /* une serie est « entiere » quand toutes ses occurrences chargees sont dans le groupe */
+  TASKS.forEach(it=>{ if(it.sk) (parSk[it.sk]=parSk[it.sk]||[]).push(it.id); });
+  /* une VRAIE repetition (Google, Microsoft) : une seule occurrence chargee suffit
+     (une echeance annuelle n'en a souvent qu'une dans la fenetre) — le maitre
+     ou le choix de serie porte les suivantes */
+  const repetition = it => !!((it.src==='google' && it.gRec && !it.gtache) ||
+    (it.mev && it.mcal && typeof it.sk==='string' && it.sk.indexOf('m|')===0 && it.sk!=='m|'+it.mev+'|'+it.mcal));
+  const entiere = it => !!(it.sk && parSk[it.sk] && (parSk[it.sk].length>1 || repetition(it)) && parSk[it.sk].every(id=>pris[id]));
+  /* une serie dont une seule occurrence est chargee ne passe par son choix de
+     serie (catSk/subSk) que si son A/X vient de la serie — un choix pose sur
+     CETTE occurrence seule ne doit pas s'etendre aux suivantes */
+  const parSerie = it => {
+    const sA=(store.catSk && store.catSk[it.sk]) || (store.cat[it.id]===undefined ? it.cat : null);
+    const sX=(store.subSk && store.subSk[it.sk]) || ((store.subOf||{})[it.id]===undefined ? it.sub : null);
+    return sA===A && sX===X;
+  };
+  E.forEach(it=>{
+    if(!pris[it.id]) return;
+    if(serieGoogle(it) && avecSerie && entiere(it)) (p.gSer[it.sk]=p.gSer[it.sk]||[]).push(it.id);
+    else if(it.src==='google' && !it.gtache && !it.gRO) p.g1.push(it.id);
+    else if(!it.gtache && it.src!=='manuel' && entiere(it) && (parSk[it.sk].length>1 || parSerie(it))) (p.locSer[it.sk]=p.locSer[it.sk]||[]).push(it.id);
+    else p.loc.push(it.id);
+  });
+  p.nLoc = p.loc.length + Object.keys(p.locSer).reduce((n,k)=>n+p.locSer[k].length,0);
+  if(tSec || tSub) TASKS.forEach(it=>{ if(catOf(it)===B && subOf(it)===Y) p.deja++; });
+  return p;
+}
+function deplOuvrir(A, X){
+  if(DEPL_EN_COURS){ deplRendre(); openModal('mDepl'); return; }
+  if(!allSections().some(x=>x.id===A) || !SUBS[X]) return;
+  DEPL={A:A, X:X, B:A, Y:X};
+  deplRendre(); openModal('mDepl');
+}
+function deplOuvrirIdx(n){ const v=IDX_CLES[n]; if(!v || !Array.isArray(v)) return; deplOuvrir(v[0], v[1]); }
+function deplFermer(){ closeModal('mDepl'); if(!DEPL_EN_COURS) DEPL=null; }
+function deplChoix(){
+  if(!DEPL || DEPL_EN_COURS || DEPL.fini) return;
+  const a=document.getElementById('deplSec'), b=document.getElementById('deplSub');
+  /* permission en attente : la destination est celle qui partira — les listes y reviennent */
+  if(DEPL.attente){ if(a) a.value=DEPL.B; if(b) b.value=DEPL.Y; return; }
+  if(a) DEPL.B=a.value; if(b) DEPL.Y=b.value;
+  deplRendre(true);
+}
+/* garder : seulement le resume et le pied (les deux listes restent, avec le focus) */
+function deplRendre(garder){
+  const corps=document.getElementById('deplCorps'), pied=document.getElementById('deplPied'), D=DEPL;
+  if(!corps || !pied || !D) return;
+  document.getElementById('deplTitre').textContent=t('deplTitre');
+  /* les nombres isoles (ils ne s'inversent pas en arabe), les noms deja surs */
+  const v=(k, ...a)=>{ let h=esc(t(k)); a.forEach((x,i)=>{ h=h.split('%'+(i+1)).join(typeof x==='number' ? '<bdi dir="ltr">'+x+'</bdi>' : x); }); return h; };
+  const nomSec=id=>{ const S=secById(id); return esc(S.ic)+' '+txtNa(secName(S)); };
+  const nomSub=id=>{ const S=SUBS[id]||SUBS.perso; return esc(S.ic)+' '+txtNa(S[state.lang]||S.fr||id); };
+  const ligne=(h, warn)=>'<div class="depl-l'+(warn?' depl-warn':'')+'">'+h+'</div>';
+  let h='<div class="depl-de">'+v('deplDe', nomSub(D.X), nomSec(D.A))+'</div>';
+  if(D.prog){
+    h+='<div class="progress"><i style="width:'+Math.round(100*D.prog.i/Math.max(1,D.prog.n))+'%"></i></div>';
+    corps.innerHTML=h;
+    pied.innerHTML='<span class="depl-enc">'+v('deplEnCours', D.prog.i, D.prog.n)+'</span>';
+    return;
+  }
+  if(D.fini){
+    const R=D.fini;
+    h+='<div class="depl-res">'+ligne('<b>'+v('deplROk', R.place, R.n)+'</b>')+
+      (R.ser ? ligne(v('deplRSer', R.ser)) : '')+(R.exc ? ligne(v('deplRExc', R.exc)) : '')+
+      (R.g1 ? ligne(v('deplRG1', R.g1)) : '')+(R.loc ? ligne(v('deplRLoc', R.loc)) : '')+
+      (R.mi ? ligne(v('deplRMi', R.mi), true) : '')+(R.att ? ligne(v('deplRAtt', R.att), true) : '')+(R.ref ? ligne(v('deplRRef', R.ref, esc(R.refMsg)), true) : '')+
+      (R.reste ? ligne(v('deplRReste', R.reste), true) : '')+(R.ign ? ligne(v('deplRIgn', R.ign)) : '')+
+      (R.err ? ligne(esc(R.err), true) : '')+'</div>';
+    corps.innerHTML=h;
+    pied.innerHTML='<button class="mb pri" onclick="deplFermer()">'+esc(t('deplOkBtn'))+'</button>';
+    return;
+  }
+  /* « مهام Google Tasks » n'est une destination que si tout le groupe en vient */
+  const p0=deplPlan(D.A, D.X, D.A, D.X), tousGt=p0.inclus.length>0 && p0.inclus.every(id=>{ const it=TID(id); return !!(it && it.gtache); });
+  const secs=allSections().filter(x=>x.id!=='gtasks' || tousGt || x.id===D.A);
+  if(!secs.some(x=>x.id===D.B)) D.B=D.A;
+  h+='<div class="row2"><div class="fld"><label>'+esc(t('deplSecL'))+'</label><select id="deplSec" onchange="deplChoix()">'+
+      secs.map(x=>'<option value="'+esc(x.id)+'"'+(x.id===D.B?' selected':'')+'>'+esc((x.ic||'')+' '+secName(x))+'</option>').join('')+'</select></div>'+
+     '<div class="fld"><label>'+esc(t('deplSubL'))+'</label><select id="deplSub" onchange="deplChoix()">'+
+      Object.keys(SUBS).map(k=>'<option value="'+esc(k)+'"'+(k===D.Y?' selected':'')+'>'+esc((SUBS[k].ic||'')+' '+(SUBS[k][state.lang]||SUBS[k].fr||k))+'</option>').join('')+'</select></div></div>';
+  const meme=(D.B===D.A && D.Y===D.X), p=deplPlan(D.A, D.X, D.B, D.Y), nS=Object.keys(p.gSer).length;
+  let r=ligne(v('deplTotal', p.total));
+  if(meme) r+=ligne(v('deplMeme'), true);
+  else if(!p.inclus.length) r+=ligne(v('deplVide'), true);
+  else {
+    r+=ligne('<b>'+v('deplVers', p.inclus.length, nomSec(D.B), nomSub(D.Y))+'</b>');
+    if(nS) r+=ligne(v('deplGSer', nS));
+    if(p.g1.length) r+=ligne(v('deplG1', p.g1.length));
+    if(p.nLoc) r+=ligne(v('deplLoc', p.nLoc));
+    if(p.deja) r+=ligne(v('deplDeja', p.deja));
+  }
+  if(p.ign) r+=ligne(v('deplIgn', p.ign), true);
+  if(D.attente) r+=ligne('<b>'+v('deplAttente')+'</b>');
+  const res=corps.querySelector('.depl-res');
+  if(garder && res && document.getElementById('deplSec')) res.innerHTML=r;
+  else { h+='<div class="depl-res">'+r+'</div>'; corps.innerHTML=h; }
+  corps.querySelectorAll('#deplSec,#deplSub').forEach(x=>{ x.disabled=!!D.attente; });
+  pied.innerHTML='<button class="mb" onclick="deplFermer()">'+esc(t('cancel'))+'</button>'+
+    '<button class="mb pri"'+((meme || !p.inclus.length || D.attente) ? ' disabled' : '')+' onclick="deplLancer()">'+esc(t('deplGo'))+'</button>';
+}
+/* Une erreur Google definitive (inutile de reessayer) ou passagere (coupure,
+   jeton, quota epuise) : la seconde arrete les series restantes. */
+function deplDefinitif(e){
+  if(e && (e.auth || e.jeton || e.name==='AP_SANS_JETON')) return false;   // pas de liaison valide : on s'arrete
+  if(e && e.gone) return true;                                              // rendez-vous disparu chez Google
+  const c=e && e.code; if(c==='ro' || c==='disparu' || c==='serie' || c==='trop') return true;
+  const st=e && e.statut; if(st===400 || st===404 || st===410) return true;
+  if(st===403 && !/ratelimit|quota|dailylimit|usagelimit/i.test(JSON.stringify((e && e.data) || {}))) return true;
+  return false;
+}
+async function deplLancer(){
+  const D=DEPL; if(!D || DEPL_EN_COURS || D.fini || D.prog || D.attente) return;
+  const A=D.A, X=D.X, B=D.B, Y=D.Y;
+  if(B===A && Y===X) return;
+  let p=deplPlan(A, X, B, Y); if(!p.inclus.length) return;
+  if(Object.keys(p.gSer).length || p.g1.length){
+    if(SERIE_EN_COURS){ toast(t('serieEnCours')); return; }
+    if(!liaisonPrete()) return;
+    /* la permission d'ecrire, demandee AVANT tout changement : refusee, rien ne bouge */
+    D.attente=true; deplRendre(true);
+    let ok=false; try{ ok=await permisAgenda(); } finally { D.attente=false; }
+    if(DEPL!==D) return;                       // fermee ou remplacee pendant l'attente : rien n'a bouge
+    if(!ok){ deplRendre(); toast(t('gNoWrite')); return; }
+    if(SERIE_EN_COURS || DEPL_EN_COURS){ deplRendre(); toast(t('serieEnCours')); return; }
+    p=deplPlan(A, X, B, Y); if(!p.inclus.length){ deplRendre(); return; }
+  }
+  const series=Object.keys(p.gSer);
+  const R={n:p.inclus.length, ser:0, exc:0, g1:p.g1.length, loc:p.nLoc, att:0, attOcc:0, ref:0, refOcc:0, refMsg:'', ign:p.ign, err:'', mi:0};
+  DEPL_EN_COURS=true; SERIE_EN_COURS=true;
+  /* les identites du 📚 AVANT le deplacement (elles contiennent section et categorie) */
+  const ident0={};
+  p.inclus.forEach(id=>{ const it=TID(id); if(it) ident0[id]=idxIdent(it, A); });
+  /* les fusions du 📚 suivent ce qui est VRAIMENT arrive en (B,Y) :
+     - chaque cle pointe directement sur le bout (deplace) de sa chaine, lu au
+       moment de la reecriture — pas de relais ;
+     - un bout arrive en partie seulement : ce qui reste a l'ancienne place
+       reste sur l'ancien bout ;
+     - l'ancienne cle d'une source partie s'en va (une « فك الدمج » faite
+       ensuite n'est pas annulee par un retour) */
+  const fusionsSuivent=ids=>{
+    const ren={};
+    ids.forEach(id=>{ const it=TID(id), o=ident0[id]; if(!it || !o || catOf(it)!==B || subOf(it)!==Y) return; const n=idxIdent(it, B); if(n!==o) ren[o]=n; });
+    if(!Object.keys(ren).length) return;
+    const F=store.idxFusion=store.idxFusion||{}, fin={};
+    Object.keys(F).forEach(k=>{ fin[k]=idxResoudre(k); });
+    const encore=new Set(TASKS.map(it=>idxIdent(it, catOf(it))));
+    Object.keys(fin).forEach(k=>{
+      const fe=fin[k], nk=ren[k]||k, ne=ren[fe]||fe;
+      /* rien n'a bouge pour cette fusion : on pointe sur le bout (un maillon intermediaire peut partir) */
+      if(nk===k && ne===fe){ if(fe!==k && F[k]!==fe) F[k]=fe; return; }
+      const reste = encore.has(fe) ? fe : ne;
+      if(nk!==k){                                              // la source est partie : sa nouvelle identite suit
+        if(F[nk]===undefined && ne!==nk) F[nk]=ne;
+        if(!encore.has(k)) delete F[k]; else if(reste!==k) F[k]=reste; else delete F[k];
+      } else {                                                 // seul le bout a bouge
+        if(reste!==k) F[k]=reste; else delete F[k];
+      }
+    });
+    lsSet();
+  };
+  try{
+    /* ce qui se fait ici, sans attendre */
+    store.catSk=store.catSk||{}; store.subSk=store.subSk||{};
+    Object.keys(p.locSer).forEach(sk=>{
+      const it=TID(p.locSer[sk][0]); if(!it) return;
+      if(p.tSec) store.catSk[sk]=B;
+      if(p.tSub) store.subSk[sk]=Y;
+      serieDe(it).forEach(x=>{
+        /* agenda Google en lecture seule : la valeur est posee sur chaque
+           occurrence (l'effacer la laisserait revenir de la reserve gsync) */
+        const ro = x.src==='google' && !!x.gRO;
+        if(p.tSec && (ro || store.cat[x.id]!==undefined)) moveCat(x.id, ro ? B : '', true);
+        if(p.tSub && (ro || (store.subOf && store.subOf[x.id]!==undefined))) setSub(x.id, ro ? Y : '', true);
+      });
+    });
+    /* un lot : chaque envoi relit Google avant de partir (rien de fait sur le
+       telephone depuis la derniere lecture n'est ecrase) */
+    const unParUn=()=>p.loc.concat(p.g1).forEach(id=>{ if(p.tSec) moveCat(id, B, true); if(p.tSub) setSub(id, Y, true); });
+    if(window.AP && AP.gsync && AP.gsync.enLot) AP.gsync.enLot(unParUn); else unParUn();
+    lsSet();
+    /* 1er passage des fusions : ce qui est deja a sa place (avant toute attente) */
+    try{ fusionsSuivent([].concat(p.loc, p.g1, ...Object.keys(p.locSer).map(k=>p.locSer[k]))); }catch(e){ try{ console.warn('[Agenda Pro] fusions 📚 :', e); }catch(x){} }
+    /* les repetitions Google, une par une */
+    D.prog={i:0, n:series.length};
+    for(let i=0;i<series.length;i++){
+      D.prog.i=i; deplRendre();
+      const ids=p.gSer[series[i]], rep=ids.find(id=>TID(id));
+      if(!rep){ R.ref++; R.refOcc+=ids.length; R.refMsg=t('errDisparu'); continue; }
+      try{
+        const r=await AP.gsync.classerSerie(rep, {sc:p.tSec ? B : undefined, sb:p.tSub ? Y : undefined}, ids);
+        if(r && r.maitre==='ecrit') R.ser++; R.exc+=(r && r.exceptions) || 0;
+        /* maitre ecrit, relecture impossible (coupure) : ses exceptions attendent ; on s'arrete la */
+        if(r && r.relu===false){ R.mi++; series.slice(i+1).forEach(sk=>{ R.att++; R.attOcc+=p.gSer[sk].length; }); break; }
+      }catch(e){
+        if(deplDefinitif(e)){ R.ref++; R.refOcc+=ids.length; R.refMsg=(e && (e.gone || e.statut===404 || e.statut===410)) ? t('errDisparu') : errMsg(e); }
+        else { series.slice(i).forEach(sk=>{ R.att++; R.attOcc+=p.gSer[sk].length; }); break; }
+      }
+    }
+  }catch(e){ R.err=errMsg(e); try{ console.warn('[Agenda Pro] نقل التصنيف :', e); }catch(x){} }
+  finally{ DEPL_EN_COURS=false; SERIE_EN_COURS=false; }
+  /* ce qui attend dans la file d'envoi part maintenant (sans attendre la prochaine lecture) */
+  try{ if(window.AP && AP.gsync && AP.gsync.vider) AP.gsync.vider(); }catch(e){}
+  /* 2e passage des fusions : les repetitions Google, apres leur ecriture */
+  try{ fusionsSuivent([].concat(...Object.keys(p.gSer).map(k=>p.gSer[k]))); }catch(e){ try{ console.warn('[Agenda Pro] fusions 📚 :', e); }catch(x){} }
+  /* ce qui est VRAIMENT a sa nouvelle place */
+  let place=0;
+  p.inclus.forEach(id=>{ const it=TID(id); if(it && catOf(it)===B && subOf(it)===Y) place++; });
+  R.place=place; R.reste=Math.max(0, p.inclus.length-place-R.attOcc-R.refOcc);
+  D.prog=null; D.fini=R;
+  if(state.sub===X && Y!==X){ state.sub='all'; syncUI(); }
+  state.boards[B]=1; state.gopen[B+':'+Y]=true;
+  applyPanels(); prefSet(); render();
+  const mi=document.getElementById('mIdx'); if(mi && mi.classList.contains('show')) idxRendre();
+  deplRendre(); openModal('mDepl');
+}
 /* Aller a un rendez-vous ou une tache, ou qu'il soit dans le temps. */
 function idxAller(id){
   const it=TID(id); if(!it) return;
@@ -6694,10 +6982,11 @@ function init(){
   document.addEventListener('click', e=>{
     if(e.target.closest('.pan-orb,.board-orb,.orb,.hdr-orb,.p-tog,.kpi,.chip,.lchip,.ins,.day,.cg-h,.card-head,.nextup-item,.tbtn')) petLook();
   });
-  document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('show'); }));
+  document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{ if(e.target!==m) return; if(m.id==='mDepl') deplFermer(); else m.classList.remove('show'); }));
   window.addEventListener('beforeprint',()=>{ PRINTING=true; render(); });
   window.addEventListener('afterprint',()=>{ PRINTING=false; render(); });
-  document.addEventListener('keydown',e=>{ if(e.key==='Escape') document.querySelectorAll('.modal.show').forEach(m=>m.classList.remove('show')); });
+  /* Echap ferme la fenetre du DESSUS seulement (la derniere ouverte dans la page : toutes au meme z-index) */
+  document.addEventListener('keydown',e=>{ if(e.key!=='Escape') return; const ms=document.querySelectorAll('.modal.show'), m=ms[ms.length-1]; if(!m) return; if(m.id==='mDepl') deplFermer(); else m.classList.remove('show'); });
 }
 
 /* Le demarrage passe par le verrou. Deux cas, et deux seulement :

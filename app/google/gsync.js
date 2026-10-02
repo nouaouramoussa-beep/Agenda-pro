@@ -1736,6 +1736,11 @@
     return file().some(function (e) { return e.cal === cal && e.ev === ev; });
   }
 
+  /* EN LOT (enLot) : les entrees posees pendant un geste qui touche beaucoup
+     de rendez-vous d'un coup naissent « differees » — elles relisent Google
+     avant de partir, comme une entree qui a attendu. */
+  var EN_LOT = 0;
+  function enLot(fn) { EN_LOT++; try { return fn(); } finally { EN_LOT--; } }
   function enfiler(cal, ev, etat, privActuel) {
     var f = file();
     var i = -1;
@@ -1751,7 +1756,7 @@
       cal: cal, ev: ev, etat: etat, priv: privActuel || null,
       par: 'artisan',                       // l'origine, verifiee a l'envoi
       q: maintenant(), essais: (i >= 0 ? f[i].essais : 0),
-      differe: ((i >= 0 && f[i].differe) || horsLigne || !connecte()) ? 1 : 0
+      differe: ((i >= 0 && f[i].differe) || horsLigne || !connecte() || EN_LOT) ? 1 : 0
     };
     if (i >= 0) f[i] = entree; else f.push(entree);
     poserFile(f);
@@ -1919,6 +1924,12 @@
     return suivante().then(function () {
       finir();
       if (partis) { say('fileVidee'); emettre('envoye', { total: partis }); }
+      /* Une entree posee pendant les derniers instants de l'envoi (apres la
+         derniere lecture de la file, avant finir) a trouve videEnCours encore
+         vrai : sans ceci elle attendrait le prochain geste ou la prochaine
+         lecture. La file s'est terminee normalement, donc tout ce qui y est
+         maintenant est arrive apres : on repart. */
+      if (file().length) setTimeout(vider, 0);
       return partis;
     }, function (err) {
       finir();
@@ -2148,7 +2159,16 @@
        seulement ») : Google refuserait toujours, et l'entree bloquerait la
        file de tous les autres rendez-vous. Le choix de l'artisan reste dans
        le programme (store), rien ne part. */
-    if (agendaEnLecture(e.cal)) return false;
+    if (agendaEnLecture(e.cal)) {
+      /* Rien ne part ; mais l'ombre garde le choix, avec son heure : sinon une
+         valeur EFFACEE ici (section, categorie rendue a la serie) revenait a
+         la lecture suivante, l'ombre portant encore l'ancienne. */
+      var etRO = etatLocalDe(idTache, e.cal, e.ev, champsGeste || []);
+      modif(etRO, maintenant());
+      poserOmbre(idTache, etRO);
+      appliquerDansStore(idTache, serieDe(e.cal, e.ev), etRO);
+      return false;
+    }
     /* On part de l'ombre ET de ce que store contient (etatLocalDe) : une note
        restauree d'une sauvegarde, un statut repris d'un rendez-vous ecrit en
        dur, ne sont plus effaces par le geste suivant — ils partent avec lui. */
@@ -2160,7 +2180,7 @@
     appliquerDansStore(idTache, serieDe(e.cal, e.ev), etat);
     var priv = (e.ev.extendedProperties && e.ev.extendedProperties.private) || null;
     enfiler(e.cal, e.ev.id, etat, priv);
-    vider();
+    Promise.resolve().then(vider);
     return true;
   }
 
@@ -2601,6 +2621,114 @@
     var p = (FILE_SERIE[cle] || Promise.resolve()).then(fn, fn);
     FILE_SERIE[cle] = p.then(function () { }, function () { });
     return p;
+  }
+  /* ---- « نقل التصنيف كاملاً » : SECTION ET CATEGORIE d'une repetition, ensemble --
+     Appele par index.html (deplLancer) pour une serie dont TOUTES les
+     occurrences chargees sont dans le groupe deplace (ids).
+     Le maitre n'est ecrit que si au moins une occurrence du groupe HERITE de
+     lui (meme casier que le maitre) : si toutes les occurrences chargees sont
+     des exceptions, la valeur du maitre (celle des occurrences futures, hors
+     fenetre) n'est pas celle du groupe, on n'y touche pas. Alors UN seul
+     PATCH pour les deux champs (pas d'etat intermediaire sur le telephone).
+     Puis on relit la fenetre : toute occurrence du groupe qui n'a pas encore
+     la nouvelle valeur (exception a casier propre) est reecrite, une par une,
+     par la file. Jamais d'« ancien » : l'appartenance est decidee par l'ecran
+     (ids), pas par une valeur brute du casier.
+     cible = {sc?, sb?} ; renvoie {maitre:'ecrit'|'saute', exceptions, occurrences}. */
+  function classerSerie(idTache, cible, ids) {
+    return enSerie(idTache, function () {
+      var e = EVENEMENTS[idTache];
+      if (!e) return Promise.reject(Object.assign(new Error('tache inconnue'), { code: 'disparu' }));
+      if (!e.ev.recurringEventId) return Promise.reject(Object.assign(new Error('pas une repetition'), { code: 'serie' }));
+      if (agendaEnLecture(e.cal)) return Promise.reject(Object.assign(new Error('agenda en lecture seule'), { code: 'ro' }));
+      var champs = ['sc', 'sb'].filter(function (c) { return cible && cible[c]; });
+      if (!champs.length) return Promise.resolve({ maitre: 'rien', exceptions: 0, occurrences: 0 });
+      var cal = e.cal, maitre = e.ev.recurringEventId;
+      var chemin = '/calendars/' + encodeURIComponent(cal) + '/events/' + encodeURIComponent(maitre);
+      var q = maintenant(), dans = {};
+      (ids || []).forEach(function (x) { dans[x] = 1; });
+      function modif(et, q2) { et.at = et.at || {}; champs.forEach(function (c) { et[c] = String(cible[c]); et.at[c] = q2; }); }
+      function differe(et) { return champs.some(function (c) { return (et[c] || '') !== String(cible[c]); }); }
+      /* le casier BRUT d'un evenement, morceaux compris (un long casier est
+         decoupe : ap = '#n', puis ap1..apn) */
+      function apDe(x) {
+        var pv = x && x.extendedProperties && x.extendedProperties.private;
+        if (!pv || pv.ap == null || pv.ap === '') return '';
+        var t = String(pv.ap);
+        if (t.charAt(0) !== '#') return t;
+        var n = parseInt(t.slice(1), 10) || 0, b = t;
+        for (var i = 1; i <= n; i++) b += '\u0001' + (pv['ap' + i] == null ? '' : String(pv['ap' + i]));
+        return b;
+      }
+      var w = fenetre();
+      var params = { timeMin: new Date(w.debut + 'T00:00:00').toISOString(), timeMax: new Date(w.fin + 'T23:59:59').toISOString(), maxResults: 250 };
+      function instances() {
+        var recus = [];
+        function page(tok) {
+          var pp = Object.assign({}, params); if (tok) pp.pageToken = tok;
+          return api(chemin + '/instances', { params: pp, attendre: false }).then(function (d) {
+            ((d && d.items) || []).forEach(function (x) { recus.push(x); });
+            return (d && d.nextPageToken) ? page(d.nextPageToken) : null;
+          });
+        }
+        return page(null).then(function () { return recus; });
+      }
+      var m = null, maitreEcrit = false, avantInst = [], apM = '', propsEcrites = null;
+      return api(chemin, { params: { fields: 'id,extendedProperties' }, attendre: false }).then(function (mm) {
+        m = mm || {};
+        return instances();
+      }).then(function (avant) {
+        avantInst = avant;
+        /* une occurrence du groupe qui herite du maitre : son casier est celui du maitre */
+        apM = apDe(m);
+        var herite = avant.some(function (x) { return dans[idDe(cal, x)] && apDe(x) === apM; });
+        if (!herite) return null;
+        var priv = (m.extendedProperties && m.extendedProperties.private) || null;
+        var etat = lireCasier(m) || { at: {} };
+        etat.at = etat.at || {};
+        modif(etat, q);
+        var p = proprietes(priv, etat);
+        if (p.trop) throw Object.assign(new Error('trop long'), { code: 'trop' });
+        noter('modification', 'casier de toute la serie ' + maitre, { champ: champs.join('+') });
+        propsEcrites = p.props;
+        return api(chemin, { methode: 'PATCH', corps: corpsSur({ extendedProperties: { private: p.props } }, null),
+          params: { sendUpdates: 'none' }, attendre: false }).then(function (r) { maitreEcrit = true; return r; });
+      }).then(function () {
+        /* relue APRES l'ecriture du maitre : les occurrences qui heritent portent deja la nouvelle valeur */
+        return instances().then(function (recus) {
+          var regl = reglages(), exceptions = 0;
+          recus.forEach(function (x) {
+            /* le casier que Google porte pour CETTE occurrence, lu avant la
+               fusion locale (voir ecrireSerie) */
+            var dist = lireCasier(x) || {};
+            absorber(cal, x, regl);
+            var id = idDe(cal, x);
+            if (EVENEMENTS[id] && dans[id] && differe(dist)) {
+              exceptions++;
+              ecrire(id, function (et, q2) { modif(et, q2); });
+            }
+          });
+          ecrireOmbres(); ranger(); rendre();
+          return { maitre: maitreEcrit ? 'ecrit' : 'saute', exceptions: exceptions, occurrences: recus.length };
+        }, function (err) {
+          if (!maitreEcrit) throw err;
+          /* Le maitre EST ecrit chez Google, la relecture a echoue (coupure) :
+             les occurrences qui heritent portent deja la nouvelle valeur la-bas.
+             On la pose ici aussi — sinon le geste suivant sur l'une d'elles
+             renverrait l'ancienne. Les exceptions du groupe, elles, ne sont pas
+             reecrites : relu:false le dit a l'ecran. */
+          var regl = reglages();
+          avantInst.forEach(function (x) {
+            if (!dans[idDe(cal, x)] || apDe(x) !== apM) return;
+            var pv = Object.assign({}, (x.extendedProperties && x.extendedProperties.private) || {});
+            Object.keys(propsEcrites || {}).forEach(function (k) { if (propsEcrites[k] === null) delete pv[k]; else pv[k] = propsEcrites[k]; });
+            absorber(cal, Object.assign({}, x, { extendedProperties: Object.assign({}, x.extendedProperties || {}, { private: pv }) }), regl);
+          });
+          ecrireOmbres(); ranger(); rendre();
+          return { maitre: 'ecrit', exceptions: 0, occurrences: avantInst.length, relu: false };
+        });
+      });
+    });
   }
   function sectionSerie(idTache, v, ancien) { return enSerie(idTache, function () { return ecrireSerie(idTache, 'sc', v, ancien); }); }
   function sousCatSerie(idTache, v, ancien) { return enSerie(idTache, function () { return ecrireSerie(idTache, 'sb', v, ancien); }); }
@@ -3081,6 +3209,8 @@
     fenetre: fenetre,
     sectionSerie: sectionSerie,
     sousCatSerie: sousCatSerie,
+    classerSerie: classerSerie,
+    enLot: enLot,
     /* Apres une permission d'ecriture accordee : le jeton garde en memoire
        ne la porte pas encore ; le suivant, si. */
     oublierJeton: oublierJeton,
